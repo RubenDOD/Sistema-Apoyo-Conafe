@@ -1,0 +1,778 @@
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            size_hint_y: 0.3
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5, 0.4
+            pos_hint: {"center_x": 0.5}
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: 'Botón 1'
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.open_button_screen()
+
+            Button:
+                text: 'Botón 2'
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+            Button:
+                text: 'Botón 3'
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+            Button:
+                text: 'Botón 4'
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.open_admin_window()
+            Button:
+                text: 'Botón 5'
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+        BoxLayout:
+            size_hint_y: 0.3
+
+<ButtonScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Botón A"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Botón B"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Botón C"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazConvocatoriasAspirante>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Abrir Convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Aplicar a Convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Ver estado de convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazConvocatoriasAdmin>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Publicar Convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Gestionar Convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Cerrar convocatoria"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Ver Solicitudes"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazEstadisticas>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Generar Reporte de Educadores"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Generar Padron de Becas"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Generar Reportes Estadisticos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazEquipamientoAdmin>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Planeacion de tallas"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Planeacion de entrega estatal"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Monitoreo de Estatus de Recepcion"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazApoyosAdmin>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Solicitudes Prorrogas"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Solicitudes Apoyo Adicional"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Problemas en pagos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazApoyos>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Monitorear Apoyo"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Ver Apoyos Disponibles"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Problemas en pagos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Reportar Prorroga"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Generar Historial"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazCapacitacionesAdmin>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Asignar CCTs"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Generar Reporte de Asignados"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Asignacion de capacitados"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazCapacitacionesTutor>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Seguimiento de Practicas"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Reporte de Asignados"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+
+<InterfazCapacitaciones>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Asignacion"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Seguimiento"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Actualizar Contacto"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazControlEscolarAdmin>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Asignar Grupo"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Control de Alumnos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Rendimiento de personal"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Certificados Pendientes"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Regularizaciones"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazControlEscolarAdminTerritorial>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Cambios de Plantel"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<InterfazControlEscolar>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Registro de Evaluaciones"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Regularizaciones"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+            Button:
+                text: "Cambio de Plantel"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+
+<VistaDireccionTerritorial>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Convocatorias"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.convocatorias_DT()
+            Button:
+                text: "Capacitacion"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.capacitacion_DT()
+            Button:
+                text: "Control Escolar"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.controlEscolar_DT()
+            Button:
+                text: "Estadisticas"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.estadisticas_DT()
+
+<VistaAspirante>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Convocatorias"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.convocatorias_aspirante()
+            Button:
+                text: "Capacitacion"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.capacitaciones_aspirante()
+<VistaLEC>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Control Escolar"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.controlEscolar_LEC()
+            Button:
+                text: "Apoyos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.apoyos_LEC()
+
+<VistaCapacitador>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                text: "Capacitaciones"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.capacitaciones_tutor()
+            Button:
+                text: "Control Escolar"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.controlEscolar_LEC()
+            Button:
+                text: "Apoyos"
+                size_hint_y: None
+                height: 40
+                background_color: (.5, .5, .5, 1)
+                background_normal: ''
+                on_release: root.apoyos_LEC()
+
