@@ -205,8 +205,6 @@ class AdminWindow(BoxLayout):
         
         return _users
     
-
-    
     def get_products(self):
         mydb = mysql.connector.connect(
             host='localhost',

@@ -25,31 +25,51 @@ class ButtonScreen(Screen):
     pass
 
 class InterfazConvocatoriasAspirante(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaAspirante'
 
 class InterfazCapacitaciones(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaAspirante'
 
 class InterfazConvocatoriasAdmin(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaDireccionTerritorial'
 
 class InterfazControlEscolarAdminTerritorial(Screen):
     pass
 
 class InterfazCapacitacionesAdmin(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaDireccionTerritorial'
 
 class InterfazEstadisticas(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaDireccionTerritorial'
 
 class InterfazControlEscolar(Screen):
-    pass
+    def __init__(self, pantalla_regreso, **kwargs):
+        super().__init__(**kwargs)
+        self.pantalla_regreso = pantalla_regreso
+
+    def regresar(self):
+        self.manager.current = self.pantalla_regreso
 
 class InterfazApoyos(Screen):
-    pass
+    def __init__(self, pantalla_regreso, **kwargs):
+        super().__init__(**kwargs)
+        self.pantalla_regreso = pantalla_regreso
+
+    def regresar(self):
+        self.manager.current = self.pantalla_regreso
 
 class InterfazCapacitacionesTutor(Screen):
-    pass
+    def regresar(self):
+        self.manager.current = 'VistaCapacitador'
+
+class InterfazControlEscolarAdmin(Screen):
+    def regresar(self):
+        self.manager.current = 'VistaDireccionTerritorial'
 
 class VistaAspirante(Screen):
     def convocatorias_aspirante(self):
@@ -63,7 +83,6 @@ class VistaAspirante(Screen):
         self.manager.current = 'Interfaz_Capacitaciones'
 
 class VistaDireccionTerritorial(Screen):
-
     def convocatorias_DT(self):
         conv_admin_screen = InterfazConvocatoriasAdmin(name='Interfaz_ConvocatoriasAdmin')
         self.manager.add_widget(conv_admin_screen)
@@ -86,24 +105,23 @@ class VistaDireccionTerritorial(Screen):
 
 class VistaLEC(Screen):
     def controlEscolar_LEC(self):
-        interfaz_controlEscolar_screen = InterfazControlEscolar(name='Interfaz_ControlEscolar')
+        interfaz_controlEscolar_screen = InterfazControlEscolar(name='Interfaz_ControlEscolar', pantalla_regreso='VistaLEC')
         self.manager.add_widget(interfaz_controlEscolar_screen)
         self.manager.current = 'Interfaz_ControlEscolar'
         
     def apoyos_LEC(self):
-        interfaz_apoyos_screen = InterfazApoyos(name='Interfaz_Apoyos')
+        interfaz_apoyos_screen = InterfazApoyos(name='Interfaz_Apoyos', pantalla_regreso='VistaLEC')
         self.manager.add_widget(interfaz_apoyos_screen)
         self.manager.current = 'Interfaz_Apoyos'
 
 class VistaCapacitador(Screen):
-
     def controlEscolar_LEC(self):
-        interfaz_controlEscolar_screen = InterfazControlEscolar(name='Interfaz_ControlEscolar')
+        interfaz_controlEscolar_screen = InterfazControlEscolar(name='Interfaz_ControlEscolar', pantalla_regreso='VistaCapacitador')
         self.manager.add_widget(interfaz_controlEscolar_screen)
         self.manager.current = 'Interfaz_ControlEscolar'
         
     def apoyos_LEC(self):
-        interfaz_apoyos_screen = InterfazApoyos(name='Interfaz_Apoyos')
+        interfaz_apoyos_screen = InterfazApoyos(name='Interfaz_Apoyos', pantalla_regreso='VistaCapacitador')
         self.manager.add_widget(interfaz_apoyos_screen)
         self.manager.current = 'Interfaz_Apoyos'
     
@@ -122,10 +140,10 @@ class MyApp(App):
         sm.add_widget(MainScreen(name='main'))
         sm.add_widget(VistaAspirante(name='aspirante_screen'))
         sm.add_widget(VistaCapacitador(name='VistaCapacitador'))
+        sm.add_widget(VistaLEC(name='VistaLEC'))  # Asegúrate de añadir VistaLEC al ScreenManager
         sm.current = self.start_screen  # Configura la pantalla inicial
         return sm
 
 if __name__ == '__main__':
     # Cambia 'button_screen' a la pantalla que quieras abrir al inicio
     MyApp(start_screen='VistaCapacitador').run()
-
