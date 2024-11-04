@@ -1,14 +1,18 @@
+DROP DATABASE IF EXISTS CONAFE;
 CREATE DATABASE CONAFE;
 USE CONAFE;
 
+
 -- Tabla: Usuario
 CREATE TABLE Usuario (
-    id_Usuario INT PRIMARY KEY,
-    password NVARCHAR(50),
-    nombreUsuario NVARCHAR(50),
+    id_Usuario INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    correo NVARCHAR(50),
+	password NVARCHAR(50),
     acceso NVARCHAR(50)
 );
 
+INSERT INTO `Usuario`(correo, password, acceso) VALUES('gutierrez.viveros.cristianr@gmail.com', '1234', 'Aspirante');
+SELECT * FROM `Usuario`;
 -- Tabla: LEC
 CREATE TABLE LEC (
     id_Usuario INT,
@@ -25,22 +29,24 @@ CREATE TABLE Aspirante (
     telefonoFijo NVARCHAR(15),
     telefonoMovil NVARCHAR(15),
     correo NVARCHAR(50),
-    curp NVARCHAR(18),
+    curp NVARCHAR(18), 
+	edad NVARCHAR(10),
     nombres NVARCHAR(50),
     apellidoPaterno NVARCHAR(50),
     apellidoMaterno NVARCHAR(50),
     fechaNacimiento DATE,
     genero NVARCHAR(10),
     nacionalidad NVARCHAR(50),
+    estado_solicitud NVARCHAR(10),
     FOREIGN KEY (id_Aspirante) REFERENCES Usuario(id_Usuario) -- Relación con Usuario
 );
+SELECT * FROM `Aspirante`;
 
 -- Tabla: EquipoAspirante
 CREATE TABLE EquipoAspirante (
     id_Aspirante INT,
     estatura NVARCHAR(10),
     peso NVARCHAR(10),
-    edad NVARCHAR(10),
     tallaPlayera NVARCHAR(10),
     tallaPantalon NVARCHAR(10),
     tallaCalzado NVARCHAR(10),
@@ -50,6 +56,7 @@ CREATE TABLE EquipoAspirante (
 -- Tabla: InfoEducativaAspirante
 CREATE TABLE InfoEducativaAspirante (
     id_Aspirante INT,
+    fechaSolicitud datetime,
     nivelEducativo NVARCHAR(50),
     lenguaIndigena NVARCHAR(50),
     pregunta1 NVARCHAR(255),
@@ -90,10 +97,9 @@ CREATE TABLE InfoBancariaAspirante (
 -- Tabla: DocumentosAspirante
 CREATE TABLE DocumentosAspirante (
     id_Aspirante INT,
-    certificado NVARCHAR(50),
-    identificacion NVARCHAR(50),
-    estadoDeCuenta NVARCHAR(50),
-    municipio NVARCHAR(50),
+    certificado NVARCHAR(255),
+    identificacion NVARCHAR(255),
+    estadoDeCuenta NVARCHAR(255),
     FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante)
 );
 
@@ -139,3 +145,9 @@ CREATE TABLE CapacitadorAspirante (
     FOREIGN KEY (id_Capacitador) REFERENCES Usuario(id_Usuario),
     FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante)
 );
+
+CREATE TABLE ActualizacionBD (
+	id_Cambio INT PRIMARY KEY,
+    fechaCambio datetime
+);
+
