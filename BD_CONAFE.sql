@@ -41,7 +41,7 @@ CREATE TABLE Aspirante (
     FOREIGN KEY (id_Aspirante) REFERENCES Usuario(id_Usuario) -- Relación con Usuario
 );
 SELECT * FROM `Aspirante`;
-
+-- UPDATE `Aspirante` SET estado_solicitud = 'Pendiente' WHERE id_Aspirante = 1;
 -- Tabla: EquipoAspirante
 CREATE TABLE EquipoAspirante (
     id_Aspirante INT,

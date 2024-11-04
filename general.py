@@ -139,11 +139,11 @@ class MyApp(App):
         sm = ScreenManager()
         sm.add_widget(MainScreen(name='main'))
         sm.add_widget(VistaAspirante(name='aspirante_screen'))
-        sm.add_widget(VistaCapacitador(name='VistaCapacitador'))
+        sm.add_widget(VistaCapacitador(name='VistaDireccionTerritorial'))
         sm.add_widget(VistaLEC(name='VistaLEC'))  # Asegúrate de añadir VistaLEC al ScreenManager
         sm.current = self.start_screen  # Configura la pantalla inicial
         return sm
 
 if __name__ == '__main__':
     # Cambia 'button_screen' a la pantalla que quieras abrir al inicio
-    MyApp(start_screen='VistaCapacitador').run()
+    MyApp(start_screen='VistaDireccionTerritorial').run()
