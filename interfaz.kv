@@ -1,0 +1,21 @@
+BoxLayout:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 10
+    canvas.before:
+        Color:
+            rgba: 0.545, 0.18, 0.18, 1  # Fondo con el color aproximado del logo
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: 'Publicar Convocatoria'
+        font_size: '20sp'
+        color: 1, 1, 1, 1 #Blanco
+
+    Button:
+        text: 'Subir Convocatoria (Boton)'
+        background_color: 0.545, 0.18, 0.18, 1 
+        color: 1, 1, 1, 1 
+        on_press: app.mostrar_popup_url()
