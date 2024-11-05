@@ -11,7 +11,6 @@ CREATE TABLE Usuario (
     acceso NVARCHAR(50)
 );
 
-INSERT INTO `Usuario`(correo, password, acceso) VALUES('gutierrez.viveros.cristianr@gmail.com', '1234', 'Aspirante');
 SELECT * FROM `Usuario`;
 -- Tabla: LEC
 CREATE TABLE LEC (
@@ -122,9 +121,12 @@ CREATE TABLE CCT (
     municipio NVARCHAR(50),
     localidad NVARCHAR(50),
     nivelEducativo NVARCHAR(50),
-    turno NVARCHAR(50),
-    Field NVARCHAR(50)
+    turno NVARCHAR(50)
 );
+
+INSERT INTO `Usuario`(correo, password, acceso) VALUES('gutierrez.viveros.cristianr@gmail.com', '1234', 'Aspirante');
+INSERT INTO `CCT` VALUES('CCT0001', 'CONAFE PRUEBA', 'CAMPECHE', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
+
 
 -- Tabla: CentroEducador
 CREATE TABLE CentroEducador (
@@ -147,7 +149,45 @@ CREATE TABLE CapacitadorAspirante (
 );
 
 CREATE TABLE ActualizacionBD (
-	id_Cambio INT PRIMARY KEY,
+	id_Cambio INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     fechaCambio datetime
 );
 
+CREATE TABLE ConvocatoriaActual (
+	id_Convo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    url_convocatoria nvarchar(255),
+    url_forms nvarchar(255)
+);
+
+
+
+/*
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador1@example.com', 'pass123', 'Capacitador');
+
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador2@example.com', 'securepass', 'Capacitador');
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (2, '5555555555', '5551234567', 'capacitador1@example.com', 'CURP1234567890ABC1', '30', 'Juan', 
+ 'Pérez', 'González', '1993-01-15', 'Masculino', 'Mexicana', 'Asignado');
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (3, '5555555556', '5557654321', 'capacitador2@example.com', 'CURP0987654321DEF2', '28', 'María', 
+ 'López', 'Hernández', '1995-03-22', 'Femenino', 'Mexicana', 'Asignado');
+ 
+INSERT INTO LEC (id_Usuario, estadoSalud, genero, edad, capacidadDiferente)
+VALUES 
+(2, 'Buena', 'Masculino', '30', 'Ninguna'),
+(3, 'Excelente', 'Femenino', '28', 'Ninguna');
+
+-- Insertar datos en la tabla CentroEducador usando los mismos id_Usuario de LEC
+INSERT INTO CentroEducador (claveCentro, id_LEC)
+VALUES 
+('CCT0001', 2),
+('CCT0001', 3);
+*/
