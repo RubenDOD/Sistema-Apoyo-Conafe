@@ -22,9 +22,19 @@ CREATE TABLE LEC (
     FOREIGN KEY (id_Usuario) REFERENCES Usuario(id_Usuario)
 );
 
+-- DROP TABLE ConvocatoriaActual;
+CREATE TABLE ConvocatoriaActual (
+	id_Convo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    nombre_convocatoria NVARCHAR(100),
+    url_convocatoria nvarchar(255),
+    url_forms nvarchar(255),
+    estado_convocatoria NVARCHAR(20)
+);
+-- SELECT * FROM ConvocatoriaActual;
 -- Tabla: Aspirante
 CREATE TABLE Aspirante (
     id_Aspirante INT PRIMARY KEY,
+    convocatoria INT,
     telefonoFijo NVARCHAR(15),
     telefonoMovil NVARCHAR(15),
     correo NVARCHAR(50),
@@ -37,7 +47,8 @@ CREATE TABLE Aspirante (
     genero NVARCHAR(10),
     nacionalidad NVARCHAR(50),
     estado_solicitud NVARCHAR(10),
-    FOREIGN KEY (id_Aspirante) REFERENCES Usuario(id_Usuario) -- Relación con Usuario
+    FOREIGN KEY (id_Aspirante) REFERENCES Usuario(id_Usuario), -- Relación con Usuario
+    FOREIGN KEY (convocatoria) REFERENCES ConvocatoriaActual(id_Convo) -- Relación con Usuario
 );
 SELECT * FROM `Aspirante`;
 -- UPDATE `Aspirante` SET estado_solicitud = 'Pendiente' WHERE id_Aspirante = 1;
@@ -153,12 +164,17 @@ CREATE TABLE ActualizacionBD (
     fechaCambio datetime
 );
 
-CREATE TABLE ConvocatoriaActual (
-	id_Convo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    url_convocatoria nvarchar(255),
-    url_forms nvarchar(255)
-);
 
+
+INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
+VALUES ('Convocatoria 2024', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'Cerrada');
+
+INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
+VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'Cerrada');
 
 
 /*

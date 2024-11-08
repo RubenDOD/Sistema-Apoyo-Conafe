@@ -1,0 +1,68 @@
+<AddConvoScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+        canvas.before:
+            Color:
+                rgba: 0.06, 0.52, 0.52, 1  # Teal oscuro
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: 'Publicar Convocatoria'
+            font_size: '26sp'
+            bold: True
+            color: 1, 1, 1, 1  # Texto blanco
+            size_hint_y: None
+            height: '40dp'
+
+        TextInput:
+            id: nombre_convocatoria  # Asignación del id
+            hint_text: "Nombre de la Convocatoria"
+            size_hint_y: None
+            height: '40dp'
+            multiline: False
+
+        Button:
+            text: 'Subir Doc. Convocatoria'
+            size_hint_x: 0.4  # Tamaño ligeramente más pequeño en ancho
+            size_hint_y: 0.2
+            pos_hint: {'center_x': 0.5}
+            background_normal: ''
+            background_color: 0.5, 0.5, 0.5, 0.85  # Fondo gris ligeramente transparente
+            border: [15, 15, 15, 15]
+            color: 1, 1, 1, 1  # Texto blanco
+            font_size: '16sp'
+            on_press: root.mostrar_popup_url("Documento")
+            id: url_documento
+
+        Button:
+            text: 'Seleccionar Forms'
+            size_hint_x: 0.4  # Tamaño ligeramente más pequeño en ancho
+            size_hint_y: 0.2
+            pos_hint: {'center_x': 0.5}
+            background_normal: ''
+            background_color: 0.5, 0.5, 0.5, 0.85  # Fondo gris ligeramente transparente
+            border: [15, 15, 15, 15]
+            color: 1, 1, 1, 1  # Texto blanco
+            font_size: '16sp'
+            on_press: root.mostrar_popup_url("Forms")
+            id: url_documento
+
+        Label:
+            text: ''
+            size_hint_y: None
+            height: '20dp'
+
+        Button:
+            text: 'Añadir Convocatoria'
+            size_hint_x: 0.4  # Tamaño ligeramente más pequeño en ancho
+            size_hint_y: 0.2
+            pos_hint: {'center_x': 0.5}
+            background_normal: ''
+            background_color: 0.5, 0.5, 0.5, 0.85  # Fondo gris ligeramente transparente
+            border: [15, 15, 15, 15]
+            color: 1, 1, 1, 1  # Texto blanco
+            font_size: '16sp'
+            on_press: root.agregar_convocatoria()

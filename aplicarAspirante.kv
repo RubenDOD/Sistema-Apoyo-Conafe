@@ -1,0 +1,75 @@
+<FlatButton@ButtonBehavior+Label>:
+    text: 'default'
+
+<aplicarAspiranteWindow>:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    BoxLayout:
+        orientation: 'vertical'
+        
+        # Top Navigation Bar
+        BoxLayout:
+            id: top_nav
+            size_hint_y: None
+            height: 30
+            canvas.before:
+                Color:
+                    rgba: (.06, .45, .45, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            FlatButton:
+                id: file_trigger
+                text: 'File'
+                on_release: file_dropdown.open(self)
+                size_hint: (.1, None)
+                height: 30
+
+            Label:
+                text: 'Aplicar a Convocatoria'
+                bold: True
+                size_hint: (.8, None)
+                height: 30
+
+
+        # Main Content Area
+        BoxLayout:
+            id: content_nav
+            orientation: 'horizontal'
+
+            ScreenManager:
+                id: scrn_mngr
+                size_hint: 1, 1
+
+                Screen:
+                    id: scrn_content
+                    name: 'scrn_content'
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 10
+
+                        BoxLayout:
+                            id: scrn_contents
+                            orientation: 'vertical'
+
+                        BoxLayout:
+                            id: ops_fields
+                            spacing: 10
+                            size_hint_y: None
+                            height: 35
+
+                        BoxLayout:
+                            id: ops_btns
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+
+

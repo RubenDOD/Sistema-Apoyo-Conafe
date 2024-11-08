@@ -1,21 +1,22 @@
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
-from kivy.uix.spinner import Spinner
-from collections import OrderedDict
-from utils.datatable import DataTable
+from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.lang import Builder
 from datetime import datetime
 import hashlib
 import mysql.connector
-from kivy.uix.boxlayout import BoxLayout
 import webbrowser
+from collections import OrderedDict
+from utils.datatable import DataTable
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.spinner import Spinner
 from kivy.uix.scrollview import ScrollView
-from kivy.lang import Builder
 
-class AdminWindow(BoxLayout):
-    def __init__(self, **kwargs):
+class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
+    def __init__(self, conv, **kwargs):
         super().__init__(**kwargs)
+        self.conv = conv
         Builder.load_file("admin.kv")  # Carga explícita de admin.kv
         self.mydb = mysql.connector.connect(
             host='localhost',
@@ -26,8 +27,8 @@ class AdminWindow(BoxLayout):
         self.mycursor = self.mydb.cursor()
 
         content = self.ids.scrn_contents
-        users = self.get_users("General", 0)
-        userstable = DataTable(table=users, callback=self.button_callback)  # Pasa button_callback aquí
+        users = self.get_users("General", 0, conv)
+        userstable = DataTable(table=users, callback=self.button_callback)
         content.add_widget(userstable)
 
         #Display Products
@@ -42,7 +43,7 @@ class AdminWindow(BoxLayout):
         content.clear_widgets()
 
         # Obtiene nuevamente la lista de usuarios
-        users = self.get_users("General", 0)
+        users = self.get_users("General", 0, self.conv)
 
         # Crea la tabla actualizada y agrégala a la pantalla
         userstable = DataTable(table=users, callback=self.button_callback)
@@ -54,7 +55,7 @@ class AdminWindow(BoxLayout):
         elif button_text == 'Rechazar':
             self.rechazar_user(idx)
         elif button_text == 'Ver':
-            self.ver_user(idx)
+            self.ver_user(idx, self.conv)
 
     def aceptar_user(self, idx):
         mydb = mysql.connector.connect(
@@ -113,10 +114,10 @@ class AdminWindow(BoxLayout):
 
 
 
-    def ver_user(self, idx):
+    def ver_user(self, idx, conv):
         content = self.ids.scrn_view
         # Obtén los datos del usuario en base al índice
-        users = self.get_users("User", idx)
+        users = self.get_users("User", idx, conv)
         user_info = {key: users[key][idx] for key in users}
 
         # Limpia la pantalla de visualización de usuario
@@ -170,72 +171,8 @@ class AdminWindow(BoxLayout):
         self.ids.scrn_mngr.current = 'scrn_content'
 
 
-        
 
-    def add_user_fields(self):
-        target = self.ids.ops_fields
-        target.clear_widgets()
-        crud_first = TextInput(hint_text='First Name')
-        crud_last = TextInput(hint_text='Last Name')
-        crud_user = TextInput(hint_text='User Name')
-        crud_pwd = TextInput(hint_text='Password')
-        crud_des = Spinner(text='Operator',values=['Operator','Administrator'])
-        crud_submit = Button(text='Add',size_hint_x=None,width=100,on_release=lambda x: self.add_user(crud_first.text,crud_last.text,crud_user.text,crud_pwd.text,crud_des.text))
-
-        target.add_widget(crud_first)
-        target.add_widget(crud_last)
-        target.add_widget(crud_user)
-        target.add_widget(crud_pwd)
-        target.add_widget(crud_des)
-        target.add_widget(crud_submit)
-    
-    def add_user(self, first,last,user,pwd,des):
-        content = self.ids.scrn_contents
-        content.clear_widgets()
-        sql = 'INSERT INTO users(first_name,last_name,user_name,password,designation,date) VALUES(%s,%s,%s,%s,%s,%s)'
-        values =[first,last,user,pwd,des,datetime.now()]
-
-        self.mycursor.execute(sql,values)
-        self.mydb.commit()
-
-        users = self.get_users("General", 0)
-        userstable = DataTable(table=users)
-        content.add_widget(userstable)
-    
-    def update_user_fields(self):
-        target = self.ids.ops_fields
-        target.clear_widgets()
-        crud_first = TextInput(hint_text='First Name')
-        crud_last = TextInput(hint_text='Last Name')
-        crud_user = TextInput(hint_text='User Name')
-        crud_pwd = TextInput(hint_text='Password')
-        crud_des = Spinner(text='Operator',values=['Operator','Administrator'])
-        crud_submit = Button(text='Update',size_hint_x=None,width=100,on_release=lambda x: self.update_user(crud_first.text,crud_last.text,crud_user.text,crud_pwd.text,crud_des.text))
-
-        target.add_widget(crud_first)
-        target.add_widget(crud_last)
-        target.add_widget(crud_user)
-        target.add_widget(crud_pwd)
-        target.add_widget(crud_des)
-        target.add_widget(crud_submit)
-    
-    def update_user(self, first,last,user,pwd,des):
-        content = self.ids.scrn_contents
-        content.clear_widgets()
-        pwd = hashlib.sha256(pwd.encode()).hexdigest()
-        
-        sql = 'UPDATE usuario SET first_name=%s,last_name=%s,user_name=%s,password=%s,designation=%s WHERE user_name=%s'
-        print(pwd)
-        values =[first,last,user,pwd,des,user]
-
-        self.mycursor.execute(sql,values)
-        self.mydb.commit()
-
-        users = self.get_users("General", 0)
-        userstable = DataTable(table=users)
-        content.add_widget(userstable)
-
-    def get_users(self, mode, id):
+    def get_users(self, mode, id, conv):
         mydb = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -255,8 +192,8 @@ class AdminWindow(BoxLayout):
             last_names = []
             user_names = []
 
-            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-            mycursor.execute(sql, ("Pendiente",))
+            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s AND convocatoria = %s'
+            mycursor.execute(sql, ("Pendiente", conv))
 
             users = mycursor.fetchall()
             for user in users:
@@ -303,16 +240,16 @@ class AdminWindow(BoxLayout):
 
             for user in users:
                 _users['ID'][idx] = user[0]
-                _users['nombres'][idx] = user[6]
-                _users['apellidoPat'][idx] = user[7]
-                _users['apellidoMat'][idx] = user[8]
-                _users['Fecha Nacimiento'][idx] = user[9]
-                _users['edad'][idx] = user[5]
-                _users['genero'][idx] = user[10]
-                _users['telefono'][idx] = user[2]
-                _users['nacionalidad'][idx] = user[11]
-                _users['CURP'][idx] = user[4]
-                _users['correo'][idx] = user[3]
+                _users['nombres'][idx] = user[7]
+                _users['apellidoPat'][idx] = user[8]
+                _users['apellidoMat'][idx] = user[9]
+                _users['Fecha Nacimiento'][idx] = user[10]
+                _users['edad'][idx] = user[6]
+                _users['genero'][idx] = user[11]
+                _users['telefono'][idx] = user[3]
+                _users['nacionalidad'][idx] = user[12]
+                _users['CURP'][idx] = user[5]
+                _users['correo'][idx] = user[4]
             
             sql = 'SELECT * FROM InfoEducativaAspirante WHERE id_Aspirante = %s'
             mycursor.execute(sql, (id_final,))
