@@ -5,14 +5,14 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 
 Builder.load_string('''
-<DataTable>:
+<DataTableAsignacion>:
     id: main_win
     RecycleView:
         viewclass: 'CustButton'
         id: table_floor
         RecycleGridLayout:
             id: table_floor_layout
-            cols: 5  # Aumentamos las columnas para incluir botones
+            cols: 4  # Aumentamos las columnas para incluir botones
             default_size: (None, 250)
             default_size_hint: (1, None)
             size_hint_y: None
@@ -34,18 +34,18 @@ Builder.load_string('''
             pos: self.pos
 ''')
 
-class DataTable(BoxLayout):
+class DataTableAsignacion(BoxLayout):
     def __init__(self, table='', callback=None, **kwargs):  # Añadido parámetro callback
         super().__init__(**kwargs)
 
         col_titles = [k for k in table.keys()]
         rows_len = len(table[col_titles[0]])
-        self.columns = len(col_titles) + 1  # Agregamos dos columnas para los botones
+        self.columns = len(col_titles)   # Agregamos dos columnas para los botones
         table_data = []
 
         # Encabezados de la tabla
         table_data.append({'text': 'Vista', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
-        for t in col_titles:
+        for t in col_titles[1:]:
             table_data.append({'text': str(t), 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
         # Agregar filas de datos y botones
@@ -53,7 +53,7 @@ class DataTable(BoxLayout):
             view_button = {'text': 'Ver', 'size_hint_y': None, 'height': 30, 'bcolor': (.75, .12, .25, 1), 'index': r, 'callback': callback}
             table_data.append(view_button)
 
-            for t in col_titles:
+            for t in col_titles[1:]:
                 table_data.append({'text': str(table[t][r]), 'size_hint_y': None, 'height': 30, 'bcolor': (.06, .25, .25, 1)})
 
 
