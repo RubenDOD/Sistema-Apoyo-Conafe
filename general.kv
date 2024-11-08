@@ -456,6 +456,38 @@
                 border: (0, 0, 0, 0)  # Remueve los bordes para que solo se vea el ícono
                 on_release: root.regresar()
 
+<InterfazSeguimientoPracticasTutor>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: (.06, .52, .52, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None  # Eliminamos el size_hint relativo
+            size: 300, 200  # Ajustamos un tamaño fijo para el BoxLayout
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Centramos en pantalla
+            spacing: 10
+            canvas.before:
+                Color:
+                    rgba: (.06, .52, .52, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Button:
+                size_hint: None, None
+                size: 50, 50
+                pos_hint: {"right": 0.6, "bottom": 0.40}
+                background_normal: 'iconos/return.png'  # Usa el ícono como fondo del botón
+                background_down: 'iconos/return.png'
+                background_color: (1, 1, 1, 1)  # Fondo blanco
+                border: (0, 0, 0, 0)  # Remueve los bordes para que solo se vea el ícono
+                on_release: root.regresar()
+
 
 <InterfazCapacitacionesTutor>:
     FloatLayout:
@@ -485,6 +517,7 @@
                 height: 40
                 background_color: (.5, .5, .5, 1)
                 background_normal: ''
+                on_release: root.seguimiento_practicas()
             Button:
                 text: "Reporte de Asignados"
                 size_hint_y: None

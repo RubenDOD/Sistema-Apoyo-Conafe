@@ -1,21 +1,47 @@
 BoxLayout:
     orientation: 'vertical'
     padding: 20
-    spacing: 10
+    spacing: 20
     canvas.before:
         Color:
-            rgba: 0.545, 0.18, 0.18, 1  # Fondo con el color aproximado del logo
+            rgba: 0.06, 0.52, 0.52, 1  # Color teal oscuro
         Rectangle:
             pos: self.pos
             size: self.size
 
     Label:
         text: 'Publicar Convocatoria'
-        font_size: '20sp'
-        color: 1, 1, 1, 1 #Blanco
+        font_size: '26sp'
+        bold: True
+        color: 1, 1, 1, 1  # Texto blanco
+        size_hint_y: None
+        height: '40dp'
 
     Button:
-        text: 'Subir Convocatoria (Boton)'
-        background_color: 0.545, 0.18, 0.18, 1 
-        color: 1, 1, 1, 1 
+        text: 'Subir Convocatoria'
+        size_hint_x: 0.4  # Tamaño ligeramente más pequeño en ancho
+        size_hint_y: 0.2  # Tamaño ligeramente más pequeño en ancho
+        pos_hint: {'center_x': 0.5}
+        background_normal: ''
+        background_color: 0.5, 0.5, 0.5, 0.85  # Fondo gris ligeramente transparente
+        border: [15, 15, 15, 15]
+        color: 1, 1, 1, 1  # Texto blanco
+        font_size: '16sp'
         on_press: app.mostrar_popup_url()
+
+    Button:
+        text: 'Seleccionar Archivo PDF'
+        size_hint_x: 0.4  # Tamaño ligeramente más pequeño en ancho
+        size_hint_y: 0.2  # Tamaño ligeramente más pequeño en ancho
+        pos_hint: {'center_x': 0.5}
+        background_normal: ''
+        background_color: 0.5, 0.5, 0.5, 0.85  # Fondo gris ligeramente transparente
+        border: [15, 15, 15, 15]
+        color: 1, 1, 1, 1  # Texto blanco
+        font_size: '16sp'
+        on_press: app.seleccionar_archivo_pdf()
+
+    Label:
+        text: ''
+        size_hint_y: None
+        height: '20dp'

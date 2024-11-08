@@ -21,7 +21,7 @@ class AdminWindow(BoxLayout):
             host='localhost',
             user='root',
             passwd='1234',
-            database='pos'
+            database='CONAFE'
         )
         self.mycursor = self.mydb.cursor()
 
@@ -224,7 +224,7 @@ class AdminWindow(BoxLayout):
         content.clear_widgets()
         pwd = hashlib.sha256(pwd.encode()).hexdigest()
         
-        sql = 'UPDATE users SET first_name=%s,last_name=%s,user_name=%s,password=%s,designation=%s WHERE user_name=%s'
+        sql = 'UPDATE usuario SET first_name=%s,last_name=%s,user_name=%s,password=%s,designation=%s WHERE user_name=%s'
         print(pwd)
         values =[first,last,user,pwd,des,user]
 

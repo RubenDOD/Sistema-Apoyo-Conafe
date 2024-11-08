@@ -4,7 +4,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
 from collections import OrderedDict
-from utils.datatable_asignaciones import DataTable
+from utils.datatable import DataTable
 from datetime import datetime
 import hashlib
 import mysql.connector
@@ -23,7 +23,7 @@ class AdminWindow(BoxLayout):
             host='localhost',
             user='root',
             passwd='1234',
-            database='pos'
+            database='CONAFE'
         )
         self.mycursor = self.mydb.cursor()
 

@@ -1,0 +1,225 @@
+<LoginScreen>:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 15
+
+    Label:
+        text: 'Correo:'
+        font_size: 18
+        color: [0, 0, 0, 1]
+    TextInput:
+        id: txt_usuario
+        multiline: False
+        font_size: 18
+        size_hint_y: None
+        height: 40
+        background_color: [0.9, 0.9, 0.9, 1]
+        foreground_color: [0, 0, 0, 1]
+
+    Label:
+        text: 'Contraseña:'
+        font_size: 18
+        color: [0, 0, 0, 1]
+    TextInput:
+        id: txt_contrasena
+        multiline: False
+        password: True
+        font_size: 18
+        size_hint_y: None
+        height: 40
+        background_color: [0.9, 0.9, 0.9, 1]
+        foreground_color: [0, 0, 0, 1]
+
+    Button:
+        text: 'Login'
+        font_size: 20
+        size_hint_y: None
+        height: 50
+        background_color: [0.1, 0.6, 0.9, 1]
+        on_press: root.verificar_credenciales()
+
+    Button:
+        text: 'Registrar nuevo usuario'
+        font_size: 20
+        size_hint_y: None
+        height: 50
+        on_press: root.go_to_register()
+
+    Label:
+        id: lbl_estado
+        text: ''
+        font_size: 16
+        color: [0, 0, 0, 1]
+
+<RegisterScreen>:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 15
+
+    Label:
+        text: 'Registro de nuevo usuario'
+        font_size: 18
+        color: [0, 0, 0, 1]
+
+    Label:
+        text: 'Correo:'
+        font_size: 18
+        color: [0, 0, 0, 1]
+    TextInput:
+        id: txt_usuario
+        multiline: False
+        font_size: 18
+        size_hint_y: None
+        height: 40
+        background_color: [0.9, 0.9, 0.9, 1]
+        foreground_color: [0, 0, 0, 1]
+
+    Label:
+        text: 'Contraseña:'
+        font_size: 18
+        color: [0, 0, 0, 1]
+    TextInput:
+        id: txt_contrasena
+        multiline: False
+        password: True
+        font_size: 18
+        size_hint_y: None
+        height: 40
+        background_color: [0.9, 0.9, 0.9, 1]
+        foreground_color: [0, 0, 0, 1]
+
+    Label:
+        text: 'Rol:'
+        font_size: 18
+        color: [0, 0, 0, 1]
+    Spinner:
+        id: spinner_rol
+        text: 'Seleccionar rol'
+        values: ['Aspirante', 'Miembro Dirección Territorial', 'LEC', 'Capacitador']
+        size_hint_y: None
+        height: 50
+        background_color: [0.9, 0.9, 0.9, 1]
+
+    Button:
+        text: 'Registrar'
+        font_size: 20
+        size_hint_y: None
+        height: 50
+        on_press: root.registrar_usuario()
+
+    Button:
+        text: 'Regresar'
+        font_size: 20
+        size_hint_y: None
+        height: 50
+        on_press: root.go_back()
+
+    Label:
+        id: lbl_estado
+        text: ''
+        font_size: 16
+        color: [0, 0, 0, 1]
+
+<AspiranteScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: 'Aspirante'
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'Regresar al Login'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.get_screen('login').children[0].limpiar_campos()
+                    app.root.current = 'login'
+
+<VistaDireccionTerritorialScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: 'Miembro Dirección Territorial'
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'Regresar al Login'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.get_screen('login').children[0].limpiar_campos()
+                    app.root.current = 'login'
+
+<LECScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: 'LEC'
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'Regresar al Login'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.get_screen('login').children[0].limpiar_campos()
+                    app.root.current = 'login'
+
+<CapacitadorScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: 'Capacitador'
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'Regresar al Login'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.get_screen('login').children[0].limpiar_campos()
+                    app.root.current = 'login'

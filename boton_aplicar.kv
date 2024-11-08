@@ -1,0 +1,27 @@
+<WebViewScreen>:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: (.06, .52, .52, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    FloatLayout:  # Usamos FloatLayout para ajustar la posición de cada elemento
+
+        Label:
+            text: "Formulario de Google"
+            font_size: 24
+            color: (1, 1, 1, 1)
+            size_hint: (0.8, None)
+            height: 50
+            pos_hint: {"center_x": 0.5, "top": 0.8}  # Mueve el Label un poco más abajo (top 0.8)
+
+        Button:
+            text: 'Abrir Formulario'
+            size_hint: (0.5, None)
+            height: 40
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Mantiene el botón en el centro de la pantalla
+            background_color: (.5, .5, .5, 1)
+            background_normal: ''
+            on_release: root.open_form(self)
