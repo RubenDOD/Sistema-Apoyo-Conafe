@@ -7,23 +7,17 @@ from kivy.properties import ObjectProperty
 Builder.load_string('''
 <DataTable>:
     id: main_win
-    size_hint: 1, 1  # Ocupa todo el espacio disponible en ancho y alto
     RecycleView:
         viewclass: 'CustButton'
         id: table_floor
-        size_hint: 1, 1  # Ocupa todo el espacio del DataTable
         RecycleGridLayout:
             id: table_floor_layout
-            cols: 9  # Aumentamos las columnas para incluir botones
+            cols: 5  # Aumentamos las columnas para incluir botones
             default_size: (None, 250)
             default_size_hint: (1, None)
             size_hint_y: None
             height: self.minimum_height
             spacing: 5
-            # Ajusta el ancho para que ocupe todo el espacio disponible
-            size_hint_x: 1
-            pos_hint: {"center_x": 0.5}
-            width: self.minimum_width  # Ajusta el ancho mínimo a los contenidos
 
 <CustButton@Button>:
     size_hint_y: None
@@ -46,17 +40,13 @@ class DataTable(BoxLayout):
 
         col_titles = [k for k in table.keys()]
         rows_len = len(table[col_titles[0]])
-        self.columns = len(col_titles) + 3  # Agregamos dos columnas para los botones
+        self.columns = len(col_titles) + 1  # Agregamos dos columnas para los botones
         table_data = []
 
         # Encabezados de la tabla
         table_data.append({'text': 'Vista', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
         for t in col_titles:
             table_data.append({'text': str(t), 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
-
-        # Encabezados para los botones
-        table_data.append({'text': 'Acepta', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
-        table_data.append({'text': 'Rechaza', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
         # Agregar filas de datos y botones
         for r in range(rows_len):
@@ -66,13 +56,6 @@ class DataTable(BoxLayout):
             for t in col_titles:
                 table_data.append({'text': str(table[t][r]), 'size_hint_y': None, 'height': 30, 'bcolor': (.06, .25, .25, 1)})
 
-            # Botón de aceptar
-            accept_button = {'text': 'Aceptar', 'size_hint_y': None, 'height': 30, 'bcolor': (.12, .75, .35, 1), 'index': r, 'callback': callback}
-            table_data.append(accept_button)
-
-            # Botón de rechazar
-            reject_button = {'text': 'Rechazar', 'size_hint_y': None, 'height': 30, 'bcolor': (.75, .12, .25, 1), 'index': r, 'callback': callback}
-            table_data.append(reject_button)
 
         # Configurar columnas y datos en el layout
         self.ids.table_floor_layout.cols = self.columns

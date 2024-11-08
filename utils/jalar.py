@@ -12,13 +12,15 @@ conn = mysql.connector.connect(
 )
 
 # Función para insertar en la tabla Aspirante
-def insertar_aspirante(id_aspirante, telefono_fijo, telefono_movil, correo, curp, edad, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, genero, nacionalidad, estado_solicitud):
+# Función para insertar en la tabla Aspirante
+def insertar_aspirante(id_aspirante, convocatoria_id, telefono_fijo, telefono_movil, correo, curp, edad, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, genero, nacionalidad, estado_solicitud):
     sql = """
-    INSERT INTO Aspirante (id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    cursor.execute(sql, (id_aspirante, telefono_fijo, telefono_movil, correo, curp, edad, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, genero, nacionalidad, estado_solicitud))
+    cursor.execute(sql, (id_aspirante, convocatoria_id, telefono_fijo, telefono_movil, correo, curp, edad, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, genero, nacionalidad, estado_solicitud))
     conn.commit()
+
 
 # Función para insertar en la tabla EquipoAspirante
 def insertar_equipo_aspirante(id_aspirante, estatura, peso, talla_playera, talla_pantalon, talla_calzado):
@@ -76,7 +78,7 @@ def insertar_participacion_aspirante(id_aspirante, estado, ciclo_escolar, medio_
 
 # ID de la hoja de cálculo
 spreadsheet_id = '1V0eUeAHJD_UfK2SjtSZ46hjc28p2Fa47qqtaYmOGeBs'
-
+convocatoria_id = 1
 # URL para descargar el CSV
 csv_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv'
 
@@ -117,7 +119,7 @@ for index, row in df_filtrado.iterrows():
             id_usuario = resultado[0]
             row['Fecha de nacimiento*:'] = pd.to_datetime(row['Fecha de nacimiento*:'], dayfirst=True)
             #print(f"El ID del usuario es: {id_usuario}")
-            insertar_aspirante(id_usuario, row['Teléfono fijo:'], row['Teléfono móvil:'], row['Correo electrónico:'], row['CURP*:'], row['Edad:']
+            insertar_aspirante(id_usuario, convocatoria_id, row['Teléfono fijo:'], row['Teléfono móvil:'], row['Correo electrónico:'], row['CURP*:'], row['Edad:']
                             , row['Nombre(s)*:'], row['Primer apellido*:'], row['Segundo apellido:'], row['Fecha de nacimiento*:'], row['Género*:'], row['Nacionalidad*:']
                             , "Pendiente")
             insertar_equipo_aspirante(id_usuario, row['Estatura*:'], row['Peso*:'], row['Talla de playera*:'], row['Talla de pantalón*:'], row['Calzado*:'])
