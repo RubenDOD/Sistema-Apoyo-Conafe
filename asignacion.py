@@ -4,7 +4,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
 from collections import OrderedDict
-from utils.datatable import DataTable
+from utils.datatable_asignaciones import DataTableAsignacion	
 from datetime import datetime
 import hashlib
 import mysql.connector
@@ -23,19 +23,19 @@ class AdminWindow(BoxLayout):
             host='localhost',
             user='root',
             passwd='1234',
-            database='CONAFE'
+            database='pos'
         )
         self.mycursor = self.mydb.cursor()
 
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
-        userstable = DataTable(table=users, callback=self.button_callback)  # Pasa button_callback aquí
+        userstable = DataTableAsignacion(table=users, callback=self.button_callback)  # Pasa button_callback aquí
         content.add_widget(userstable)
 
         #Display Products
         #product_scrn = self.ids.scrn_product_content
         #products = self.get_products()
-        #prod_table = DataTable(table=products)
+        #prod_table = DataTableAsignacion(table=products)
         #product_scrn.add_widget(prod_table)
 
     def reload_users(self):
@@ -47,7 +47,7 @@ class AdminWindow(BoxLayout):
         users = self.get_users("General", 0)
 
         # Crea la tabla actualizada y agrégala a la pantalla
-        userstable = DataTable(table=users, callback=self.button_callback)
+        userstable = DataTableAsignacion(table=users, callback=self.button_callback)
         content.add_widget(userstable)
 
     def button_callback(self, button_text, idx):
@@ -67,25 +67,28 @@ class AdminWindow(BoxLayout):
 
         values = list(user_info.values())
         
-        aspirante_text = f"Aspirante: {values[1]} {values[2]} {values[3]}"
+        aspirante_text = f"Aspirante: {values[2]} {values[3]} {values[4]}"
         user_info_layout.add_widget(Label(text=aspirante_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        aspirante_text2 = f"Fecha de nacimiento: {values[4]}"
+        conv_text = f"Aplicando a la convocatoria: {values[1]}"
+        user_info_layout.add_widget(Label(text=conv_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
+
+        aspirante_text2 = f"Fecha de nacimiento: {values[5]}"
         user_info_layout.add_widget(Label(text=aspirante_text2, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
         
-        residencia_text = f"Residencia: {values[6]}, {values[7]}, {values[5]}"
+        residencia_text = f"Residencia: {values[7]}, {values[8]}, {values[6]}"
         user_info_layout.add_widget(Label(text=residencia_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
         
-        estado_text = f"Estado preferente: {values[8]}"
+        estado_text = f"Estado preferente: {values[9]}"
         user_info_layout.add_widget(Label(text=estado_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        estado_text2 = f"en el municipio: {values[10]}"
+        estado_text2 = f"en el municipio: {values[11]}"
         user_info_layout.add_widget(Label(text=estado_text2, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        ciclo_text = f"Ciclo: {values[9]}"
+        ciclo_text = f"Ciclo: {values[10]}"
         user_info_layout.add_widget(Label(text=ciclo_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        estado = values[8].replace("CONAFE ", "")
+        estado = values[9].replace("CONAFE ", "")
 
         # Primer Spinner: Selección del CCT
         dropdown_values = self.get_dropdown_options(estado)
@@ -115,6 +118,13 @@ class AdminWindow(BoxLayout):
         # Añadir ambos Spinner al layout
         user_info_layout.add_widget(spinner_cct)
         user_info_layout.add_widget(spinner_capacitador)
+        
+        # Botón para asignar el estado del aspirante a "Asignado"
+        assign_button = Button(text="Asignar Aspirante", size_hint_y=None, height=50)
+        assign_button.bind(on_release=lambda x: self.assign_aspirante(idx, spinner_capacitador.text))
+
+        user_info_layout.add_widget(assign_button)  # Añadir el botón a la vista
+
 
         # Botón para volver a la pantalla principal
         back_button = Button(text="Regresar", size_hint_y=None, height=50)
@@ -124,6 +134,68 @@ class AdminWindow(BoxLayout):
         scroll_view.add_widget(user_info_layout)
         content.add_widget(scroll_view)
         self.ids.scrn_mngr.current = 'scrn_view'
+
+    def assign_aspirante(self, idx, nombreCapacitador):
+        # Obtén el ID del aspirante en función del índice
+        users = self.get_users("User", idx)
+        aspirante_id = users['ID'][idx]
+
+        # Obtén el capacitador seleccionado del dropdown
+        selected_capacitador = nombreCapacitador
+        if selected_capacitador == "Capacitador":  # Verifica si no se seleccionó un capacitador
+            print("Por favor, selecciona un capacitador antes de asignar.")
+            return
+
+        # Separar el nombre del capacitador para encontrar su ID en la base de datos
+        capacitador_nombre = selected_capacitador.split()  # Divide el nombre completo
+        nombres, apellidoPaterno, apellidoMaterno = capacitador_nombre[0], capacitador_nombre[1], capacitador_nombre[2]
+
+        # Conectar a la base de datos
+        mydb = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            passwd='1234',
+            database='CONAFE'
+        )
+        mycursor = mydb.cursor()
+
+        # Encuentra el id_Capacitador en base al nombre y apellidos
+        sql = '''
+            SELECT id_Usuario FROM Usuario
+            JOIN Aspirante ON Usuario.id_Usuario = Aspirante.id_Aspirante
+            WHERE Aspirante.nombres = %s AND Aspirante.apellidoPaterno = %s AND Aspirante.apellidoMaterno = %s
+        '''
+        mycursor.execute(sql, (nombres, apellidoPaterno, apellidoMaterno))
+        capacitador_id_result = mycursor.fetchone()
+
+        if not capacitador_id_result:
+            print("Capacitador no encontrado en la base de datos.")
+            mycursor.close()
+            mydb.close()
+            return
+
+        capacitador_id = capacitador_id_result[0]
+
+        # Actualiza el estado a "Asignado" para el aspirante
+        sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
+        mycursor.execute(sql, ("Asignado", aspirante_id))
+
+        # Inserta en la tabla CapacitadorAspirante
+        sql = '''
+            INSERT INTO CapacitadorAspirante (id_Capacitador, id_Aspirante, estadoCapacitacion, fechaInicio)
+            VALUES (%s, %s, %s, %s)
+        '''
+        mycursor.execute(sql, (capacitador_id, aspirante_id, "Asignado", datetime.now().date()))
+
+        mydb.commit()
+
+        # Cerrar la conexión a la base de datos
+        mycursor.close()
+        mydb.close()
+
+        # Confirmación visual
+        print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id}.")
+
 
     def get_dropdown_options(self, estado):
         # Conecta a la base de datos y obtiene las opciones
@@ -225,7 +297,7 @@ class AdminWindow(BoxLayout):
         self.mydb.commit()
 
         users = self.get_users("General", 0)
-        userstable = DataTable(table=users)
+        userstable = DataTableAsignacion(table=users)
         content.add_widget(userstable)
     
     def update_user_fields(self):
@@ -258,7 +330,7 @@ class AdminWindow(BoxLayout):
         self.mydb.commit()
 
         users = self.get_users("General", 0)
-        userstable = DataTable(table=users)
+        userstable = DataTableAsignacion(table=users)
         content.add_widget(userstable)
 
     def get_users(self, mode, id):
@@ -287,9 +359,9 @@ class AdminWindow(BoxLayout):
             users = mycursor.fetchall()
             for user in users:
                 ids.append(user[0])
-                first_names.append(user[6])
-                last_names.append(user[7])
-                user_names.append(user[8])
+                first_names.append(user[7])
+                last_names.append(user[8])
+                user_names.append(user[9])
             # print(designations)
             users_length = len(first_names)
             idx = 0
@@ -305,7 +377,7 @@ class AdminWindow(BoxLayout):
         else:
             # Lista de claves
             keys = [
-                'ID', 'nombres', 'apellidoPat', 'apellidoMat', 'Fecha Nacimiento',
+                'ID', 'Convocatoria', 'nombres', 'apellidoPat', 'apellidoMat', 'Fecha Nacimiento',
                 'Codigo Postal', 'Estado', 'Municipio',
                 'Estado Preferente', 'Ciclo', 'Municipio Deseado'
             ]
@@ -325,13 +397,19 @@ class AdminWindow(BoxLayout):
             users = mycursor.fetchall()
             idx = 0
 
+            sql = 'SELECT nombre_convocatoria FROM ConvocatoriaActual WHERE id_Convo = %s'
+            mycursor.execute(sql, (users[0][1],))
+            conv = mycursor.fetchall()
+
             for user in users:
                 _users['ID'][idx] = user[0]
-                _users['nombres'][idx] = user[6]
-                _users['apellidoPat'][idx] = user[7]
-                _users['apellidoMat'][idx] = user[8]
-                _users['Fecha Nacimiento'][idx] = user[9]
-
+                _users['Convocatoria'][idx] = conv[0][0]
+                _users['nombres'][idx] = user[7]
+                _users['apellidoPat'][idx] = user[8]
+                _users['apellidoMat'][idx] = user[9]
+                _users['Fecha Nacimiento'][idx] = user[10]
+            
+            
             sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = %s'
             mycursor.execute(sql, (id_final,))
 
