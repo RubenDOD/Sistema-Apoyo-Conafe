@@ -55,6 +55,8 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
             self.aceptar_user(user_id)
         elif button_text == 'Rechazar':
             self.rechazar_user(user_id)
+        elif button_text == 'Ver':
+            self.ver_user(user_id-1, self.conv)
 
     def aceptar_user(self, user_id):
         # Conexión a la base de datos
@@ -102,7 +104,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         content = self.ids.scrn_view
         # Obtén los datos del usuario en base al índice
         users = self.get_users("User", idx, conv)
-        user_info = {key: users[key][idx] for key in users}
+        user_info = {key: users[key][0] for key in users}
 
         # Limpia la pantalla de visualización de usuario
         content.clear_widgets()
