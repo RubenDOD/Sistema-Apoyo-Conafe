@@ -35,12 +35,12 @@ Builder.load_string('''
 ''')
 
 class DataTableAsignacion(BoxLayout):
-    def __init__(self, table='', callback=None, **kwargs):  # Añadido parámetro callback
+    def __init__(self, table='', callback=None, **kwargs):
         super().__init__(**kwargs)
 
         col_titles = [k for k in table.keys()]
         rows_len = len(table[col_titles[0]])
-        self.columns = len(col_titles)   # Agregamos dos columnas para los botones
+        self.columns = len(col_titles)  # Definimos el número de columnas basándonos en el número de títulos
         table_data = []
 
         # Encabezados de la tabla
@@ -48,14 +48,30 @@ class DataTableAsignacion(BoxLayout):
         for t in col_titles[1:]:
             table_data.append({'text': str(t), 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
-        # Agregar filas de datos y botones
+        # Agregar filas de datos y botones asociados con el `user_id`
         for r in range(rows_len):
-            view_button = {'text': 'Ver', 'size_hint_y': None, 'height': 30, 'bcolor': (.75, .12, .25, 1), 'index': r, 'callback': callback}
+            # Extraemos `user_id` de la primera columna
+            user_id = table[col_titles[0]][r]
+
+            # Botón "Ver" asociado al `user_id`
+            view_button = {
+                'text': 'Ver',
+                'size_hint_y': None,
+                'height': 30,
+                'bcolor': (.75, .12, .25, 1),
+                'index': r,
+                'callback': lambda btn_text, idx, user_id=user_id: callback(btn_text, user_id)  # Pasamos el `user_id` al callback
+            }
             table_data.append(view_button)
 
+            # Agregar datos de la fila
             for t in col_titles[1:]:
-                table_data.append({'text': str(table[t][r]), 'size_hint_y': None, 'height': 30, 'bcolor': (.06, .25, .25, 1)})
-
+                table_data.append({
+                    'text': str(table[t][r]),
+                    'size_hint_y': None,
+                    'height': 30,
+                    'bcolor': (.06, .25, .25, 1)
+                })
 
         # Configurar columnas y datos en el layout
         self.ids.table_floor_layout.cols = self.columns

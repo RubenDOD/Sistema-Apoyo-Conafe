@@ -50,15 +50,14 @@ class AdminWindow(BoxLayout):
         userstable = DataTableAsignacion(table=users, callback=self.button_callback)
         content.add_widget(userstable)
 
-    def button_callback(self, button_text, idx):
+    def button_callback(self, button_text, user_id):
         if button_text == 'Ver':
-            self.ver_user(idx)
-
+            self.ver_user(user_id)
 
     def ver_user(self, idx):
         content = self.ids.scrn_view
         users = self.get_users("User", idx)
-        user_info = {key: users[key][idx] for key in users}
+        user_info = {key: users[key][0] for key in users}
 
         content.clear_widgets()
         scroll_view = ScrollView(size_hint=(1, 1))
@@ -121,7 +120,7 @@ class AdminWindow(BoxLayout):
         
         # Botón para asignar el estado del aspirante a "Asignado"
         assign_button = Button(text="Asignar Aspirante", size_hint_y=None, height=50)
-        assign_button.bind(on_release=lambda x: self.assign_aspirante(idx, spinner_capacitador.text))
+        assign_button.bind(on_release=lambda x: self.assign_aspirante(values[0], spinner_capacitador.text))
 
         user_info_layout.add_widget(assign_button)  # Añadir el botón a la vista
 
@@ -138,7 +137,7 @@ class AdminWindow(BoxLayout):
     def assign_aspirante(self, idx, nombreCapacitador):
         # Obtén el ID del aspirante en función del índice
         users = self.get_users("User", idx)
-        aspirante_id = users['ID'][idx]
+        aspirante_id = users['ID'][0]
 
         # Obtén el capacitador seleccionado del dropdown
         selected_capacitador = nombreCapacitador
@@ -195,6 +194,10 @@ class AdminWindow(BoxLayout):
 
         # Confirmación visual
         print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id}.")
+
+        # Cambiar de pantalla a 'Manage Users' y recargar la lista de usuarios
+        self.ids.scrn_mngr.current = 'scrn_content'
+        self.reload_users()  # Recarga la lista de usuarios actualizada
 
 
     def get_dropdown_options(self, estado):
@@ -270,68 +273,8 @@ class AdminWindow(BoxLayout):
     def go_back(self, instance):
         self.ids.scrn_mngr.current = 'scrn_content'
 
-    def add_user_fields(self):
-        target = self.ids.ops_fields
-        target.clear_widgets()
-        crud_first = TextInput(hint_text='First Name')
-        crud_last = TextInput(hint_text='Last Name')
-        crud_user = TextInput(hint_text='User Name')
-        crud_pwd = TextInput(hint_text='Password')
-        crud_des = Spinner(text='Operator',values=['Operator','Administrator'])
-        crud_submit = Button(text='Add',size_hint_x=None,width=100,on_release=lambda x: self.add_user(crud_first.text,crud_last.text,crud_user.text,crud_pwd.text,crud_des.text))
 
-        target.add_widget(crud_first)
-        target.add_widget(crud_last)
-        target.add_widget(crud_user)
-        target.add_widget(crud_pwd)
-        target.add_widget(crud_des)
-        target.add_widget(crud_submit)
     
-    def add_user(self, first,last,user,pwd,des):
-        content = self.ids.scrn_contents
-        content.clear_widgets()
-        sql = 'INSERT INTO users(first_name,last_name,user_name,password,designation,date) VALUES(%s,%s,%s,%s,%s,%s)'
-        values =[first,last,user,pwd,des,datetime.now()]
-
-        self.mycursor.execute(sql,values)
-        self.mydb.commit()
-
-        users = self.get_users("General", 0)
-        userstable = DataTableAsignacion(table=users)
-        content.add_widget(userstable)
-    
-    def update_user_fields(self):
-        target = self.ids.ops_fields
-        target.clear_widgets()
-        crud_first = TextInput(hint_text='First Name')
-        crud_last = TextInput(hint_text='Last Name')
-        crud_user = TextInput(hint_text='User Name')
-        crud_pwd = TextInput(hint_text='Password')
-        crud_des = Spinner(text='Operator',values=['Operator','Administrator'])
-        crud_submit = Button(text='Update',size_hint_x=None,width=100,on_release=lambda x: self.update_user(crud_first.text,crud_last.text,crud_user.text,crud_pwd.text,crud_des.text))
-
-        target.add_widget(crud_first)
-        target.add_widget(crud_last)
-        target.add_widget(crud_user)
-        target.add_widget(crud_pwd)
-        target.add_widget(crud_des)
-        target.add_widget(crud_submit)
-    
-    def update_user(self, first,last,user,pwd,des):
-        content = self.ids.scrn_contents
-        content.clear_widgets()
-        pwd = hashlib.sha256(pwd.encode()).hexdigest()
-        
-        sql = 'UPDATE users SET first_name=%s,last_name=%s,user_name=%s,password=%s,designation=%s WHERE user_name=%s'
-        print(pwd)
-        values =[first,last,user,pwd,des,user]
-
-        self.mycursor.execute(sql,values)
-        self.mydb.commit()
-
-        users = self.get_users("General", 0)
-        userstable = DataTableAsignacion(table=users)
-        content.add_widget(userstable)
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
@@ -354,7 +297,7 @@ class AdminWindow(BoxLayout):
             user_names = []
 
             sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-            mycursor.execute(sql, ("Pendiente",))
+            mycursor.execute(sql, ("Aceptado",))
 
             users = mycursor.fetchall()
             for user in users:
@@ -386,13 +329,8 @@ class AdminWindow(BoxLayout):
 
             _users = OrderedDict((key, {}) for key in keys)
 
-            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-            mycursor.execute(sql, ("Pendiente",))
-
-            users = mycursor.fetchall()
-            id_final = users[id][0]
             sql = 'SELECT * FROM Aspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
             idx = 0
@@ -411,7 +349,7 @@ class AdminWindow(BoxLayout):
             
             
             sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 
@@ -421,7 +359,7 @@ class AdminWindow(BoxLayout):
                 _users['Municipio'][idx] = user[3]
             
             sql = 'SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 

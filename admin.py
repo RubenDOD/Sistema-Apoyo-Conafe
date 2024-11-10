@@ -56,7 +56,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         elif button_text == 'Rechazar':
             self.rechazar_user(user_id)
         elif button_text == 'Ver':
-            self.ver_user(user_id-1, self.conv)
+            self.ver_user(user_id, self.conv)
 
     def aceptar_user(self, user_id):
         # Conexión a la base de datos
@@ -213,13 +213,9 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
 
             _users = OrderedDict((key, {}) for key in keys)
 
-            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-            mycursor.execute(sql, ("Pendiente",))
 
-            users = mycursor.fetchall()
-            id_final = users[id][0]
             sql = 'SELECT * FROM Aspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
             idx = 0
@@ -238,7 +234,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['correo'][idx] = user[4]
             
             sql = 'SELECT * FROM InfoEducativaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 
@@ -253,7 +249,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['Requisito para titulo'][idx] = user[11]
 
             sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 
@@ -263,7 +259,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['Municipio'][idx] = user[3]
             
             sql = 'SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 
@@ -273,7 +269,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['Municipio Deseado'][idx] = user[4]
 
             sql = 'SELECT * FROM DocumentosAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id_final,))
+            mycursor.execute(sql, (id,))
 
             users = mycursor.fetchall()
 
