@@ -1,9 +1,13 @@
+# main.py
+
 import re
 import mysql.connector
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
+from convocatorias import ConvocatoriaWindow  # Importar ConvocatoriaWindow
+from aplicarAspirante import aplicarAspiranteWindow  # Importa la ventana aplicarAspirante
 
 # Conexión a la base de datos
 connection = mysql.connector.connect(
@@ -13,8 +17,11 @@ connection = mysql.connector.connect(
     database="CONAFE"
 )
 
-# Cargar el archivo de diseño Kivy
+# Cargar todos los archivos .kv
 Builder.load_file('main.kv')
+Builder.load_file('convocatorias.kv')  # Asegúrate de que el archivo convocatorias.kv esté disponible
+Builder.load_file('admin.kv')          # Asegúrate de que el archivo admin.kv esté disponible
+Builder.load_file('aplicarAspirante.kv')  # Asegura la carga de aplicarAspirante.kv aquí
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -113,10 +120,24 @@ class RegisterScreen(CustomBoxLayout):
         App.get_running_app().root.current = 'login'
 
 class AspiranteScreen(CustomBoxLayout):
-    pass
+    def aplicar_a_convocatoria(self):
+        app = App.get_running_app()
+        app.root.current = 'aplicar_aspirante'  # Redirige a la pantalla de aplicación
 
 class VistaDireccionTerritorialScreen(CustomBoxLayout):
-    pass
+    def __init__(self, **kwargs):
+        super(VistaDireccionTerritorialScreen, self).__init__(**kwargs)
+        # Configuración de los botones
+
+    def interfaz_convocatorias(self, instance):
+        # Cambia a la pantalla de Convocatorias
+        app = App.get_running_app()
+        app.root.current = 'convocatorias'
+
+class ConvocatoriasScreen(Screen):  # Modificar para heredar de Screen
+    def __init__(self, **kwargs):
+        super(ConvocatoriasScreen, self).__init__(**kwargs)
+        self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
 
 class LECScreen(CustomBoxLayout):
     pass
@@ -151,6 +172,13 @@ class LoginApp(App):
         screen_capacitador = Screen(name='capacitador')
         screen_capacitador.add_widget(CapacitadorScreen())
         sm.add_widget(screen_capacitador)
+
+        screen_convocatorias = ConvocatoriasScreen(name='convocatorias')  # Usar ConvocatoriasScreen
+        sm.add_widget(screen_convocatorias)
+
+        screen_aplicar_aspirante = Screen(name='aplicar_aspirante')
+        screen_aplicar_aspirante.add_widget(aplicarAspiranteWindow())
+        sm.add_widget(screen_aplicar_aspirante)
 
         return sm
 

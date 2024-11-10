@@ -38,6 +38,11 @@
                 size_hint: (.8, None)
                 height: 30
 
+            Button:
+                text: "Regresar"
+                size_hint_x: None
+                width: 100
+                on_press: root.go_back(self)
 
         # Main Content Area
         BoxLayout:

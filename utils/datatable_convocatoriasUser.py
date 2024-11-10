@@ -66,8 +66,6 @@ class DataTableConvUser(BoxLayout):
                 else:
                     table_data.append({'text': str(table[t][r]), 'size_hint_x': 0.3, 'size_hint_y': None, 'height': 30, 'bcolor': (.06, .25, .25, 1)})
 
-
-
             # Botón de "Aspirantes"
             documento_button = {'text': 'Ver', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 30, 'bcolor': (.25, .55, .25, 1), 'index': r, 'callback': callback}
             table_data.append(documento_button)

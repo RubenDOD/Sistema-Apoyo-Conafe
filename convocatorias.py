@@ -37,7 +37,7 @@ class ConvocatoriaWindow(BoxLayout):
          # Crear una pantalla compatible y agregar `addConvoApp` como widget
         convo_screen = Screen(name='add_convo_app')
         convo_layout = BoxLayout()  # Asegura que el layout sea compatible con `addConvoApp`
-        convo_layout.add_widget(AddConvoScreen())
+        convo_layout.add_widget(AddConvoScreen(convocatoria_window=self))
         convo_screen.add_widget(convo_layout)
         
         self.ids.scrn_mngr.add_widget(convo_screen)
@@ -71,6 +71,7 @@ class ConvocatoriaWindow(BoxLayout):
             self.users = self.get_users("General", 0)
             conv_id = self.users['ID'][idx]
             self.ver_user(idx, conv_id)
+        self.reload_users()
 
     def abrir_convocatoria(self, conv_id):
         # Conexión a la base de datos
@@ -90,7 +91,6 @@ class ConvocatoriaWindow(BoxLayout):
         cursor.close()
         db.close()
         print(f"Convocatoria {conv_id} abierta con éxito.")
-        self.reload_users()
 
     def cerrar_convocatoria(self, conv_id):
         # Conexión a la base de datos
@@ -123,23 +123,17 @@ class ConvocatoriaWindow(BoxLayout):
         self.ids.scrn_mngr.add_widget(conv_admin_screen)
         self.ids.scrn_mngr.current = 'AdminWindow'
 
-
-    def go_back_to_convocatorias(self):
-        # Cambiar de pantalla a 'convocatorias' cuando se presione el botón de regreso
-        self.ids.scrn_mngr.current = 'scrn_content'
-        self.reload_users()
-
-
-
     def go_back(self, instance):
-        self.ids.scrn_mngr.current = 'scrn_content2'
-
-
-        
+        # Verifica si la pantalla actual es la pantalla inicial
+        if self.ids.scrn_mngr.current == 'scrn_content':  # 'scrn_content' como la pantalla principal
+            # Si estamos en la pantalla inicial, regresa a VistaDireccionTerritorialScreen
+            App.get_running_app().root.current = 'vista_direccion_territorial'
+        else:
+            # Si no estamos en la pantalla inicial, vuelve a la pantalla anterior dentro de ConvocatoriaWindow
+            self.ids.scrn_mngr.current = 'scrn_content'
 
     def add_user_fields(self):
-        self.ids.scrn_mngr.current = 'add_convo_app'
-   
+        self.ids.scrn_mngr.current = 'add_convo_app'   
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
@@ -238,8 +232,6 @@ class ConvocatoriaWindow(BoxLayout):
     def change_screen(self, instance):
         if instance.text == 'Manage Users':
             self.ids.scrn_mngr.current = 'scrn_content'
-
-
 
 class ConvocatoriasApp(App):
     def build(self):

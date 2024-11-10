@@ -1,3 +1,5 @@
+# añadir_convocatoria.py
+
 import validators
 import requests
 import mysql.connector
@@ -19,6 +21,11 @@ class AddConvoScreen(Screen):  # Pantalla principal
     # Inicializar variables para almacenar las URLs
     url_documento = None
     url_forms = None
+
+    # Recibe la referencia de ConvocatoriaWindow para recargar los datos al agregar una nueva convocatoria
+    def __init__(self, convocatoria_window=None, **kwargs):
+        super().__init__(**kwargs)
+        self.convocatoria_window = convocatoria_window  # Guarda la referencia para recargar la interfaz
 
     def mostrar_popup_url(self, type):
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
@@ -134,6 +141,13 @@ class AddConvoScreen(Screen):  # Pantalla principal
                 cursor.close()
                 conn.close()
 
+                # Llama a reload_users para actualizar la interfaz en ConvocatoriaWindow
+                if self.convocatoria_window:
+                    self.convocatoria_window.reload_users()
+
+                # Cambiar de vuelta a ConvocatoriaWindow después de agregar
+                App.get_running_app().root.current = 'convocatorias'  # Cambia a la pantalla de convocatorias
+
             except mysql.connector.Error as err:
                 self.mostrar_popup_error(f"Error al conectar con la base de datos: {err}")
 
@@ -153,7 +167,7 @@ class AddConvoScreen(Screen):  # Pantalla principal
         boton_aceptar.bind(on_press=popup.dismiss)
         popup.open()
 
-class AddConvoApp(App):  # Aplicación principal
+class AddConvoApp(App):  # Aplicación principal para pruebas
     def build(self):
         return AddConvoScreen()
 

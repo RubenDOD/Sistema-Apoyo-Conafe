@@ -31,7 +31,9 @@ class aplicarAspiranteWindow(BoxLayout):
         userstable = DataTableConvUser(table=users, callback=self.button_callback)  # Pasa button_callback aquí
         content.add_widget(userstable)
 
-
+    def go_back(self, instance):
+        app = App.get_running_app()
+        app.root.current = 'aspirante'  # Cambia a la pantalla 'aspirante'
 
     def reload_users(self):
         # Obtiene el contenedor de usuarios
@@ -107,15 +109,6 @@ class aplicarAspiranteWindow(BoxLayout):
         cursor.close()
         db.close()
 
-        
-
-    def go_back(self, instance):
-        self.ids.scrn_mngr.current = 'scrn_content2'
-
-
-        
-
-   
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
