@@ -10,7 +10,6 @@ CREATE TABLE Usuario (
     acceso NVARCHAR(50)
 );
 
-SELECT * FROM `Usuario`;
 -- Tabla: LEC
 CREATE TABLE LEC (
     id_Usuario INT,
@@ -49,8 +48,13 @@ CREATE TABLE Aspirante (
     FOREIGN KEY (id_Aspirante) REFERENCES Usuario(id_Usuario), -- Relación con Usuario
     FOREIGN KEY (convocatoria) REFERENCES ConvocatoriaActual(id_Convo) -- Relación con Usuario
 );
-SELECT * FROM `Aspirante`;
+
 -- UPDATE `Aspirante` SET estado_solicitud = 'Pendiente' WHERE id_Aspirante = 1;
+-- UPDATE `Aspirante` SET estado_solicitud = 'Pendiente' WHERE id_Aspirante = 3;
+
+SELECT * FROM `Aspirante`;
+-- DELETE FROM `Aspirante` WHERE id_Aspirante = 1;
+-- UPDATE `Aspirante` SET estado_solicitud = 'Pendiente' WHERE id_Aspirante = 3;
 -- Tabla: EquipoAspirante
 CREATE TABLE EquipoAspirante (
     id_Aspirante INT,
@@ -127,6 +131,8 @@ CREATE TABLE ParticipacionAspirante (
     FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante)
 );
 
+-- --------------------------- 
+
 -- Tabla: CCT
 CREATE TABLE CCT (
     claveCentro NVARCHAR(50) PRIMARY KEY,
@@ -140,6 +146,8 @@ CREATE TABLE CCT (
 );
 
 INSERT INTO `Usuario`(correo, password, acceso) VALUES('gutierrez.viveros.cristianr@gmail.com', '1234', 'Aspirante');
+INSERT INTO `Usuario`(correo, password, acceso) VALUES('rabos@gmail.com', '12345678', 'Aspirante');
+INSERT INTO `Usuario`(correo, password, acceso) VALUES('DOT@conafe.gob.mx', '12345678', 'Miembro Dirección Territorial');
 INSERT INTO `CCT` VALUES('CCT0001', 'CONAFE PRUEBA', 'CAMPECHE', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
 
 
@@ -163,10 +171,15 @@ CREATE TABLE CapacitadorAspirante (
     FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante)
 );
 
+
+
 CREATE TABLE ActualizacionBD (
 	id_Cambio INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     fechaCambio datetime
 );
+
+SELECT * FROM participacionaspirante;
+
 
 SELECT * FROM ConvocatoriaActual;
 
