@@ -49,15 +49,15 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         userstable = DataTable(table=users, callback=self.button_callback)
         content.add_widget(userstable)
 
-    def button_callback(self, button_text, idx):
+    def button_callback(self, button_text, idx, user_id):
+        print(user_id)
         if button_text == 'Aceptar':
-            self.aceptar_user(idx)
+            self.aceptar_user(user_id)
         elif button_text == 'Rechazar':
-            self.rechazar_user(idx)
-        elif button_text == 'Ver':
-            self.ver_user(idx, self.conv)
+            self.rechazar_user(user_id)
 
-    def aceptar_user(self, idx):
+    def aceptar_user(self, user_id):
+        # Conexión a la base de datos
         mydb = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -65,29 +65,20 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
             database='CONAFE'
         )
         mycursor = mydb.cursor()
-        sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-        mycursor.execute(sql, ("Pendiente",))
-        users = mycursor.fetchall()
-        id_final = users[idx][0]
-        print(f"Aqui en teoria acepto a {id_final}")
-        # Actualiza el valor de acceso en la tabla Usuario
+
+        # Actualizar el estado en ambas tablas usando `user_id`
         update_sql = 'UPDATE Usuario SET acceso = %s WHERE id_Usuario = %s'
-        mycursor.execute(update_sql, ("Aceptado", id_final))
-
-        # Confirma la transacción
-        mydb.commit()
+        mycursor.execute(update_sql, ("Aceptado", user_id))
         update_sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
-        mycursor.execute(update_sql, ("Aceptado", id_final))
+        mycursor.execute(update_sql, ("Aceptado", user_id))
+        
+        mydb.commit()  # Guarda los cambios
 
-        # Confirma la transacción
-        mydb.commit()
-        print(f"El usuario con ID {id_final} ahora tiene acceso 'Aceptado'.")
-
-        # Cierra la conexión
+        print(f"El usuario con ID {user_id} ahora tiene acceso 'Aceptado'.")
         mycursor.close()
         self.reload_users()
 
-    def rechazar_user(self, idx):
+    def rechazar_user(self, user_id):
         mydb = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -95,22 +86,15 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
             database='CONAFE'
         )
         mycursor = mydb.cursor()
-        sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-        mycursor.execute(sql, ("Pendiente",))
-        users = mycursor.fetchall()
-        id_final = users[idx][0]
-        print(f"Aqui en teoria acepto a {id_final}")
 
         update_sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
-        mycursor.execute(update_sql, ("Rechazado", id_final))
+        mycursor.execute(update_sql, ("Rechazado", user_id))
+        mydb.commit()  # Guarda los cambios
 
-        # Confirma la transacción
-        mydb.commit()
-        print(f"El usuario con ID {id_final} ahora tiene acceso 'Rechazado'.")
-
-        # Cierra la conexión
+        print(f"El usuario con ID {user_id} ahora tiene acceso 'Rechazado'.")
         mycursor.close()
         self.reload_users()
+
 
 
 

@@ -81,7 +81,6 @@ spreadsheet_id = '1V0eUeAHJD_UfK2SjtSZ46hjc28p2Fa47qqtaYmOGeBs'
 convocatoria_id = 1
 # URL para descargar el CSV
 csv_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv'
-
 # Lee el CSV desde la URL
 df = pd.read_csv(csv_url)
 
@@ -104,7 +103,7 @@ df_filtrado = df[df['Marca temporal'] > fecha_hora_inicio]
 cursor = conn.cursor()
 
 # Iterar sobre las filas del DataFrame filtrado y agregar cada fila a la tabla 'test'
-for index, row in df_filtrado.iterrows():
+for index, row in df.iterrows():
     valor = (row['Correo electrónico:'],)  # Nota: Debe ser una tupla
     sql = "SELECT id_Usuario FROM Usuario WHERE correo = %s"
     cursor.execute(sql, valor)

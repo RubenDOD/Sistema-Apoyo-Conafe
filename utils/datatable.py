@@ -41,12 +41,12 @@ Builder.load_string('''
 ''')
 
 class DataTable(BoxLayout):
-    def __init__(self, table='', callback=None, **kwargs):  # Añadido parámetro callback
+    def __init__(self, table='', callback=None, **kwargs):
         super().__init__(**kwargs)
 
         col_titles = [k for k in table.keys()]
         rows_len = len(table[col_titles[0]])
-        self.columns = len(col_titles) + 3  # Agregamos dos columnas para los botones
+        self.columns = len(col_titles) + 3  # Incluimos dos columnas adicionales para botones
         table_data = []
 
         # Encabezados de la tabla
@@ -54,24 +54,55 @@ class DataTable(BoxLayout):
         for t in col_titles:
             table_data.append({'text': str(t), 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
-        # Encabezados para los botones
+        # Encabezados para los botones de aceptar y rechazar
         table_data.append({'text': 'Acepta', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
         table_data.append({'text': 'Rechaza', 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
-        # Agregar filas de datos y botones
+        # Agregar filas de datos y botones con su correspondiente `user_id`
         for r in range(rows_len):
-            view_button = {'text': 'Ver', 'size_hint_y': None, 'height': 30, 'bcolor': (.75, .12, .25, 1), 'index': r, 'callback': callback}
+            # Extrae `user_id` de la primera columna
+            user_id = table[col_titles[0]][r]
+
+            # Botón "Ver" asociado al `user_id`
+            view_button = {
+                'text': 'Ver',
+                'size_hint_y': None,
+                'height': 30,
+                'bcolor': (.75, .12, .25, 1),
+                'index': r,
+                'callback': lambda btn_text, idx, user_id=user_id: callback(btn_text, idx, user_id)
+            }
             table_data.append(view_button)
 
+            # Agregar datos de la fila
             for t in col_titles:
-                table_data.append({'text': str(table[t][r]), 'size_hint_y': None, 'height': 30, 'bcolor': (.06, .25, .25, 1)})
+                table_data.append({
+                    'text': str(table[t][r]),
+                    'size_hint_y': None,
+                    'height': 30,
+                    'bcolor': (.06, .25, .25, 1)
+                })
 
-            # Botón de aceptar
-            accept_button = {'text': 'Aceptar', 'size_hint_y': None, 'height': 30, 'bcolor': (.12, .75, .35, 1), 'index': r, 'callback': callback}
+            # Botón "Aceptar" asociado al `user_id`
+            accept_button = {
+                'text': 'Aceptar',
+                'size_hint_y': None,
+                'height': 30,
+                'bcolor': (.12, .75, .35, 1),
+                'index': r,
+                'callback': lambda btn_text, idx, user_id=user_id: callback(btn_text, idx, user_id)
+            }
             table_data.append(accept_button)
 
-            # Botón de rechazar
-            reject_button = {'text': 'Rechazar', 'size_hint_y': None, 'height': 30, 'bcolor': (.75, .12, .25, 1), 'index': r, 'callback': callback}
+            # Botón "Rechazar" asociado al `user_id`
+            reject_button = {
+                'text': 'Rechazar',
+                'size_hint_y': None,
+                'height': 30,
+                'bcolor': (.75, .12, .25, 1),
+                'index': r,
+                'callback': lambda btn_text, idx, user_id=user_id: callback(btn_text, idx, user_id)
+            }
             table_data.append(reject_button)
 
         # Configurar columnas y datos en el layout

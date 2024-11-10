@@ -133,7 +133,8 @@ class ConvocatoriaWindow(BoxLayout):
             self.ids.scrn_mngr.current = 'scrn_content'
 
     def add_user_fields(self):
-        self.ids.scrn_mngr.current = 'add_convo_app'   
+        self.ids.scrn_mngr.current = 'add_convo_app'
+        self.reload_users   
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
