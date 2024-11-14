@@ -81,6 +81,7 @@ spreadsheet_id = '1V0eUeAHJD_UfK2SjtSZ46hjc28p2Fa47qqtaYmOGeBs'
 convocatoria_id = 1
 # URL para descargar el CSV
 csv_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv'
+
 # Lee el CSV desde la URL
 df = pd.read_csv(csv_url)
 
@@ -103,7 +104,7 @@ df_filtrado = df[df['Marca temporal'] > fecha_hora_inicio]
 cursor = conn.cursor()
 
 # Iterar sobre las filas del DataFrame filtrado y agregar cada fila a la tabla 'test'
-for index, row in df.iterrows():
+for index, row in df_filtrado.iterrows():
     valor = (row['Correo electrónico:'],)  # Nota: Debe ser una tupla
     sql = "SELECT id_Usuario FROM Usuario WHERE correo = %s"
     cursor.execute(sql, valor)
@@ -116,12 +117,12 @@ for index, row in df.iterrows():
         resultado_aspirante = cursor.fetchone()
         if not resultado_aspirante:
             id_usuario = resultado[0]
-            row['Fecha de nacimiento*:'] = pd.to_datetime(row['Fecha de nacimiento*:'], dayfirst=True)
+            row['Fecha de nacimiento:'] = pd.to_datetime(row['Fecha de nacimiento:'], dayfirst=True)
             #print(f"El ID del usuario es: {id_usuario}")
             insertar_aspirante(id_usuario, convocatoria_id, row['Teléfono fijo:'], row['Teléfono móvil:'], row['Correo electrónico:'], row['CURP*:'], row['Edad:']
-                            , row['Nombre(s)*:'], row['Primer apellido*:'], row['Segundo apellido:'], row['Fecha de nacimiento*:'], row['Género*:'], row['Nacionalidad*:']
+                            , row['Nombre(s)*:'], row['Primer apellido:'], row['Segundo apellido:'], row['Fecha de nacimiento:'], row['Género:'], row['Nacionalidad:']
                             , "Pendiente")
-            insertar_equipo_aspirante(id_usuario, row['Estatura*:'], row['Peso*:'], row['Talla de playera*:'], row['Talla de pantalón*:'], row['Calzado*:'])
+            insertar_equipo_aspirante(id_usuario, row['Estatura:'], row['Peso:'], row['Talla de playera:'], row['Talla de pantalón:'], row['Calzado:'])
             insertar_info_educativa_aspirante(id_usuario, row['Marca temporal'], row['Nivel educativo*:'] , "Pendiente", row['1. ¿Hablas alguna lengua indígena?:'], 
                                             row['2. De acuerdo a tus aptitudes, ¿en qué nivel educativo prefieres realizar tu Servicio Social Educativo?:'], row['3. Gusto o experiencia en cuanto a divulgación de la ciencia:'], 
                                             row['4. Habilidades o experiencias previas en materia de arte y cultura:'], row['5. Menciona ¿Cuál es el interés que tienes en el desarrollo comunitario?*:'], 
@@ -129,7 +130,8 @@ for index, row in df.iterrows():
                                             row['8. ¿Tu participación en el CONAFE te servirá como requisito de titulación universitaria?:'], row['9. Te interesa la incorporación al CONAFE para realizar:'])
             insertar_residencia_aspirante(id_usuario, row['Código postal*:'], row['Estado*:'], row['Municipio o Alcaldía*:'], row['Localidad*:'] ,
                                         row['Colonia*:'], row['Calle*:'], row['Número exterior:'], row['Número interior:'] )
-            insertar_info_bancaria_aspirante(id_usuario, row['Banco*:'], row['Cuenta bancaria:'], row['CLABE:'])
+            cuenta_bancaria = row['Cuenta bancaria:'] if pd.notnull(row['Cuenta bancaria:']) and row['Cuenta bancaria:'] != '' else '0'
+            insertar_info_bancaria_aspirante(id_usuario, row['Banco:'], cuenta_bancaria, row['CLABE:'])
             insertar_documentos_aspirante(id_usuario,  row['Anexa el archivo PDF de tu certificado o constancia de último grado de estudios. Da clic en el icono siguiente*:'], 
                                         row['Anexa el archivo PDF de tu identificación oficial. Da clic en el icono siguiente*: '],
                                         row['Anexa el archivo PDF de la carátula de estado de cuenta bancaria que incluya nombre y domicilio del aspirante. Da clic en el icono siguiente*: '])
