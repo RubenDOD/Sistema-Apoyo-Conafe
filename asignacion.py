@@ -13,6 +13,7 @@ import webbrowser
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.spinner import Spinner  
 
 class AdminWindow(BoxLayout):
@@ -87,7 +88,8 @@ class AdminWindow(BoxLayout):
         ciclo_text = f"Ciclo: {values[10]}"
         user_info_layout.add_widget(Label(text=ciclo_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        estado = values[9].replace("CONAFE ", "")
+        # estado = values[9].replace("CONAFE ", "")
+        estado = values[7]
 
         # Primer Spinner: Selección del CCT
         dropdown_values = self.get_dropdown_options(estado)
@@ -109,6 +111,7 @@ class AdminWindow(BoxLayout):
         # Método para actualizar el segundo Spinner cuando cambie el primer Spinner
         def on_cct_select(spinner, text):
             claveCentro = text.split(' - ')[0]  # Obtiene solo el claveCentro del texto seleccionado
+            print(claveCentro)
             capacitadores = self.get_capacitadores_by_cct(claveCentro)
             spinner_capacitador.values = capacitadores
 
@@ -175,7 +178,22 @@ class AdminWindow(BoxLayout):
 
         capacitador_id = capacitador_id_result[0]
 
-        # Actualiza el estado a "Asignado" para el aspirante
+        # Verificar si el capacitador ya tiene al menos un aspirante asignado
+        sql = 'SELECT COUNT(*) FROM CapacitadorAspirante WHERE id_Capacitador = %s'
+        mycursor.execute(sql, (capacitador_id,))
+        count = mycursor.fetchone()[0]
+
+        if count >= 1:
+            # Mostrar un popup indicando que el capacitador ya tiene el cupo lleno
+            popup = Popup(title='Capacitador lleno',
+                          content=Label(text='Cupos llenos para este capacitador'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+            mycursor.close()
+            mydb.close()
+            return
+
+        # Si hay cupo disponible, procede a asignar el aspirante
         sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
         mycursor.execute(sql, ("Asignado", aspirante_id))
 
@@ -199,7 +217,6 @@ class AdminWindow(BoxLayout):
         self.ids.scrn_mngr.current = 'scrn_content'
         self.reload_users()  # Recarga la lista de usuarios actualizada
 
-
     def get_dropdown_options(self, estado):
         # Conecta a la base de datos y obtiene las opciones
         mydb = mysql.connector.connect(
@@ -211,12 +228,12 @@ class AdminWindow(BoxLayout):
         mycursor = mydb.cursor()
         
         # Ejecuta el query para obtener claveCentro, nombre y municipio
-        sql = 'SELECT claveCentro, nombre, municipio FROM CCT WHERE CCT.estado = %s'
+        sql = 'SELECT claveCentro, nombre, municipio, localidad FROM CCT WHERE CCT.estado = %s'
         mycursor.execute(sql, (estado,))
         result = mycursor.fetchall()
         
         # Formatea los resultados para mostrarlos en el dropdown
-        options = [f"{claveCentro} - {nombre}, {municipio}" for claveCentro, nombre, municipio in result]
+        options = [f"{claveCentro} - {nombre}, {municipio}, {localidad},  " for claveCentro, nombre, municipio, localidad in result]
         
         mycursor.close()
         mydb.close()
@@ -224,7 +241,7 @@ class AdminWindow(BoxLayout):
         return options
 
     def get_capacitadores_by_cct(self, claveCentro):
-        # Conecta a la base de datos y obtiene los capacitadores para el CCT seleccionado
+        # Conectar a la base de datos y obtener capacitadores para el CCT seleccionado
         mydb = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -233,33 +250,26 @@ class AdminWindow(BoxLayout):
         )
         mycursor = mydb.cursor()
 
-        # Primero, obtenemos el id_LEC correspondiente al claveCentro seleccionado
-        sql = '''
-            SELECT LEC.id_Usuario 
-            FROM CentroEducador
-            JOIN LEC ON CentroEducador.id_LEC = LEC.id_Usuario
-            WHERE CentroEducador.claveCentro = %s
-        '''
-        mycursor.execute(sql, (claveCentro,))
-        lec_ids = [row[0] for row in mycursor.fetchall()]
-
-        # Ahora obtenemos los nombres y apellidos de los usuarios con acceso "Capacitador" y en los lec_ids obtenidos
+        # Consulta para obtener nombres de capacitadores asignados a un CCT específico
         sql = '''
             SELECT Aspirante.nombres, Aspirante.apellidoPaterno, Aspirante.apellidoMaterno 
-            FROM Usuario
+            FROM CentroEducador
+            JOIN LEC ON CentroEducador.id_LEC = LEC.id_Usuario
+            JOIN Usuario ON LEC.id_Usuario = Usuario.id_Usuario
             JOIN Aspirante ON Usuario.id_Usuario = Aspirante.id_Aspirante
-            WHERE Usuario.acceso = 'Capacitador' AND Usuario.id_Usuario IN (%s)
-        ''' % ','.join(['%s'] * len(lec_ids))  # Genera el número adecuado de placeholders
-        mycursor.execute(sql, tuple(lec_ids))
+            WHERE CentroEducador.claveCentro = %s AND Usuario.acceso = 'Capacitador'
+        '''
+        mycursor.execute(sql, (claveCentro,))
         result = mycursor.fetchall()
 
-        # Formatea los resultados para mostrarlos en el dropdown
+        # Formatear resultados para mostrarlos en el dropdown
         capacitadores = [f"{nombres} {apellidoPaterno} {apellidoMaterno}" for nombres, apellidoPaterno, apellidoMaterno in result]
 
         mycursor.close()
         mydb.close()
-        
+
         return capacitadores
+
 
 
 
