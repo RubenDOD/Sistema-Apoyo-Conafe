@@ -1,0 +1,76 @@
+# centroeducador.kv
+
+<MainWidget>:
+    orientation: "vertical"
+    padding: 10
+    spacing: 10
+    canvas.before:
+        Color:
+            rgba: (.06, .45, .45, 1)  # Color de fondo claro
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    # Título en la parte superior de toda la aplicación
+    BoxLayout:
+        size_hint_y: None
+        height: 60
+        padding: [10, 10]
+        Label:
+            text: "Registros de la Tabla de Formación Inicial"
+            font_size: "24sp"
+            color: 0, 0, 0, 1  # Color rojo para el título
+            bold: True
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+
+    # Área de filtro, botón de filtro y botón de exportación
+    BoxLayout:
+        size_hint_y: None
+        height: 50
+        spacing: 10
+        padding: [10, 0]
+
+        Label:
+            text: "Filtrar por ClaveCCT:"
+            font_size: "18sp"
+            color: 0, 0, 0, 1  # Texto en negro
+            size_hint_x: None
+            width: 150
+
+        TextInput:
+            id: filtro_clavecct
+            hint_text: "Ingrese ClaveCCT"
+            input_filter: 'int'  # Solo permite números enteros
+            multiline: False
+            size_hint_x: None
+            width: 200
+
+        Button:
+            text: "Aplicar Filtro"
+            size_hint_x: None
+            width: 150
+            on_release: root.filtrar_por_clavecct(filtro_clavecct.text)
+
+        Button:
+            id: export_button
+            text: "Exportar Datos"
+            size_hint_x: None
+            width: 150
+            on_release: root.exportar_datos()
+            disabled: True  # Inicia desactivado
+
+    # Área de desplazamiento para la tabla
+    ScrollView:
+        size_hint: 1, 1  # Usa el espacio restante
+        do_scroll_x: True
+        do_scroll_y: False  # Sólo scroll horizontal
+        GridLayout:
+            id: table_layout
+            cols: 7  # Número de columnas de acuerdo a la tabla de datos
+            size_hint_x: None
+            width: self.minimum_width
+            row_default_height: 40
+            spacing: 5
+            padding: 5
