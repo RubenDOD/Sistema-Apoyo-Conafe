@@ -148,15 +148,17 @@ CREATE TABLE CentroEducador (
 );
 
 -- Tabla: CapacitadorAspirante
-CREATE TABLE CapacitadorAspirante (
+CREATE TABLE FII (
     id_Capacitador INT,
     id_Aspirante INT,
+    id_CCT NVARCHAR(50),
     estadoCapacitacion NVARCHAR(50),
     fechaInicio DATE,
     fechaFinalizacion DATE,
     observaciones NVARCHAR(255),
     FOREIGN KEY (id_Capacitador) REFERENCES Usuario(id_Usuario),
-    FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante)
+    FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante),
+    FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro)
 );
 
 CREATE TABLE ActualizacionBD (
@@ -179,33 +181,6 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
 
 
 INSERT INTO Usuario (correo, password, acceso) VALUES ('rabos@gmail.com', '1234', 'Aspirante');
-INSERT INTO `CCT` VALUES('CCT0001', 'CONAFE PRUEBA', 'CAMPECHE', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
-INSERT INTO `CCT` VALUES('CCT0002', 'CONAFE PRUEBA2', 'Estado de México', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
-INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador1@example.com', 'pass123', 'Capacitador');
+INSERT INTO Usuario (correo, password, acceso) VALUES ('rubengmail.com', '1234', 'Aspirante');
 
-INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador2@example.com', 'securepass', 'Capacitador');
 
-INSERT INTO Aspirante (
-    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
-    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
-)
-VALUES (3, '5555555555', '5551234567', 'capacitador1@example.com', 'CURP1234567890ABC1', '30', 'Juan', 
- 'Pérez', 'González', '1993-01-15', 'Masculino', 'Mexicana', 'Asignado');
-
-INSERT INTO Aspirante (
-    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
-    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
-)
-VALUES (4, '5555555556', '5557654321', 'capacitador2@example.com', 'CURP0987654321DEF2', '28', 'María', 
- 'López', 'Hernández', '1995-03-22', 'Femenino', 'Mexicana', 'Asignado');
- 
-INSERT INTO LEC (id_Usuario, estadoSalud, genero, edad, capacidadDiferente)
-VALUES 
-(3, 'Buena', 'Masculino', '30', 'Ninguna'),
-(4, 'Excelente', 'Femenino', '28', 'Ninguna');
-
--- Insertar datos en la tabla CentroEducador usando los mismos id_Usuario de LEC
-INSERT INTO CentroEducador (claveCentro, id_LEC)
-VALUES 
-('CCT0001', 3),
-('CCT0002', 4);

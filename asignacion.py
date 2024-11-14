@@ -20,6 +20,7 @@ class AdminWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Builder.load_file("admin.kv")  # Carga explícita de admin.kv
+        self.selected_cct_key = None
         self.mydb = mysql.connector.connect(
             host='localhost',
             user='root',
@@ -112,6 +113,7 @@ class AdminWindow(BoxLayout):
         def on_cct_select(spinner, text):
             claveCentro = text.split(' - ')[0]  # Obtiene solo el claveCentro del texto seleccionado
             print(claveCentro)
+            self.selected_cct_key = claveCentro  # Almacena la clave en la variable
             capacitadores = self.get_capacitadores_by_cct(claveCentro)
             spinner_capacitador.values = capacitadores
 
@@ -178,8 +180,8 @@ class AdminWindow(BoxLayout):
 
         capacitador_id = capacitador_id_result[0]
 
-        # Verificar si el capacitador ya tiene al menos un aspirante asignado
-        sql = 'SELECT COUNT(*) FROM CapacitadorAspirante WHERE id_Capacitador = %s'
+        # Verificar si el capacitador ya tiene al menos un aspirante asignado en la tabla `FII`
+        sql = 'SELECT COUNT(*) FROM FII WHERE id_Capacitador = %s'
         mycursor.execute(sql, (capacitador_id,))
         count = mycursor.fetchone()[0]
 
@@ -197,12 +199,16 @@ class AdminWindow(BoxLayout):
         sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
         mycursor.execute(sql, ("Asignado", aspirante_id))
 
-        # Inserta en la tabla CapacitadorAspirante
+        # Inserta en la tabla FII
         sql = '''
-            INSERT INTO CapacitadorAspirante (id_Capacitador, id_Aspirante, estadoCapacitacion, fechaInicio)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         '''
-        mycursor.execute(sql, (capacitador_id, aspirante_id, "Asignado", datetime.now().date()))
+        fecha_inicio = datetime.now().date()
+        fecha_finalizacion = datetime.now().date()  # Puede especificar la fecha finalización si es necesaria, o dejarla nula
+        observaciones = "Observación inicial"  # Cambiar o eliminar si no es necesaria
+
+        mycursor.execute(sql, (capacitador_id, aspirante_id, self.selected_cct_key, "En inicio", fecha_inicio, fecha_finalizacion, observaciones))
 
         mydb.commit()
 
@@ -211,7 +217,7 @@ class AdminWindow(BoxLayout):
         mydb.close()
 
         # Confirmación visual
-        print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id}.")
+        print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id} en la tabla FII.")
 
         # Cambiar de pantalla a 'Manage Users' y recargar la lista de usuarios
         self.ids.scrn_mngr.current = 'scrn_content'
