@@ -16,16 +16,16 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.spinner import Spinner  
 
-class AdminWindow(BoxLayout):
+class AdminWindowAsignaciones(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Builder.load_file("admin.kv")  # Carga explícita de admin.kv
+        #Builder.load_file("admin.kv")  # Carga explícita de admin.kv
         self.selected_cct_key = None
         self.mydb = mysql.connector.connect(
             host='localhost',
             user='root',
             passwd='1234',
-            database='pos'
+            database='conafe'
         )
         self.mycursor = self.mydb.cursor()
 
@@ -39,6 +39,15 @@ class AdminWindow(BoxLayout):
         #products = self.get_products()
         #prod_table = DataTableAsignacion(table=products)
         #product_scrn.add_widget(prod_table)
+
+    def change_screen(self, instance):
+        if instance.text == 'Manage Users':
+            app = App.get_running_app()
+            app.root.current = 'vista_direccion_territorial'
+        elif instance.text == 'Regresar':  # Asegúrate de que el texto sea "Regresar"
+            print("Intentando regresar a vista_direccion_territorial")
+            app = App.get_running_app()
+            app.root.current = 'vista_direccion_territorial'
 
     def reload_users(self):
         # Obtiene el contenedor de usuarios
@@ -450,10 +459,10 @@ class AdminWindow(BoxLayout):
             self.ids.scrn_mngr.current = 'scrn_view' 
 
 
-class AdminApp(App):
+class AdminAppAsignaciones(App):
     def build(self):
 
-        return AdminWindow()
+        return AdminWindowAsignaciones()
 
 if __name__=='__main__':
-    AdminApp().run()
+    AdminAppAsignaciones().run()

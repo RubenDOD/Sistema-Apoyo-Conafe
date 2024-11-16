@@ -1,5 +1,3 @@
-# main.py
-
 import re
 import mysql.connector
 from kivy.app import App
@@ -8,6 +6,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from convocatorias import ConvocatoriaWindow  # Importar ConvocatoriaWindow
 from aplicarAspirante import aplicarAspiranteWindow  # Importa la ventana aplicarAspirante
+from FII import MainWidget  # Importa el widget principal de la pantalla FII
+from asignacion import AdminWindowAsignaciones  # Importa AdminWindowAsignaciones desde asignación.py
 
 # Conexión a la base de datos
 connection = mysql.connector.connect(
@@ -20,8 +20,10 @@ connection = mysql.connector.connect(
 # Cargar todos los archivos .kv
 Builder.load_file('main.kv')
 Builder.load_file('convocatorias.kv')  # Asegúrate de que el archivo convocatorias.kv esté disponible
-Builder.load_file('admin.kv')          # Asegúrate de que el archivo admin.kv esté disponible
+#Builder.load_file('admin.kv')          # Asegúrate de que el archivo admin.kv esté disponible
 Builder.load_file('aplicarAspirante.kv')  # Asegura la carga de aplicarAspirante.kv aquí
+Builder.load_file('FII.kv')
+Builder.load_file('asignacion.kv')
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -133,11 +135,45 @@ class VistaDireccionTerritorialScreen(CustomBoxLayout):
         # Cambia a la pantalla de Convocatorias
         app = App.get_running_app()
         app.root.current = 'convocatorias'
+    
+    def interfaz_capacitaciones(self, instance):
+        # Cambia a la pantalla de capacitaciones
+        app = App.get_running_app()
+        app.root.current = 'capacitaciones'  # Cambia a la pantalla de capacitaciones
+    
+    def interfaz_tablero_control(self, instance):
+        pass
+        # Cambia a la pantalla de tablero de control
+        app = App.get_running_app()
+        app.root.current = 'tablero de control'
 
 class ConvocatoriasScreen(Screen):  # Modificar para heredar de Screen
     def __init__(self, **kwargs):
         super(ConvocatoriasScreen, self).__init__(**kwargs)
         self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
+
+class CapacitacionesScreen(Screen):
+    def __init__(self, **kwargs):
+        super(CapacitacionesScreen, self).__init__(**kwargs)
+        self.admin_window = AdminWindowAsignaciones()  # Instancia única de AdminWindowAsignaciones
+
+    def on_enter(self):
+        # Limpiar todos los widgets de la pantalla antes de añadir el contenido
+        self.clear_widgets()  # Asegúrate de que la pantalla esté vacía
+        self.add_widget(self.admin_window)  # Añade la instancia única de AdminWindowAsignaciones
+
+# Define la pantalla Tablero de Control
+class TableroControlScreen(Screen):
+    def __init__(self, **kwargs):
+        super(TableroControlScreen, self).__init__(**kwargs)
+    
+    def regresar_vista_direccion(self):
+        app = App.get_running_app()
+        app.root.current = 'vista_direccion_territorial'
+
+    def go_to_fii_screen(self):
+        app = App.get_running_app()
+        app.root.current = 'fii'
 
 class LECScreen(CustomBoxLayout):
     pass
@@ -176,9 +212,19 @@ class LoginApp(App):
         screen_convocatorias = ConvocatoriasScreen(name='convocatorias')  # Usar ConvocatoriasScreen
         sm.add_widget(screen_convocatorias)
 
+        screen_capacitaciones = CapacitacionesScreen(name='capacitaciones')  # Usar CapacitacionScreen
+        sm.add_widget(screen_capacitaciones)
+
+        screen_tablero_control = TableroControlScreen(name='tablero de control')  # Usar TableroScreen
+        sm.add_widget(screen_tablero_control)
+
         screen_aplicar_aspirante = Screen(name='aplicar_aspirante')
         screen_aplicar_aspirante.add_widget(aplicarAspiranteWindow())
         sm.add_widget(screen_aplicar_aspirante)
+
+        screen_fii = Screen(name='fii')
+        screen_fii.add_widget(MainWidget())
+        sm.add_widget(screen_fii)
 
         return sm
 

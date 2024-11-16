@@ -175,9 +175,21 @@
                 size_hint_y: None
                 height: 50
                 on_press: root.interfaz_convocatorias(self)
+            
+            Button:
+                text: 'Capacitaciones'
+                size_hint_y: None
+                height: 50
+                on_press: root.interfaz_capacitaciones(self)
+            
+            Button:
+                text: 'Tablero de Control'
+                size_hint_y: None
+                height: 50
+                on_press: root.interfaz_tablero_control(self)
 
             Button:
-                text: 'Regresar al Login'
+                text: 'Cerrar Sesión'
                 size_hint_y: None
                 height: 50
                 on_press:
@@ -208,6 +220,47 @@
                 size_hint_y: None
                 height: 50
                 on_press: root.regresar(self)
+
+<TableroControlScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.06, 0.52, 0.52, 1  # Color teal oscuro de fondo
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+            Label:
+                text: 'Tablero de Control'
+                font_size: 24
+                color: [1, 1, 1, 1]  # Texto en blanco
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'FII'
+                font_size: 20
+                size_hint_y: None
+                height: 50
+                background_color: [0.1, 0.6, 0.9, 1]  # Color azul del botón
+                on_press: root.go_to_fii_screen()
+
+            Button:
+                text: 'Regresar'
+                font_size: 20
+                size_hint_y: None
+                height: 50
+                background_color: [0.1, 0.6, 0.9, 1]  # Color azul del botón
+                on_press: root.regresar_vista_direccion()
 
 <LECScreen>:
     FloatLayout:

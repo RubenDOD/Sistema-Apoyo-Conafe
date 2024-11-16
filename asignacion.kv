@@ -1,53 +1,48 @@
-<FlatButton@ButtonBehavior+Label>:
-    text: 'default'
-
-
-<AdminWindow>:
-    id: scrn_contents
+<AdminWindowAsignaciones>:
     orientation: 'vertical'
     canvas.before:
         Color:
-            rgba: (1,1,1,1)
+            rgba: (1, 1, 1, 1)
         Rectangle:
             size: self.size
             pos: self.pos
-    
+
+    # Contenedor para el botón de "Regresar"
+    BoxLayout:
+        size_hint_y: None
+        height: 50  # Aumentamos la altura para que el botón se vea claramente
+        padding: [10, 20, 10, 20]  # Padding en formato [left, top, right, bottom]
+        spacing: 10
+
+        Button:
+            text: "Regresar"
+            size_hint_x: None
+            width: 100
+            height: 40
+            on_release: app.root.current = 'vista_direccion_territorial'
+
+    # Navegación superior
     BoxLayout:
         id: top_nav
         size_hint_y: None
         height: 30
         canvas.before:
             Color:
-                rgba: (.06, .45, .45,1)
+                rgba: (.06, .45, .45, 1)
             Rectangle:
                 size: self.size
                 pos: self.pos
-        
-        FlatButton:
-            id: file_trigger
-            text: 'File'
-            on_release: file_dropdown.open(self)
-            size_hint: (.1,None)
-            height: 30
 
-            Widget:
-                on_parent: file_dropdown.dismiss()
-            
-                DropDown:
-                    id: file_dropdown
-                    Button:
-                        id: close
-                        text: 'quit'
-                        size_hint_y: None
-                        height: 30
         Label:
             text: 'Admin Dashboard'
             bold: True
-            size_hint: (.9,None)
+            size_hint: (1, None)
             height: 30
+
+    # Contenido principal
     BoxLayout:
         id: content_nav
-        
+
         BoxLayout:
             id: nav_tabs
             size_hint_x: .2
@@ -55,7 +50,7 @@
             spacing: 3
             canvas.before:
                 Color:
-                    rgba: (.06, .52, .52,1)
+                    rgba: (.06, .52, .52, 1)
                 Rectangle:
                     size: self.size
                     pos: self.pos
@@ -69,14 +64,7 @@
                 background_normal: ''
                 group: 'admin_navs'
                 on_state: root.change_screen(self)
-            #ToggleButton:
-            #    id: products_toggle
-            #    text: 'Manage Products'
-            #    size_hint_y: .1
-            #    background_color: (.06, .47, .47, 1)
-            #    background_normal: ''
-            #    group: 'admin_navs'
-            #    on_state: root.change_screen(self)
+            
             ToggleButton:
                 id: view_toggle
                 text: 'Ver usuario'
@@ -85,14 +73,16 @@
                 background_normal: ''
                 group: 'admin_navs'
                 on_state: root.change_screen(self)
+
             Label:
                 id: sp
                 text: ''
                 size_hint_y: .7
+
         BoxLayout:
             id: all_content
             size_hint_x: .8
-            padding: (20,10)
+            padding: (20, 10)
             ScreenManager:
                 id: scrn_mngr
                 Screen:
@@ -103,27 +93,7 @@
                         spacing: 10
                         BoxLayout:
                             id: scrn_contents
-                        BoxLayout:
-                            id: ops_fields
-                            spacing: 10
-                            size_hint_y: None
-                            height: 35
-                        BoxLayout:
-                            id: ops_btns
-                            spacing: 10
-                            size_hint_y: None
-                            height: 45
-                            Button:
-                                id: crud_add
-                                text: 'Add User'
-                                on_release: root.add_user_fields()
-                            Button:
-                                id: crud_update
-                                text: 'Update User'
-                                on_release: root.update_user_fields()
-                            Button:
-                                id: crud_remove
-                                text: 'Remove User'
+
                 Screen:
                     id: scrn_product_content
                     name: 'scrn_product_content'
@@ -137,5 +107,3 @@
                         id: scrn_view
                         orientation: 'vertical'
                         size_hint: 1, 1
-                
-

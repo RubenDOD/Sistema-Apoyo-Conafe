@@ -6,7 +6,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
 import mysql.connector
 import io
+from kivy.lang import Builder
 
+#Builder.load_file('FII.kv')
 
 class MySQLConnection:
     def __init__(self):
@@ -14,15 +16,15 @@ class MySQLConnection:
         self.conn = mysql.connector.connect(
             host="localhost",  # Cambia según tu configuración
             user="root",  # Cambia según tu configuración
-            password="123456789",  # Cambia según tu configuración
+            password="1234",  # Cambia según tu configuración
             database="conafe"  # Cambia según tu configuración
         )
         self.cursor = self.conn.cursor()
 
     def fetch_data(self, clavecct=None):
-        # Obtener los registros de la tabla con filtro opcional en ClaveCentro
+        # Obtener los registros de la tabla con filtro opcional en id_CCT
         if clavecct:
-            query = "SELECT * FROM fii WHERE claveCentro = %s"
+            query = "SELECT * FROM fii WHERE id_CCT = %s"
             self.cursor.execute(query, (clavecct,))
         else:
             query = "SELECT * FROM fii"
@@ -34,11 +36,16 @@ class MySQLConnection:
         self.cursor.close()
         self.conn.close()
 
-
 class MainWidget(BoxLayout):
+    def regresar_a_tablero(self):
+        app = App.get_running_app()
+        app.root.current = 'tablero de control'  # Cambia 'tablero_control' por el nombre exacto de tu pantalla de Tablero de Control
+
     def on_kv_post(self, base_widget):
-        # Obtener todos los datos al inicio
-        self.actualizar_tabla()
+        # Cargar los datos solo si no se han cargado previamente
+        if not hasattr(self, '_tabla_cargada'):
+            self.actualizar_tabla()
+            self._tabla_cargada = True  # Marca que la tabla ya ha sido cargada
 
     def actualizar_tabla(self, clavecct=None):
         # Limpiar el layout de la tabla antes de actualizar
@@ -51,8 +58,8 @@ class MainWidget(BoxLayout):
         db.close_connection()
 
         # Encabezados de la tabla
-        headers = ["id_Capacitador", "id_Aspirante", "EstadoCapacitacion", "fechaInicio", "fechaFinalizacion",
-                   "Observaciones", "ClaveCCT"]
+        headers = ["id_Capacitador", "id_Aspirante", "ClaveCCT", "EstadoCapacitacion", "fechaInicio", "fechaFinalizacion",
+                   "Observaciones"]
 
         # Agregar encabezados
         for header in headers:
@@ -116,7 +123,6 @@ class MainWidget(BoxLayout):
 class FIIApp(App):
     def build(self):
         return MainWidget()
-
 
 if __name__ == "__main__":
     FIIApp().run()
