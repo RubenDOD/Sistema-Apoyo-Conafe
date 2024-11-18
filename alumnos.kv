@@ -1,0 +1,186 @@
+<FlatButton@ButtonBehavior+Label>:
+    text: 'default'
+
+<AlumnosWindow>:
+    id: scrn_contents
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Top Navigation Bar
+        BoxLayout:
+            id: top_nav
+            size_hint_y: None
+            height: 30
+            size_hint: 1, None
+            canvas.before:
+                Color:
+                    rgba: (.06, .45, .45, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            FlatButton:
+                id: file_trigger
+                text: 'File'
+                on_release: file_dropdown.open(self)
+                size_hint: (.1, None)
+                height: 30
+
+            Label:
+                text: 'Admin Dashboard'
+                bold: True
+                size_hint: (.8, None)
+                height: 30
+
+            Button:
+                text: 'Regresar'
+                size_hint: (.1, None)
+                height: 30
+                on_release: root.go_back_to_convocatorias()
+
+        # Main Content Area
+        BoxLayout:
+            id: content_nav
+            size_hint: 1, 1
+            orientation: 'horizontal'
+
+            ScreenManager:
+                id: scrn_mngr
+                size_hint: 1, 1
+
+                # Pantalla principal
+                Screen:
+                    id: scrn_content
+                    name: 'scrn_content'
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 10
+                        size_hint: 1, 1
+
+                        BoxLayout:
+                            id: scrn_contents
+                            size_hint: 1, 1
+                            orientation: 'vertical'
+
+                        BoxLayout:
+                            id: ops_fields
+                            spacing: 10
+                            size_hint: 1, None
+                            height: 35
+
+                        BoxLayout:
+                            id: ops_btns
+                            spacing: 10
+                            size_hint: 1, None
+                            height: 45
+
+                            Button:
+                                id: crud_add
+                                text: 'Añadir Alumno'
+                                size_hint: 1, 1
+                                on_release: root.add_user_fields()
+
+                # Nueva pantalla: Formulario de usuario
+                Screen:
+                    id: add_user_form
+                    name: 'add_user_form'
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        padding: 10
+                        spacing: 10
+
+                        TextInput:
+                            id: curp
+                            hint_text: 'CURP'
+                            multiline: False
+                            input_filter: root.alphanumeric
+                            max_text_length: 16
+                            halign: 'center'
+
+                        TextInput:
+                            id: nombres
+                            hint_text: 'Nombres'
+                            multiline: False
+                            input_filter: root.only_letters
+                            halign: 'center'
+
+                        TextInput:
+                            id: apellido_paterno
+                            hint_text: 'Apellido Paterno'
+                            multiline: False
+                            input_filter: root.only_letters
+                            halign: 'center'
+
+                        TextInput:
+                            id: apellido_materno
+                            hint_text: 'Apellido Materno'
+                            multiline: False
+                            input_filter: root.only_letters
+                            halign: 'center'
+
+                        BoxLayout:
+                            orientation: 'horizontal'
+                            size_hint: 1, None
+                            height: 40
+                            spacing: 10
+
+                            TextInput:
+                                id: dia
+                                hint_text: 'Día'
+                                multiline: False
+                                input_filter: root.only_numbers
+                                max_text_length: 2
+                                halign: 'center'
+
+                            TextInput:
+                                id: mes
+                                hint_text: 'Mes'
+                                multiline: False
+                                input_filter: root.only_numbers
+                                max_text_length: 2
+                                halign: 'center'
+
+                            TextInput:
+                                id: anio
+                                hint_text: 'Año'
+                                multiline: False
+                                input_filter: root.only_numbers
+                                max_text_length: 4
+                                halign: 'center'
+
+                        Spinner:
+                            id: nivel
+                            text: 'Seleccionar Nivel'
+                            values: ['Preescolar', 'Primaria', 'Secundaria']
+                            size_hint_y: None
+                            height: 40
+
+                        Spinner:
+                            id: grado
+                            text: 'Seleccionar Grado'
+                            values: ['1', '2', '3']
+                            size_hint_y: None
+                            height: 40
+
+                        BoxLayout:
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+
+                            Button:
+                                text: 'Guardar'
+                                on_release: root.save_user()
+
+                            Button:
+                                text: 'Cancelar'
+                                on_release: root.go_back_to_convocatorias()
