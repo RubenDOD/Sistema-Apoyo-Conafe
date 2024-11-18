@@ -182,5 +182,30 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
 
 INSERT INTO Usuario (correo, password, acceso) VALUES ('rabos@gmail.com', '1234', 'Aspirante');
 INSERT INTO Usuario (correo, password, acceso) VALUES ('rubengmail.com', '1234', 'Aspirante');
+# DROP TABLE alumno;
+CREATE TABLE alumno (
+    CURP NVARCHAR(16) PRIMARY KEY NOT NULL,
+    nombres NVARCHAR(80),
+    apellido_paterno NVARCHAR(50),
+    apellido_materno NVARCHAR(50),
+    fechaNacimiento DATE,
+    nivel NVARCHAR(255),
+    grado NVARCHAR(255)
+);
+select * from alumno;
 
-
+CREATE TABLE CCTgrupos(
+	id_grupo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	id_CCT NVARCHAR(50),
+	nombre_grupo NVARCHAR(20),
+    FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro)
+);
+DROP TABLE alumnoCCT;
+CREATE TABLE alumnoCCT(
+	id_CCT NVARCHAR(50),
+    id_alumno NVARCHAR(16),
+    id_grupo INT,
+    FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro),
+    FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
+    FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
+)

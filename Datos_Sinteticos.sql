@@ -2,7 +2,7 @@ USE CONAFE;
 INSERT INTO `CCT` VALUES('CCT0001', 'CONAFE PRUEBA', 'CAMPECHE', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
 INSERT INTO `CCT` VALUES('CCT0002', 'CONAFE PRUEBA2', 'Estado de México', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
 INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador1@example.com', 'pass123', 'Capacitador');
-
+select * from Usuario;
 INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador2@example.com', 'securepass', 'Capacitador');
 
 INSERT INTO Aspirante (
@@ -75,5 +75,5 @@ VALUES
 ('CCT0006', 9),
 ('CCT0007', 10);
 
-SELECT * FROM ResidenciaAspirante;
+SELECT * FROM CCT;
 
