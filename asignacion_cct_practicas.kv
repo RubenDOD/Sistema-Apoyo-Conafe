@@ -1,0 +1,98 @@
+ScreenManager:
+    MainScreen:
+        id: main_screen
+    DetalleCCTScreen:
+        id: detalle_cct
+
+<MainScreen>:
+    name: 'main'
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0.15, 0.50, 0.50, 1  # Fondo azul-verde
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            text: "Asignación de CCT para prácticas"
+            font_size: 24
+            bold: True
+            color: 1, 1, 1, 1  # Texto blanco
+            size_hint_y: None
+            height: 50
+            canvas.before:
+                Color:
+                    rgba: 0.0, 0.4, 0.4, 1  # Encabezado más oscuro
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+        BoxLayout:
+            orientation: 'vertical'
+            ScrollView:
+                GridLayout:
+                    id: data_layout
+                    cols: 2
+                    size_hint_y: None
+                    height: self.minimum_height
+                    row_default_height: 50
+                    row_force_default: True
+                    canvas.before:
+                        Color:
+                            rgba: 0.15, 0.50, 0.50, 1  # Fondo de los registros
+                        Rectangle:
+                            size: self.size
+                            pos: self.pos
+        Button:
+            text: "Regresar"
+            size_hint_y: None
+            height: 50
+            background_color: 0.7, 0, 0, 1  # Botón rojo
+            color: 1, 1, 1, 1
+            on_release: app.stop()
+
+<DetalleCCTScreen>:
+    name: 'detalle_cct'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: "Buscar y Asignar CCT"
+            font_size: 24
+            size_hint_y: None
+            height: 50
+        Label:
+            id: aspirante_info
+            text: "Información del aspirante"
+            size_hint_y: None
+            height: 50
+            color: 1, 1, 1, 1
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: 50
+            TextInput:
+                id: search_estado
+                hint_text: "Estado"
+                multiline: False
+            TextInput:
+                id: search_municipio
+                hint_text: "Municipio"
+                multiline: False
+            Button:
+                text: "Buscar"
+                on_release: root.search_ccts()
+        ScrollView:
+            GridLayout:
+                id: cct_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                row_default_height: 50
+                row_force_default: True
+        Button:
+            text: "Regresar"
+            size_hint_y: None
+            height: 50
+            background_color: 0.7, 0, 0, 1
+            color: 1, 1, 1, 1
+            on_release: root.go_back()

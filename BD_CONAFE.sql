@@ -249,3 +249,65 @@ CREATE TABLE alumnoCCT(
     FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
     FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
 )
+
+ALTER TABLE CCT ADD COLUMN cupos_disponibles INT DEFAULT 5;
+
+-- NOTA DE VERIFICAR LA PARTE DE LA CONCORDANCIA ENTRE LOS GRUPOS Y LOS CCT PARA QUE NO VAYA A CHOCAR CON LAS TABLAS CREADAS INDIVIDUALMENTE
+
+CREATE TABLE AsignacionAspiranteCCT (
+    id_asignacion INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    id_Aspirante INT,
+    claveCentro NVARCHAR(50),
+    fecha_asignacion DATE,
+    FOREIGN KEY (id_Aspirante) REFERENCES Aspirante(id_Aspirante),
+    FOREIGN KEY (claveCentro) REFERENCES CCT(claveCentro)
+);
+
+-- DATOS GENERADOS PARA REALIZAR PRUEBAS PARA LA ASIGNACION DE CCT
+
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, cupos_disponibles)
+VALUES
+('CCT001', 'Escuela Primaria Benito Juárez', 'Estado 1', '12345', 'Municipio 1', 'Localidad 1', 'Primaria', 'Matutino', 5),
+('CCT002', 'Escuela Secundaria General No. 2', 'Estado 2', '67890', 'Municipio 2', 'Localidad 2', 'Secundaria', 'Vespertino', 3),
+('CCT003', 'Colegio de Bachilleres Plantel 1', 'Estado 1', '11223', 'Municipio 3', 'Localidad 3', 'Bachillerato', 'Matutino', 0),
+('CCT004', 'Escuela Telesecundaria 15', 'Estado 3', '44556', 'Municipio 4', 'Localidad 4', 'Secundaria', 'Matutino', 2),
+('CCT005', 'Escuela Primaria Emiliano Zapata', 'Estado 2', '77889', 'Municipio 5', 'Localidad 5', 'Primaria', 'Vespertino', 4);
+
+SELECT * FROM CCT WHERE nivelEducativo='Bachillerato';
+
+INSERT INTO Usuario (correo, password, acceso)
+VALUES
+('aspirante1@gmail.com', 'password1', 'Aspirante'),
+('aspirante2@gmail.com', 'password2', 'Aspirante'),
+('aspirante3@gmail.com', 'password3', 'Aspirante'),
+('aspirante4@gmail.com', 'password4', 'Aspirante');
+
+SELECT * FROM Usuario;
+SELECT * FROM Aspirante;
+SELECT * FROM AsignacionAspiranteCCT;
+SELECT * FROM ConvocatoriaActual;
+
+INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud)
+VALUES
+(4, 1, '5551234567', '5557654321', 'aspirante1@gmail.com', 'CURP001', '25', 'Juan', 'Pérez', 'Gómez', '1998-05-10', 'Masculino', 'Mexicana', 'Finalizado'),
+(5, 1, '5559876543', '5553456789', 'aspirante2@gmail.com', 'CURP002', '30', 'María', 'López', 'Hernández', '1993-07-15', 'Femenino', 'Mexicana', 'Finalizado'),
+(6, 2, '5558765432', '5552345678', 'aspirante3@gmail.com', 'CURP003', '28', 'Carlos', 'Ramírez', 'Martínez', '1995-03-20', 'Masculino', 'Mexicana', 'Finalizado'),
+(7, 2, '5557654321', '5551234567', 'aspirante4@gmail.com', 'CURP004', '22', 'Ana', 'Torres', 'Núñez', '2001-11-30', 'Femenino', 'Mexicana', 'Finalizado');
+
+INSERT INTO ResidenciaAspirante (id_Aspirante, codigoPostal, estado, municipio, localidad, colonia, calle, numeroExterior, numeroInterior)
+VALUES
+(4, '12345', 'Estado 1', 'Municipio 1', 'Localidad 1', 'Colonia 1', 'Calle 1', '10', '1A'),
+(5, '67890', 'Estado 2', 'Municipio 2', 'Localidad 2', 'Colonia 2', 'Calle 2', '20', NULL),
+(6, '11223', 'Estado 1', 'Municipio 3', 'Localidad 3', 'Colonia 3', 'Calle 3', '30', NULL),
+(7, '44556', 'Estado 3', 'Municipio 4', 'Localidad 4', 'Colonia 4', 'Calle 4', '40', '2B');
+
+INSERT INTO InfoEducativaAspirante (id_Aspirante, fechaSolicitud, nivelEducativo, lenguaIndigena, pregunta1, pregunta2, pregunta3, pregunta4, pregunta5, pregunta6, pregunta7, pregunta8, pregunta9)
+VALUES
+(4, '2024-01-10', 'Primaria', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí'),
+(5, '2024-01-12', 'Secundaria', 'Sí', 'Sí', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No'),
+(6, '2024-01-15', 'Bachillerato', 'No', 'No', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí'),
+(7, '2024-01-18', 'Primaria', 'No', 'Sí', 'Sí', 'Sí', 'Sí', 'Sí', 'No', 'No', 'Sí', 'Sí');
+
+SELECT id_Aspirante, CONCAT(nombres, ' ', apellidoPaterno, ' ', apellidoMaterno) AS nombre_completo
+FROM Aspirante
+WHERE estado_solicitud = 'Finalizado';
