@@ -77,7 +77,7 @@ class CapacitadorAspiranteWindow(BoxLayout):
                 a.apellidoPaterno AS apellido_paterno,
                 a.apellidoMaterno AS apellido_materno
             FROM 
-                CapacitadorAspirante ca
+                FII ca
             JOIN 
                 Aspirante a ON ca.id_Aspirante = a.id_Aspirante
             WHERE 

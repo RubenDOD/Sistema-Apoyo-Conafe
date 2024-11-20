@@ -238,7 +238,7 @@ class DataTableCapacitadorAspirante(BoxLayout):
 
             # Consulta SQL para actualizar los datos
             query = """
-            UPDATE CapacitadorAspirante
+            UPDATE FII
             SET estadoCapacitacion = %s, observaciones = %s
             WHERE id_Aspirante = %s
             """

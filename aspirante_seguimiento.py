@@ -2,6 +2,7 @@ from collections import OrderedDict
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
+from kivy.properties import StringProperty
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Rectangle
@@ -34,10 +35,17 @@ class CircleWidget(Widget):
     def update_circle(self, *args):
         self.draw_circle()
 
-class AspiranteSeguimientoScreen(BoxLayout):
-    def __init__(self, id_aspirante = None,**kwargs):
+class AspiranteSeguimientoWindow(BoxLayout):
+    def __init__(self, id_usuario, **kwargs):
         super().__init__(orientation='vertical', **kwargs)
-        self.id_aspirante = 2
+        self.id_aspirante = 1
+        if self.id_aspirante is None:
+            self.add_widget(Label(text='No se pudo obtener la información del aspirante.', size_hint=(1, 0.1), halign="center", valign="middle", color=(0, 0, 0, 1)))  # Texto en negro
+            return None
+        else:
+            self.id_aspirante = id_usuario
+       
+
         # Barra de navegación superior
         self.add_widget(self.create_navigation_bar())
 
@@ -52,144 +60,146 @@ class AspiranteSeguimientoScreen(BoxLayout):
         # Obtenemos la información del aspirante
         info_aspirante = self.consultar_observaciones(self.id_aspirante, self.db_config)
 
-        # Nombre del aspirante
-        nombre_aspirante = Label(
-            text="Nombre: " + str(info_aspirante['nombres']) + " " + str(info_aspirante['apellidoPaterno']) + " " + str(info_aspirante['apellidoMaterno']),
-            size_hint=(1, 0.1),
-            halign="center",
-            valign="middle",
-            color=(0, 0, 0, 1)  # Texto en negro
-        )
-        nombre_aspirante.bind(size=nombre_aspirante.setter('text_size'))
-        self.add_widget(nombre_aspirante)
-
-        # Capacitador
-        capacitador_label = Label(
-            text="Número de capacitador: " +  str(info_aspirante['id_Capacitador']) + " Correo: " + str(info_aspirante['correo_Capacitador']),
-            size_hint=(1, 0.1),
-            halign="center",
-            valign="middle",
-            color=(0, 0, 0, 1)  # Texto en negro
-        )
-        capacitador_label.bind(size=capacitador_label.setter('text_size'))
-        self.add_widget(capacitador_label)
-
-        # Estado de la capacitación
-        estado_label = Label(
-            text="Estado de capacitación: " + str(info_aspirante['estadoCapacitacion']),
-            size_hint=(1, 0.1),
-            halign="center",
-            valign="middle",
-            color=(0, 0, 0, 1)  # Texto en negro
-        )
-        estado_label.bind(size=estado_label.setter('text_size'))
-        self.add_widget(estado_label)
-
-        # Label para mostrar las observaciones
-        self.observations_label = Label(
-            text="Observaciones: " + str(info_aspirante['observaciones']),
-            size_hint=(1, 0.1),
-            halign="center",
-            valign="middle",
-            color=(0, 0, 0, 1)  # Texto en negro
-        )
-        self.observations_label.bind(size=self.observations_label.setter('text_size'))
-        self.add_widget(self.observations_label)
-
-        # Estados de capacitación
-        self.states = ["En Inicio", "Cursos intermedios", "Finalizando Cursos", "Finalizado"]
-        # Buscamos el estado del aspirante en la base de datos
-        print("Estado actual: " + str(info_aspirante['estadoCapacitacion']))
-        self.current_state = self.states.index(str(info_aspirante['estadoCapacitacion'])) if str(info_aspirante['estadoCapacitacion']) in self.states else print("Estado no reconocido")
-
-        self.states_layout = GridLayout(cols=4, size_hint=(1, 0.2))
-
-        for i, state in enumerate(self.states):
-            circle_layout = BoxLayout(orientation='vertical')
-
-            # Elegimos un color distinto si el estado actual es Rechazado o Congelado
-            if str(info_aspirante['estadoCapacitacion']) == "Rechazado":
-                print("Es rechazado")
-                color = (1, 0, 0, 1)  # Rojo
-                is_active = True
-            elif str(info_aspirante['estadoCapacitacion']) == "Congelado":
-                print("Es congelado")
-                color = (1, 1, 0, 1)  # Amarillo
-                is_active = True
-            else:
-                print("No es rechazado ni congelado")
-                color = (0, 0, 1, 1) # Azul
-                is_active = (i <= self.current_state)
-
-            # Crear el widget del círculo
-            circle_widget = CircleWidget(is_active=is_active, color=color, size_hint=(1, 0.7))
-            circle_layout.add_widget(circle_widget)
-
-            # Etiqueta del estado
-            label = Label(
-                text=state,
-                size_hint=(1, 0.3),
+        if info_aspirante:
+            # Nombre del aspirante
+            nombre_aspirante = Label(
+                text="Nombre: " + str(info_aspirante['nombres']) + " " + str(info_aspirante['apellidoPaterno']) + " " + str(info_aspirante['apellidoMaterno']),
+                size_hint=(1, 0.1),
                 halign="center",
                 valign="middle",
                 color=(0, 0, 0, 1)  # Texto en negro
             )
-            label.bind(size=label.setter('text_size'))
-            circle_layout.add_widget(label)
+            nombre_aspirante.bind(size=nombre_aspirante.setter('text_size'))
+            self.add_widget(nombre_aspirante)
 
-            self.states_layout.add_widget(circle_layout)
+            # Capacitador
+            capacitador_label = Label(
+                text="Número de capacitador: " +  str(info_aspirante['id_Capacitador']) + " Correo: " + str(info_aspirante['correo_Capacitador']),
+                size_hint=(1, 0.1),
+                halign="center",
+                valign="middle",
+                color=(0, 0, 0, 1)  # Texto en negro
+            )
+            capacitador_label.bind(size=capacitador_label.setter('text_size'))
+            self.add_widget(capacitador_label)
 
-        self.add_widget(self.states_layout)
+            # Estado de la capacitación
+            estado_label = Label(
+                text="Estado de capacitación: " + str(info_aspirante['estadoCapacitacion']),
+                size_hint=(1, 0.1),
+                halign="center",
+                valign="middle",
+                color=(0, 0, 0, 1)  # Texto en negro
+            )
+            estado_label.bind(size=estado_label.setter('text_size'))
+            self.add_widget(estado_label)
+
+            # Label para mostrar las observaciones
+            self.observations_label = Label(
+                text="Observaciones: " + str(info_aspirante['observaciones']),
+                size_hint=(1, 0.1),
+                halign="center",
+                valign="middle",
+                color=(0, 0, 0, 1)  # Texto en negro
+            )
+            self.observations_label.bind(size=self.observations_label.setter('text_size'))
+            self.add_widget(self.observations_label)
+
+            # Estados de capacitación
+            self.states = ["En Inicio", "Cursos intermedios", "Finalizando Cursos", "Finalizado"]
+            # Buscamos el estado del aspirante en la base de datos
+            print("Estado actual: " + str(info_aspirante['estadoCapacitacion']))
+            self.current_state = self.states.index(str(info_aspirante['estadoCapacitacion'])) if str(info_aspirante['estadoCapacitacion']) in self.states else print("Estado no reconocido")
+
+            self.states_layout = GridLayout(cols=4, size_hint=(1, 0.2))
+
+            for i, state in enumerate(self.states):
+                circle_layout = BoxLayout(orientation='vertical')
+
+                # Elegimos un color distinto si el estado actual es Rechazado o Congelado
+                if str(info_aspirante['estadoCapacitacion']) == "Rechazado":
+                    print("Es rechazado")
+                    color = (1, 0, 0, 1)  # Rojo
+                    is_active = True
+                elif str(info_aspirante['estadoCapacitacion']) == "Congelado":
+                    print("Es congelado")
+                    color = (1, 1, 0, 1)  # Amarillo
+                    is_active = True
+                else:
+                    print("No es rechazado ni congelado")
+                    color = (.06, .45, .45, 1) # Azul
+                    is_active = (i <= self.current_state)
+
+                # Crear el widget del círculo
+                circle_widget = CircleWidget(is_active=is_active, color=color, size_hint=(1, 0.7))
+                circle_layout.add_widget(circle_widget)
+
+                # Etiqueta del estado
+                label = Label(
+                    text=state,
+                    size_hint=(1, 0.3),
+                    halign="center",
+                    valign="middle",
+                    color=(0, 0, 0, 1)  # Texto en negro
+                )
+                label.bind(size=label.setter('text_size'))
+                circle_layout.add_widget(label)
+
+                self.states_layout.add_widget(circle_layout)
+
+            self.add_widget(self.states_layout)
 
 
     def consultar_observaciones(self, id_aspirante, db_config=None):
-        try:
-            with mysql.connector.connect(**db_config) as mydb:
-                with mydb.cursor() as my_cursor:
-                    # Consulta optimizada
-                    sql = """
-                        SELECT 
-                            ca.id_Capacitador,
-                            a.nombres AS nombre_aspirante,
-                            ca.fechaInicio,
-                            ca.fechaFinalizacion,
-                            ca.observaciones,
-                            ca.estadoCapacitacion,
-                            a.apellidoPaterno AS apellido_paterno,
-                            a.apellidoMaterno AS apellido_materno,
-                            u.correo
-                        FROM 
-                            CapacitadorAspirante ca
-                        JOIN 
-                            Aspirante a ON ca.id_Aspirante = a.id_Aspirante
-                        JOIN 
-                            Usuario u ON ca.id_Capacitador = u.id_Usuario
-                        WHERE 
-                            ca.id_Aspirante = %s
-                    """
-                    my_cursor.execute(sql, (id_aspirante,))
-                    info_aspirante = my_cursor.fetchone()
+        mydb = mysql.connector.connect(**db_config)
+        my_cursor = mydb.cursor()
 
-                    # Validar si hay resultados
-                    if not info_aspirante:
-                        raise ValueError("No se encontraron datos para el aspirante.")
+        # Consulta optimizada
+        sql = """
+            SELECT 
+                ca.id_Capacitador,
+                a.nombres AS nombre_aspirante,
+                ca.fechaInicio,
+                ca.fechaFinalizacion,
+                ca.observaciones,
+                ca.estadoCapacitacion,
+                a.apellidoPaterno AS apellido_paterno,
+                a.apellidoMaterno AS apellido_materno,
+                u.correo
+            FROM 
+                FII ca
+            JOIN 
+                Aspirante a ON ca.id_Aspirante = a.id_Aspirante
+            JOIN 
+                Usuario u ON ca.id_Capacitador = u.id_Usuario
+            WHERE 
+                ca.id_Aspirante = %s
+        """
+        my_cursor.execute(sql, (id_aspirante,))
+        info_aspirante = my_cursor.fetchone()
 
-                    # Construir el diccionario
-                    _datosAspirante = {
-                        'id_Capacitador': info_aspirante[0],
-                        'nombres': info_aspirante[1],
-                        'fechaInicio': info_aspirante[2],
-                        'fechaFinalizacion': info_aspirante[3],
-                        'observaciones': info_aspirante[4],
-                        'estadoCapacitacion': info_aspirante[5],
-                        'apellidoPaterno': info_aspirante[6],
-                        'apellidoMaterno': info_aspirante[7],
-                        'correo_Capacitador': info_aspirante[8]
-                    }
+        # Cerrar el cursor y la conexión
+        my_cursor.close()
+        mydb.close()
 
-                    return _datosAspirante
-        except mysql.connector.Error as err:
-            print(f"Error al conectar con la base de datos: {err}")
-            return None
+        # Validar si hay resultados
+        if not info_aspirante:
+            return []
+
+        # Construir el diccionario
+        _datosAspirante = {
+            'id_Capacitador': info_aspirante[0],
+            'nombres': info_aspirante[1],
+            'fechaInicio': info_aspirante[2],
+            'fechaFinalizacion': info_aspirante[3],
+            'observaciones': info_aspirante[4],
+            'estadoCapacitacion': info_aspirante[5],
+            'apellidoPaterno': info_aspirante[6],
+            'apellidoMaterno': info_aspirante[7],
+            'correo_Capacitador': info_aspirante[8]
+        }
+
+        return _datosAspirante
 
     def create_navigation_bar(self):
         # Crear la barra de navegación superior
@@ -239,7 +249,7 @@ class AspiranteSeguimientoScreen(BoxLayout):
 
 class ObservationsApp(App):
     def build(self):
-        return AspiranteSeguimientoScreen()
+        return AspiranteSeguimientoWindow()
 
 if __name__ == "__main__":
     ObservationsApp().run()

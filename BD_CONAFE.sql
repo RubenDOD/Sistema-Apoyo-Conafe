@@ -144,7 +144,7 @@ CREATE TABLE CentroEducador (
     claveCentro NVARCHAR(50),
     id_LEC INT,
     FOREIGN KEY (claveCentro) REFERENCES CCT(claveCentro),
-    FOREIGN KEY (id_LEC) REFERENCES LEC(id_Usuario)
+    FOREIGN KEY (id_LEC) REFERENCES Usuario(id_Usuario)
 );
 
 -- Tabla: CapacitadorAspirante
@@ -181,7 +181,47 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
 
 
 INSERT INTO Usuario (correo, password, acceso) VALUES ('rabos@gmail.com', '1234', 'Aspirante');
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador1@example.com', 'pass123', 'Capacitador');
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador2@example.com', 'securepass', 'Capacitador');
 INSERT INTO Usuario (correo, password, acceso) VALUES ('rubengmail.com', '1234', 'Aspirante');
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (1, '5555555555', '5551234567', 'capacitador1@example.com', 'CURP1234567890ABC1', '30', 'Juan', 
+ 'Pérez', 'González', '1993-01-15', 'Masculino', 'Mexicana', 'Asignado');
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (2, '5555555556', '5557654321', 'capacitador2@example.com', 'CURP0987654321DEF2', '28', 'María', 
+ 'López', 'Hernández', '1995-03-22', 'Femenino', 'Mexicana', 'Asignado');
+ 
+INSERT INTO LEC (id_Usuario, estadoSalud, genero, edad, capacidadDiferente)
+VALUES 
+(1, 'Buena', 'Masculino', '30', 'Ninguna'),
+(2, 'Excelente', 'Femenino', '28', 'Ninguna');
+
+-- Insertar datos del CCT
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno)
+VALUES ('CCT0001', 'CONAFE PRUEBA1', 'Estado de México', '05000', 'NEZA', 'LOCAL 1', 'PRIMARIA', 'MATUTINO');
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno)
+VALUES ('CCT0002', 'CONAFE PRUEBA2', 'Estado de México', '05000', 'PRUEBA', 'LOCAL 2', 'PRIMARIA', 'MATUTINO');
+
+-- Insertar datos en la tabla CentroEducador usando los mismos id_Usuario de LEC
+INSERT INTO CentroEducador (claveCentro, id_LEC)
+VALUES 
+('CCT0001', 3),
+('CCT0002', 4);
+
+-- Insertar datos en la tabla CapacitadorAspirante
+INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
+VALUES (3, 1, 'CCT0001', 'En Inicio', '2024-11-01', '2024-12-01', 'Capacitación enfocada en liderazgo.');
+INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
+VALUES (3, 2, 'CCT0002', 'Finalizado', '2024-10-01', '2024-11-01', NULL);
+
 # DROP TABLE alumno;
 CREATE TABLE alumno (
     CURP NVARCHAR(16) PRIMARY KEY NOT NULL,

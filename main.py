@@ -1,5 +1,6 @@
 import re
 import mysql.connector
+from kivy.properties import StringProperty
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -8,7 +9,8 @@ from convocatorias import ConvocatoriaWindow  # Importar ConvocatoriaWindow
 from aplicarAspirante import aplicarAspiranteWindow  # Importa la ventana aplicarAspirante
 from FII import MainWidget  # Importa el widget principal de la pantalla FII
 from asignacion import AdminWindowAsignaciones  # Importa AdminWindowAsignaciones desde asignación.py
-
+from capacitador_aspirante import CapacitadorAspiranteWindow  # Importa la ventana capacitadorAspirante
+from aspirante_seguimiento import AspiranteSeguimientoWindow  # Importa la ventana aspirante_seguimiento
 # Conexión a la base de datos
 connection = mysql.connector.connect(
     host="localhost",
@@ -24,6 +26,7 @@ Builder.load_file('convocatorias.kv')  # Asegúrate de que el archivo convocator
 Builder.load_file('aplicarAspirante.kv')  # Asegura la carga de aplicarAspirante.kv aquí
 Builder.load_file('FII.kv')
 Builder.load_file('asignacion.kv')
+Builder.load_file('capacitador_aspirante.kv')
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -44,25 +47,37 @@ class LoginScreen(CustomBoxLayout):
         usuario = self.ids.txt_usuario.text
         contrasena = self.ids.txt_contrasena.text
         cursor = connection.cursor()
-        consulta = "SELECT acceso FROM Usuario WHERE correo=%s AND password=%s"
+        consulta = "SELECT acceso, id_Usuario FROM Usuario WHERE correo=%s AND password=%s"
         cursor.execute(consulta, (usuario, contrasena))
         resultado = cursor.fetchone()
         
         if resultado:
-            acceso = resultado[0]
+            acceso, id_usuario = resultado
+            id_usuario = str(id_usuario)
             self.ids.lbl_estado.text = "Login exitoso!"
             
             app = App.get_running_app()
             sm = app.root  # Accede al ScreenManager principal
             
+            # Imprimir el ID del usuario para verificación
+            print(f"ID de usuario en verificar_credenciales: {id_usuario}")
+
             # Seleccionar pantalla según el rol
             if acceso == 'Aspirante':
+                sm.current = 'aspirante'
+                aspirante_screen = sm.get_screen('aspirante').children[0]
+                aspirante_screen.id_usuario = id_usuario
+                print(f"ID de usuario asignado en AspiranteScreen desde verificar_credenciales: {aspirante_screen.id_usuario}")
                 sm.current = 'aspirante'
             elif acceso == 'Miembro Dirección Territorial':
                 sm.current = 'vista_direccion_territorial'
             elif acceso == 'LEC':
                 sm.current = 'lec'
             elif acceso == 'Capacitador':
+                sm.current = 'capacitador'
+                capacitador_screen = sm.get_screen('capacitador').children[0]
+                capacitador_screen.id_usuario = id_usuario
+                print(f"ID de usuario asignado en CapacitadorScreen desde verificar_credenciales: {capacitador_screen.id_usuario}")
                 sm.current = 'capacitador'
         else:
             self.ids.lbl_estado.text = "Usuario o contraseña incorrectos."
@@ -122,9 +137,33 @@ class RegisterScreen(CustomBoxLayout):
         App.get_running_app().root.current = 'login'
 
 class AspiranteScreen(CustomBoxLayout):
+    id_usuario = StringProperty()
+
+    def __init__(self, **kwargs):
+        super(AspiranteScreen, self).__init__(**kwargs)
+
     def aplicar_a_convocatoria(self):
         app = App.get_running_app()
         app.root.current = 'aplicar_aspirante'  # Redirige a la pantalla de aplicación
+
+    def interfazAspiranteSeguimiento(self, instance):
+        print(f"ID de usuario en AspiranteScreen: {self.id_usuario}")
+        # Crea una instancia de CapacitadorAspiranteWindow pasando el id_usuario actual
+        app = App.get_running_app()
+        aspirante_seguimiento_window = AspiranteSeguimientoWindow(id_usuario=self.id_usuario)
+        aspirante_seguimiento_screen = app.root.get_screen('aspirante_seguimiento')
+        aspirante_seguimiento_screen.clear_widgets()
+        aspirante_seguimiento_screen.add_widget(aspirante_seguimiento_window)
+
+        # Cambia a la pantalla de capacitador_aspirante
+        app.root.current = 'aspirante_seguimiento'
+
+class AspiranteSeguimientoScreen(CustomBoxLayout):
+    id_usuario = StringProperty()
+    def __init__(self, **kwargs):
+        super(AspiranteSeguimientoScreen, self).__init__(**kwargs)
+        # Crear una instancia de AspiranteSeguimientoWindow y pasar id_usuario
+        self.add_widget(AspiranteSeguimientoWindow(self.id_usuario))
 
 class VistaDireccionTerritorialScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
@@ -179,7 +218,29 @@ class LECScreen(CustomBoxLayout):
     pass
 
 class CapacitadorScreen(CustomBoxLayout):
-    pass
+    id_usuario = StringProperty()
+    def __init__(self, **kwargs):
+        super(CapacitadorScreen, self).__init__(**kwargs)
+    
+    def interfaz_CapacitadorAspirante(self, instance):
+        print(f"ID de usuario en CAPACITADOR: {self.id_usuario}")
+        # Crea una instancia de CapacitadorAspiranteWindow pasando el id_usuario actual
+        app = App.get_running_app()
+        capacitador_aspirante_window = CapacitadorAspiranteWindow(id_usuario=self.id_usuario)
+        capacitador_aspirante_screen = app.root.get_screen('capacitador_aspirante')
+        capacitador_aspirante_screen.clear_widgets()
+        capacitador_aspirante_screen.add_widget(capacitador_aspirante_window)
+
+        # Cambia a la pantalla de capacitador_aspirante
+        app.root.current = 'capacitador_aspirante'
+
+class CapacitadorAspiranteScreen(CustomBoxLayout):
+    id_usuario = StringProperty()
+    def __init__(self, **kwargs):
+        super(CapacitadorAspiranteScreen, self).__init__(**kwargs)
+        # Crear una instancia de CapacitadorAspiranteWindow y pasar id_usuario
+        self.add_widget(CapacitadorAspiranteWindow(self.id_usuario))
+
 
 class LoginApp(App):
     def build(self):
@@ -197,6 +258,10 @@ class LoginApp(App):
         screen_aspirante.add_widget(AspiranteScreen())
         sm.add_widget(screen_aspirante)
 
+        screen_aspiranteSeguimiento = Screen(name='aspirante_seguimiento')
+        screen_aspiranteSeguimiento.add_widget(AspiranteSeguimientoScreen())    
+        sm.add_widget(screen_aspiranteSeguimiento)
+
         screen_vdt = Screen(name='vista_direccion_territorial')
         screen_vdt.add_widget(VistaDireccionTerritorialScreen())
         sm.add_widget(screen_vdt)
@@ -208,6 +273,10 @@ class LoginApp(App):
         screen_capacitador = Screen(name='capacitador')
         screen_capacitador.add_widget(CapacitadorScreen())
         sm.add_widget(screen_capacitador)
+
+        screen_capacitadorAspirante = Screen(name='capacitador_aspirante')
+        screen_capacitadorAspirante.add_widget(CapacitadorAspiranteScreen())
+        sm.add_widget(screen_capacitadorAspirante)
 
         screen_convocatorias = ConvocatoriasScreen(name='convocatorias')  # Usar ConvocatoriasScreen
         sm.add_widget(screen_convocatorias)

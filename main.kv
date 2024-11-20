@@ -145,7 +145,13 @@
                 on_press: root.aplicar_a_convocatoria()
 
             Button:
-                text: 'Regresar al Login'
+                text: 'Seguimiento Capacitación'
+                size_hint_y: None
+                height: 50
+                on_press: root.interfazAspiranteSeguimiento(self)
+
+            Button:
+                text: 'Cerrar Sesión'
                 size_hint_y: None
                 height: 50
                 on_press:
@@ -305,6 +311,12 @@
                 valign: 'middle'
                 size_hint_y: None
                 height: self.texture_size[1]
+
+            Button:
+                text: 'Seguir Capacitación'
+                size_hint_y: None
+                height: 50
+                on_press: root.interfaz_CapacitadorAspirante(self)
 
             Button:
                 text: 'Regresar al Login'
