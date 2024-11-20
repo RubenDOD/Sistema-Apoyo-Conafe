@@ -125,6 +125,13 @@ class AspiranteSeguimientoWindow(BoxLayout):
                     print("Es congelado")
                     color = (1, 1, 0, 1)  # Amarillo
                     is_active = True
+                elif str(info_aspirante['estadoCapacitacion']) == "Finalizado":
+                    print("Es finalizado")
+                    color = (0, 1, 0, 1)  # Verde
+                    is_active = True
+
+                    # Actualizar el label de observaciones
+                    self.observations_label.text = "En espera de asignación"
                 else:
                     print("No es rechazado ni congelado")
                     color = (.06, .45, .45, 1) # Azul
