@@ -216,11 +216,15 @@ VALUES
 ('CCT0001', 3),
 ('CCT0002', 4);
 
+SELECT * FROM FII;
+SELECT * FROM Aspirante;
+SELECT * FROM Usuario;
+
 -- Insertar datos en la tabla CapacitadorAspirante
 INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
-VALUES (3, 1, 'CCT0001', 'En Inicio', '2024-11-01', '2024-12-01', 'Capacitación enfocada en liderazgo.');
+VALUES (9, 1, 'CCT001', 'En Inicio', '2024-11-01', '2024-12-01', 'Capacitación enfocada en liderazgo.');
 INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
-VALUES (3, 2, 'CCT0002', 'Finalizado', '2024-10-01', '2024-11-01', NULL);
+VALUES (9, 2, 'CCT002', 'Finalizado', '2024-10-01', '2024-11-01', NULL);
 
 # DROP TABLE alumno;
 CREATE TABLE alumno (
@@ -248,7 +252,7 @@ CREATE TABLE alumnoCCT(
     FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro),
     FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
     FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
-)
+);
 
 ALTER TABLE CCT ADD COLUMN cupos_disponibles INT DEFAULT 5;
 
@@ -263,15 +267,17 @@ CREATE TABLE AsignacionAspiranteCCT (
     FOREIGN KEY (claveCentro) REFERENCES CCT(claveCentro)
 );
 
+DELETE FROM AsignacionAspiranteCCT;
+
 -- DATOS GENERADOS PARA REALIZAR PRUEBAS PARA LA ASIGNACION DE CCT
 
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, cupos_disponibles)
 VALUES
-('CCT001', 'Escuela Primaria Benito Juárez', 'Estado 1', '12345', 'Municipio 1', 'Localidad 1', 'Primaria', 'Matutino', 5),
-('CCT002', 'Escuela Secundaria General No. 2', 'Estado 2', '67890', 'Municipio 2', 'Localidad 2', 'Secundaria', 'Vespertino', 3),
-('CCT003', 'Colegio de Bachilleres Plantel 1', 'Estado 1', '11223', 'Municipio 3', 'Localidad 3', 'Bachillerato', 'Matutino', 0),
-('CCT004', 'Escuela Telesecundaria 15', 'Estado 3', '44556', 'Municipio 4', 'Localidad 4', 'Secundaria', 'Matutino', 2),
-('CCT005', 'Escuela Primaria Emiliano Zapata', 'Estado 2', '77889', 'Municipio 5', 'Localidad 5', 'Primaria', 'Vespertino', 4);
+('CCT001', 'Escuela Primaria Benito Juárez', 'Campeche', '12345', 'Municipio 1', 'Localidad 1', 'Primaria', 'Matutino', 5),
+('CCT002', 'Escuela Secundaria General No. 2', 'Durango', '67890', 'Municipio 2', 'Localidad 2', 'Secundaria', 'Vespertino', 3),
+('CCT003', 'Colegio de Bachilleres Plantel 1', 'Campeche', '11223', 'Municipio 3', 'Localidad 3', 'Bachillerato', 'Matutino', 0),
+('CCT004', 'Escuela Telesecundaria 15', 'Durango', '44556', 'Municipio 4', 'Localidad 4', 'Secundaria', 'Matutino', 2),
+('CCT005', 'Escuela Primaria Emiliano Zapata', 'Durango', '77889', 'Municipio 5', 'Localidad 5', 'Primaria', 'Vespertino', 4);
 
 SELECT * FROM CCT WHERE nivelEducativo='Bachillerato';
 
@@ -308,6 +314,79 @@ VALUES
 (6, '2024-01-15', 'Bachillerato', 'No', 'No', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí', 'No', 'Sí'),
 (7, '2024-01-18', 'Primaria', 'No', 'Sí', 'Sí', 'Sí', 'Sí', 'Sí', 'No', 'No', 'Sí', 'Sí');
 
+UPDATE CCT
+SET cupos_disponibles = 5
+WHERE claveCentro = 'CCT001';
+
+UPDATE CCT
+SET cupos_disponibles = 3
+WHERE claveCentro = 'CCT002';
+
+UPDATE CCT
+SET cupos_disponibles = 0
+WHERE claveCentro = 'CCT003';
+
+UPDATE CCT
+SET cupos_disponibles = 2
+WHERE claveCentro = 'CCT004';
+
+UPDATE CCT
+SET cupos_disponibles = 4
+WHERE claveCentro = 'CCT005';
+
+
 SELECT id_Aspirante, CONCAT(nombres, ' ', apellidoPaterno, ' ', apellidoMaterno) AS nombre_completo
 FROM Aspirante
 WHERE estado_solicitud = 'Finalizado';
+
+INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
+VALUES ('Convocatoria 2024', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'Cerrada');
+
+INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
+VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRMVa1xSL-neCetlOlfCK1sxyPZNGwektNPq6ZvxYBw/viewform?usp=sf_link', 
+        'Cerrada');
+
+
+INSERT INTO Usuario (correo, password, acceso) VALUES ('rabos@gmail.com', '1234', 'Aspirante');
+INSERT INTO `CCT` VALUES('CCT0001', 'CONAFE PRUEBA', 'CAMPECHE', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO',5);
+INSERT INTO `CCT` VALUES('CCT0002', 'CONAFE PRUEBA2', 'Estado de México', '05000', 'PRUEBA 1', 'LOCAL 1', 'PRIMARIA', 'MATUTINO',5);
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador1@example.com', 'pass123', 'Capacitador');
+INSERT INTO Usuario (correo, password, acceso) VALUES ('capacitador2@example.com', 'securepass', 'Capacitador');
+
+SELECT * FROM Aspirante;
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (8, '5555555555', '5551234567', 'capacitador1@example.com', 'CURP1234567890ABC1', '30', 'Juan', 
+ 'Pérez', 'González', '1993-01-15', 'Masculino', 'Mexicana', 'Asignado');
+
+INSERT INTO Aspirante (
+    id_Aspirante, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, 
+    apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud
+)
+VALUES (9, '5555555556', '5557654321', 'capacitador2@example.com', 'CURP0987654321DEF2', '28', 'María', 
+ 'López', 'Hernández', '1995-03-22', 'Femenino', 'Mexicana', 'Asignado');
+ 
+SELECT * FROM Usuario; 
+ Select * FROM Aspirante;
+INSERT INTO LEC (id_Usuario, estadoSalud, genero, edad, capacidadDiferente)
+VALUES 
+(8, 'Buena', 'Masculino', '30', 'Ninguna'),
+(9, 'Excelente', 'Femenino', '28', 'Ninguna');
+
+-- Insertar datos en la tabla CentroEducador usando los mismos id_Usuario de LEC
+INSERT INTO CentroEducador (claveCentro, id_LEC)
+VALUES 
+('CCT001', 3),
+('CCT002', 4);
+SELECT * FROM Capacitador;
+-- Insertar datos en la tabla CapacitadorAspirante
+INSERT INTO CapacitadorAspirante (id_Capacitador, id_Aspirante, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
+VALUES (3, 1, 'En Proceso', '2024-11-01', '2024-12-01', 'Capacitación enfocada en liderazgo.');
+INSERT INTO CapacitadorAspirante (id_Capacitador, id_Aspirante, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
+VALUES (3, 2, 'Completado', '2024-10-01', '2024-11-01', NULL);

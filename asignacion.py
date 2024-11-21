@@ -98,8 +98,9 @@ class AdminWindowAsignaciones(BoxLayout):
         ciclo_text = f"Ciclo: {values[10]}"
         user_info_layout.add_widget(Label(text=ciclo_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        # estado = values[9].replace("CONAFE ", "")
-        estado = values[7]
+        estado = values[9].replace("CONAFE ", "")
+        #estado = values[7]
+        print(estado)
 
         # Primer Spinner: Selección del CCT
         dropdown_values = self.get_dropdown_options(estado)
@@ -340,7 +341,7 @@ class AdminWindowAsignaciones(BoxLayout):
                 _users['user_names'][idx] = user_names[idx]
 
                 idx += 1
-            
+            print(_users)
             return _users
         else:
             # Lista de claves

@@ -69,8 +69,6 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         mycursor = mydb.cursor()
 
         # Actualizar el estado en ambas tablas usando `user_id`
-        update_sql = 'UPDATE Usuario SET acceso = %s WHERE id_Usuario = %s'
-        mycursor.execute(update_sql, ("Aceptado", user_id))
         update_sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
         mycursor.execute(update_sql, ("Aceptado", user_id))
         

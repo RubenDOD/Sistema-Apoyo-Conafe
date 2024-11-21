@@ -1,11 +1,11 @@
-ScreenManager:
-    MainScreen:
-        id: main_screen
+<ScreenManager>:
+    AsignacionCCTPracticasScreen:
+        name: "asignacion_cct_practicas"
     DetalleCCTScreen:
-        id: detalle_cct
+        name: "detalle_cct"
 
-<MainScreen>:
-    name: 'main'
+<AsignacionCCTPracticasScreen>:
+    name: 'asignacion_cct_practicas'
     BoxLayout:
         orientation: 'vertical'
         canvas.before:
@@ -49,27 +49,45 @@ ScreenManager:
             height: 50
             background_color: 0.7, 0, 0, 1  # Botón rojo
             color: 1, 1, 1, 1
-            on_release: app.stop()
+            on_release: root.go_back()
 
 <DetalleCCTScreen>:
     name: 'detalle_cct'
     BoxLayout:
         orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0.0, 0.2, 0.6, 1  # Fondo azul
+            Rectangle:
+                size: self.size
+                pos: self.pos
         Label:
             text: "Buscar y Asignar CCT"
             font_size: 24
+            bold: True
             size_hint_y: None
-            height: 50
-        Label:
-            id: aspirante_info
-            text: "Información del aspirante"
-            size_hint_y: None
-            height: 50
+            height: 60  # Mayor altura para el título
             color: 1, 1, 1, 1
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: 150  # Espacio expandido para datos del aspirante
+            padding: 10
+            Label:
+                id: aspirante_info
+                text: "Información del aspirante"
+                size_hint_y: None
+                height: 150
+                color: 1, 1, 1, 1
+                text_size: self.width, None
+                halign: "center"
+                valign: "middle"
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
             height: 50
+            padding: [10, 0, 10, 0]  # Margen horizontal
+            spacing: 10
             TextInput:
                 id: search_estado
                 hint_text: "Estado"
@@ -81,18 +99,58 @@ ScreenManager:
             Button:
                 text: "Buscar"
                 on_release: root.search_ccts()
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: 50  # Ajustar altura de encabezados
+            padding: [10, 0, 10, 10]  # Añadimos espacio inferior
+            spacing: 10
+            Label:
+                text: "Número de CCT"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Nombre"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.25
+            Label:
+                text: "Estado"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Municipio"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Nivel Educativo"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Cupos"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.1
+            Label:
+                text: "Acción"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.1
         ScrollView:
             GridLayout:
                 id: cct_list
                 cols: 1
                 size_hint_y: None
                 height: self.minimum_height
-                row_default_height: 50
-                row_force_default: True
+                spacing: 5  # Espaciado entre las filas
         Button:
             text: "Regresar"
             size_hint_y: None
             height: 50
-            background_color: 0.7, 0, 0, 1
+            background_color: 0.7, 0, 0, 1  # Botón rojo
             color: 1, 1, 1, 1
-            on_release: root.go_back()
+            on_release: root.go_back()       

@@ -106,7 +106,7 @@ class AspiranteSeguimientoWindow(BoxLayout):
             self.add_widget(self.observations_label)
 
             # Estados de capacitación
-            self.states = ["En Inicio", "Cursos intermedios", "Finalizando Cursos", "Finalizado"]
+            self.states = ["En inicio", "Cursos intermedios", "Finalizando Cursos", "Finalizado"]
             # Buscamos el estado del aspirante en la base de datos
             print("Estado actual: " + str(info_aspirante['estadoCapacitacion']))
             self.current_state = self.states.index(str(info_aspirante['estadoCapacitacion'])) if str(info_aspirante['estadoCapacitacion']) in self.states else print("Estado no reconocido")
