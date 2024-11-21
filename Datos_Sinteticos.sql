@@ -125,6 +125,8 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
         'Cerrada');
 
 -- LOS DATOS DE LOS QUE SE ENCUENTRAN EN EL FORMS ESTÁN AL EJECUTAR JALAR.PY
+-- Después de usar jalar.py ejecuten esta línea para cambiar el nivel educativo de Cristian
+UPDATE InfoEducativaAspirante SET nivelEducativo='Primaria' WHERE id=x;
 
 -- DATOS ASPIRANTES
 INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud) VALUES (19, 1, '+24(1)8396348984', '385.560.4509x280', 'C019@gmail.com', '67270475485', '26', 'Ricardo', 'Vanegas', 'Olivas', '1994-02-17', 'Masculino', 'Armenia', 'Finalizado');
