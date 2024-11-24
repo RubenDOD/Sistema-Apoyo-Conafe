@@ -90,6 +90,9 @@ class AsignarAlumnosWindow(BoxLayout):
         users = self.get_users("User", idx)
         user_info = {key: users[key][0] for key in users}
 
+        # Nivel del alumno
+        nivel_alumno = user_info['nivel']
+
         # Limpiar el contenido actual
         content.clear_widgets()
 
@@ -115,7 +118,7 @@ class AsignarAlumnosWindow(BoxLayout):
             halign='left', valign='middle'
         ))
         user_info_layout.add_widget(Label(
-            text=f"Nivel: {user_info['nivel']}", 
+            text=f"Nivel: {nivel_alumno}", 
             color=(0, 0, 0, 1), size_hint_y=None, height=50, 
             halign='left', valign='middle'
         ))
@@ -146,7 +149,7 @@ class AsignarAlumnosWindow(BoxLayout):
         # Método para actualizar el segundo Spinner cuando cambie el primer Spinner
         def on_state_select(spinner, text):
             estado = text  # El texto seleccionado del Spinner
-            capacitadores = self.get_ccts_estado(estado)
+            capacitadores = self.get_ccts_estado(estado, nivel_alumno)  # Filtrar por nivel del alumno
             spinner_cct.values = capacitadores  # Actualiza los valores del segundo Spinner
 
         # Método para actualizar el tercer Spinner cuando cambie el segundo Spinner
@@ -201,30 +204,35 @@ class AsignarAlumnosWindow(BoxLayout):
         # Cambia a la pantalla de visualización de usuario
         self.ids.scrn_mngr.current = 'scrn_view'
 
-
-
     def get_grupo_id(self, cct, grupo):
         """Obtiene el ID del grupo basado en la claveCentro y el nombre del grupo."""
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+        try:
+            # Conexión a la base de datos
+            mydb = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                passwd='1234',
+                database='CONAFE'
+            )
+            mycursor = mydb.cursor()
 
-        # Consulta para obtener el ID del grupo
-        sql = '''
-            SELECT id_grupo FROM CCTgrupos
-            WHERE id_CCT = %s AND nombre_grupo = %s
-        '''
-        mycursor.execute(sql, (cct, grupo))
-        result = mycursor.fetchone()
+            # Consulta para obtener el ID del grupo
+            sql = '''
+                SELECT id_grupo FROM CCTgrupos
+                WHERE id_CCT = %s AND nombre_grupo = %s
+            '''
+            mycursor.execute(sql, (cct, grupo))
+            result = mycursor.fetchone()
 
-        mycursor.close()
-        mydb.close()
+            return result[0] if result else None
 
-        return result[0] if result else None
+        except mysql.connector.Error as e:
+            print(f"Error al obtener el ID del grupo: {e}")
+            return None
+
+        finally:
+            mycursor.close()
+            mydb.close()
 
 
     def asignar_alumno_cct(self, id_alumno, id_cct, id_grupo):
@@ -233,24 +241,25 @@ class AsignarAlumnosWindow(BoxLayout):
             self.show_popup("Error", "CCT o grupo no seleccionados.")
             return
 
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
-        # Inserción en la tabla alumnoCCT
-        sql = '''
-            INSERT INTO alumnoCCT (id_CCT, id_alumno, id_grupo)
-            VALUES (%s, %s, %s)
-        '''
         try:
+            # Conexión a la base de datos
+            mydb = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                passwd='1234',
+                database='CONAFE'
+            )
+            mycursor = mydb.cursor()
+
+            # Inserción en la tabla alumnoCCT
+            sql = '''
+                INSERT INTO alumnoCCT (id_CCT, id_alumno, id_grupo)
+                VALUES (%s, %s, %s)
+            '''
             mycursor.execute(sql, (id_cct, id_alumno, id_grupo))
             mydb.commit()
 
-            # Muestra un popup de éxito
+            # Mostrar mensaje de éxito
             self.show_popup("Éxito", "Alumno asignado correctamente.")
             self.reload_users()  # Recargar los usuarios no asignados
             self.go_back_to_convocatorias()
@@ -260,9 +269,6 @@ class AsignarAlumnosWindow(BoxLayout):
         finally:
             mycursor.close()
             mydb.close()
-
-
-
 
 
     def get_grupos_cct(self, cct):
@@ -293,31 +299,42 @@ class AsignarAlumnosWindow(BoxLayout):
 
 
 
-    def get_ccts_estado(self, estado):
-        # Conectar a la base de datos y obtener capacitadores para el CCT seleccionado
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+    def get_ccts_estado(self, estado, nivel_alumno):
+        """
+        Obtiene los CCTs disponibles para un estado específico que coincidan con el nivel educativo del alumno.
+        """
+        try:
+            # Conexión a la base de datos
+            mydb = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                passwd='1234',
+                database='CONAFE'
+            )
+            mycursor = mydb.cursor()
 
-        # Consulta para obtener nombres de capacitadores asignados a un CCT específico
-        sql = '''
-            SELECT  claveCentro, municipio, localidad FROM CCT
-            WHERE estado = %s
-        '''
-        mycursor.execute(sql, (estado,))
-        result = mycursor.fetchall()
+            # Consulta para obtener CCTs que coincidan con el estado y el nivel educativo
+            sql = '''
+                SELECT claveCentro, municipio, localidad 
+                FROM CCT 
+                WHERE estado = %s AND nivelEducativo = %s
+            '''
+            mycursor.execute(sql, (estado, nivel_alumno))
+            result = mycursor.fetchall()
 
-        # Formatear resultados para mostrarlos en el dropdown
-        ccts = [f"{claveCentro} {municipio} {localidad}" for claveCentro, municipio, localidad in result]
+            # Formatear resultados para mostrarlos en el dropdown
+            ccts = [f"{claveCentro} {municipio} {localidad}" for claveCentro, municipio, localidad in result]
 
-        mycursor.close()
-        mydb.close()
+            return ccts
 
-        return ccts
+        except mysql.connector.Error as e:
+            print(f"Error al obtener los CCTs: {e}")
+            return []
+
+        finally:
+            mycursor.close()
+            mydb.close()
+
     
     def go_back_to_convocatorias(self):
         """Regresa a la pantalla principal."""
