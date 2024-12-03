@@ -18,7 +18,6 @@ from kivy.uix.screenmanager import Screen
 class AlumnosWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Builder.load_file("alumnos.kv")
         # Conexión a la base de datos
         self.mydb = mysql.connector.connect(
             host='localhost',
@@ -69,21 +68,15 @@ class AlumnosWindow(BoxLayout):
     def alphanumeric(self, substring, from_undo):
         """Permite solo caracteres alfanuméricos."""
         return ''.join([char for char in substring if char.isalnum()])
-    
-    def ver_user(self, idx, conv_id):
-        """Muestra detalles de un usuario."""
-        if 'AdminWindow' in self.ids.scrn_mngr.screen_names:
-            screen_to_remove = self.ids.scrn_mngr.get_screen('AdminWindow')
-            self.ids.scrn_mngr.remove_widget(screen_to_remove)
-
-        conv_admin_screen = AdminWindow(name='AdminWindow', conv=conv_id)
-        self.ids.scrn_mngr.add_widget(conv_admin_screen)
-        self.ids.scrn_mngr.current = 'AdminWindow'
 
     def go_back_to_convocatorias(self):
         """Regresa a la pantalla principal."""
-        self.ids.scrn_mngr.current = 'scrn_content'
-        self.reload_users()
+        try:
+            app = App.get_running_app()  # Obtén la instancia de la aplicación principal
+            app.root.current = "vista_gestion_alumnos"  # Cambia a la pantalla específica
+            print("Regresando a la pantalla 'vista_gestion_alumnos'")
+        except Exception as e:
+            print(f"Error al regresar a la pantalla: {e}")
 
     def add_user_fields(self):
         """Cambia a la pantalla del formulario de usuario."""
@@ -106,8 +99,8 @@ class AlumnosWindow(BoxLayout):
             self.show_popup("Revisar datos", "Todos los campos son obligatorios.")
             return
 
-        if len(curp) < 10 or len(curp) > 16:
-            self.show_popup("Revisar datos", "El CURP debe tener al menos 10 caracteres y maximo 16.")
+        if len(curp) < 16 or len(curp) > 18:
+            self.show_popup("Revisar datos", "El CURP debe tener al menos 16 caracteres y maximo 18.")
             return
 
         if len(nombres) < 2 or len(nombres) > 50:

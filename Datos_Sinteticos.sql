@@ -112,6 +112,10 @@ INSERT INTO Usuario (id_Usuario, correo, password, acceso) VALUES (116, 'C116@gm
 INSERT INTO Usuario (id_Usuario, correo, password, acceso) VALUES (117, 'C117@gmail.com', '12345678', 'Capacitador');
 INSERT INTO Usuario (id_Usuario, correo, password, acceso) VALUES (118, 'C118@gmail.com', '12345678', 'Capacitador');
 
+INSERT INTO Usuario (correo, password, acceso) VALUES ('ACT1@gmail.com', '12345678', 'Control Escolar');
+INSERT INTO Usuario (correo, password, acceso) VALUES ('ACT2@gmail.com', '12345678', 'Control Escolar');
+
+
 -- DATOS CONVOATORIAS
 
 INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
@@ -127,6 +131,8 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
 -- LOS DATOS DE LOS QUE SE ENCUENTRAN EN EL FORMS ESTÁN AL EJECUTAR JALAR.PY
 -- Después de usar jalar.py ejecuten esta línea para cambiar el nivel educativo de Cristian
 UPDATE InfoEducativaAspirante SET nivelEducativo='Primaria' WHERE id=x;
+
+SELECT * FROM Aspirante;
 
 -- DATOS ASPIRANTES
 INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud) VALUES (19, 1, '+24(1)8396348984', '385.560.4509x280', 'C019@gmail.com', '67270475485', '26', 'Ricardo', 'Vanegas', 'Olivas', '1994-02-17', 'Masculino', 'Armenia', 'Finalizado');
@@ -695,3 +701,42 @@ INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 115);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 116);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 117);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 118);
+
+-- Area de Control Escolar
+INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
+
+-- Grupos CCT-1273-163
+INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 1');
+INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 2');
+INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 3');
+
+-- Materias
+INSERT INTO Materias (nombre_materia) VALUES
+('Matemáticas'),
+('Español'),
+('Ciencias Naturales'),
+('Historia'),
+('Geografía'),
+('Educación Física'),
+('Formación Cívica y Ética')
+;
+
+-- Insertar materias para el alumno con CURP 'A1B2C3D4E5F6G7H8'
+INSERT INTO Calificaciones (id_alumno, id_materia, calificacion) VALUES
+('DOOR031116HMCMRBA8', 1, 0.00),  -- Matemáticas
+('DOOR031116HMCMRBA8', 2, 0.00),  -- Español
+('DOOR031116HMCMRBA8', 3, 0.00),  -- Ciencias Naturales
+('DOOR031116HMCMRBA8', 4, 0.00),  -- Historia
+('DOOR031116HMCMRBA8', 5, 0.00),  -- Geografía
+('DOOR031116HMCMRBA8', 6, 0.00),  -- Educación Física
+('DOOR031116HMCMRBA8', 7, 0.00);  -- Artes Visuales
+
+-- Insertar materias para el alumno con CURP 'A1B2C3D4E5F6G7H8'
+INSERT INTO Calificaciones (id_alumno, id_materia, calificacion) VALUES
+('CTYP710803MCHFTZ29', 1, 0.00),  -- Matemáticas
+('CTYP710803MCHFTZ29', 2, 0.00),  -- Español
+('CTYP710803MCHFTZ29', 3, 0.00),  -- Ciencias Naturales
+('CTYP710803MCHFTZ29', 4, 0.00),  -- Historia
+('CTYP710803MCHFTZ29', 5, 0.00),  -- Geografía
+('CTYP710803MCHFTZ29', 6, 0.00),  -- Educación Física
+('CTYP710803MCHFTZ29', 7, 0.00);  -- Artes Visuales

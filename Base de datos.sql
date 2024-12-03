@@ -31,6 +31,7 @@ CREATE TABLE ConvocatoriaActual (
     estado_convocatoria NVARCHAR(20)
 );
 
+
 -- Tabla: Aspirante
 CREATE TABLE Aspirante (
     id_Aspirante INT PRIMARY KEY,
@@ -159,7 +160,7 @@ CREATE TABLE FII (
 
 -- Tabla: alumno
 CREATE TABLE alumno (
-    CURP NVARCHAR(16) PRIMARY KEY NOT NULL,
+    CURP NVARCHAR(18) PRIMARY KEY NOT NULL,
     nombres NVARCHAR(80),
     apellido_paterno NVARCHAR(50),
     apellido_materno NVARCHAR(50),
@@ -168,23 +169,66 @@ CREATE TABLE alumno (
     grado NVARCHAR(255)
 );
 
+-- ALTER TABLE alumno MODIFY COLUMN CURP NVARCHAR(18) NOT NULL;
+
+-- Tabla: Materias
+CREATE TABLE Materias (
+    id_materia INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_materia VARCHAR(100) NOT NULL
+);
+
+-- Tabla Calificaciones
+CREATE TABLE Calificaciones (
+    id_calificacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_alumno NVARCHAR(18) NOT NULL,
+    id_materia INT NOT NULL,
+    calificacion DECIMAL(5, 2) NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
+    FOREIGN KEY (id_materia) REFERENCES Materias(id_materia)
+);
+
+-- ALTER TABLE Calificaciones MODIFY COLUMN id_alumno NVARCHAR(18) NOT NULL;
+
+SELECT * FROM materias;
+SELECT * FROM alumno;
+
 -- Tabla: CCTgrupos
 CREATE TABLE CCTgrupos (
     id_grupo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     id_CCT NVARCHAR(50),
     nombre_grupo NVARCHAR(20),
-    FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro)
+    id_profesor INT,
+    nivel NVARCHAR(15),
+    grado NVARCHAR(15),
+    FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro),
+	FOREIGN KEY (id_profesor) REFERENCES Aspirante(id_Aspirante)
 );
+
+-- ALTER TABLE CCTgrupos
+-- ADD COLUMN id_profesor INT DEFAULT NULL;
+
+-- ALTER TABLE CCTgrupos
+-- ADD COLUMN nivel NVARCHAR(15);
+
+-- ALTER TABLE CCTgrupos
+-- ADD COLUMN grado NVARCHAR(15);
+
+-- ALTER TABLE CCTgrupos
+-- ADD CONSTRAINT fk_profesor FOREIGN KEY (id_profesor) REFERENCES Aspirante(id_Aspirante);
 
 -- Tabla: alumnoCCT
 CREATE TABLE alumnoCCT (
     id_CCT NVARCHAR(50),
-    id_alumno NVARCHAR(16),
-    id_grupo INT,
+    id_alumno NVARCHAR(18),
+    id_grupo INT DEFAULT NULL,
     FOREIGN KEY (id_CCT) REFERENCES CCT(claveCentro),
     FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
     FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
 );
+SELECT * FROM alumnoCCT;
+-- ALTER TABLE alumnoCCT MODIFY COLUMN id_alumno NVARCHAR(18) NOT NULL;
+
 
 -- Tabla: AsignacionAspiranteCCT
 CREATE TABLE AsignacionAspiranteCCT (
@@ -202,3 +246,35 @@ CREATE TABLE ActualizacionBD (
     fechaCambio DATETIME,
     descripcion NVARCHAR(255)
 );
+
+CREATE TABLE AreaControlEscolar(
+	id_ACT INT PRIMARY KEY NOT NULL,
+	CCT NVARCHAR(50),
+    FOREIGN KEY (CCT) REFERENCES CCT(claveCentro),
+    FOREIGN KEY (id_ACT) REFERENCES Usuario(id_Usuario)
+);
+
+-- REINICIAR
+DELETE FROM AsignacionAspiranteCCT;
+DELETE FROM FII;
+UPDATE Aspirante SET estado_solicitud='Aceptado' WHERE id_Aspirante=10;
+SELECT * FROM Aspirante;
+SELECT * FROM FII;
+UPDATE Usuario SET acceso='Aspirante' WHERE id_Usuario=10;
+
+-- SELECTs
+SELECT * FROM Usuario;
+SELECT * FROM Aspirante;
+SELECT * FROM CCT WHERE claveCentro = 'CCT-4597-168';
+SELECT * FROM AsignacionAspiranteCCT;
+
+SELECT Aspirante.id_Aspirante AS id, 
+       CONCAT(Aspirante.nombres, ' ', Aspirante.apellidoPaterno, ' ', Aspirante.apellidoMaterno) AS nombre
+FROM AsignacionAspiranteCCT
+JOIN Aspirante ON AsignacionAspiranteCCT.id_Aspirante = Aspirante.id_Aspirante
+WHERE AsignacionAspiranteCCT.claveCentro = 'CCT-4597-168';
+
+SELECT * FROM CCTGrupos;
+UPDATE CCTGrupos SET id_profesor=null WHERE id_profesor=10;
+
+SELECT * FROM CentroEducador;

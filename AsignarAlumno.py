@@ -15,11 +15,11 @@ from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 
+#Builder.load_file("AsignarAlumno.kv")
+
 class AsignarAlumnosWindow(BoxLayout):
-    Builder.load_file("AsignarAlumno.kv")
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
         # Conexión a la base de datos
         self.mydb = mysql.connector.connect(
             host='localhost',
@@ -337,10 +337,13 @@ class AsignarAlumnosWindow(BoxLayout):
 
     
     def go_back_to_convocatorias(self):
-        """Regresa a la pantalla principal."""
-        self.reload_users()
-        self.ids.scrn_mngr.current = 'scrn_content'
-        self.reload_users()
+        """Regresa directamente a la pantalla 'vista_gestion_alumnos'."""
+        try:
+            app = App.get_running_app()  # Obtén la instancia de la aplicación principal
+            app.root.current = 'vista_gestion_alumnos'  # Cambia la pantalla actual a 'vista_gestion_alumnos'
+            print("Regresando a la pantalla 'vista_gestion_alumnos'")  # Solo para depuración
+        except Exception as e:
+            print(f"Error al regresar a la pantalla: {e}")
 
 
     def show_popup(self, title, message):
@@ -353,10 +356,15 @@ class AsignarAlumnosWindow(BoxLayout):
         )
         popup.open()
 
+    # En el botón de regresar (cuando estás viendo los detalles del alumno)
+    def go_back_button(self):
+        """Manejo de regresar desde el detalle del alumno."""
+        self.go_back_to_convocatorias()  # Usamos la función modificada
+
 
     def go_back_to_users(self):
         """Regresa a la pantalla principal desde el formulario."""
-        self.ids.scrn_mngr.current = 'scrn_content'
+        self.ids.scrn_mngr.current = 'vista_asignar_alumnos'
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
@@ -429,9 +437,6 @@ class AsignarAlumnosWindow(BoxLayout):
             # Cierra el cursor y la conexión
             mycursor.close()
             mydb.close()
-
-        
-
 
 class AsignarAlumnosApp(App):
     def build(self):

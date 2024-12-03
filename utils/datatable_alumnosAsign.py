@@ -7,7 +7,7 @@ Builder.load_string('''
 <DataTableAlumnosAsign>:
     id: main_win
     RecycleView:
-        viewclass: 'CustButton'
+        viewclass: 'CustButtonAsign'
         id: table_floor
         RecycleGridLayout:
             id: table_floor_layout
@@ -18,7 +18,7 @@ Builder.load_string('''
             height: self.minimum_height
             spacing: 5
 
-<CustButton@Button>:
+<CustButtonAsign@Button>:
     size_hint_y: None
     height: 30
     bcolor: (0.5, 0.5, 0.5, 1)

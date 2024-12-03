@@ -16,7 +16,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 
 class CCTsWindow(BoxLayout):
-    Builder.load_file("AsignarAlumno.kv")
+    #Builder.load_file("AsignarAlumno.kv")
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
@@ -222,12 +222,6 @@ class CCTsWindow(BoxLayout):
             mycursor.close()
             mydb.close()
 
-
-
-
-
-
-
     def get_grupo_id(self, cct, grupo):
         """Obtiene el ID del grupo basado en la claveCentro y el nombre del grupo."""
         mydb = mysql.connector.connect(
@@ -344,10 +338,13 @@ class CCTsWindow(BoxLayout):
         return ccts
     
     def go_back_to_convocatorias(self):
-        """Regresa a la pantalla principal."""
-        self.reload_users()
-        self.ids.scrn_mngr.current = 'scrn_content'
-        self.reload_users()
+        """Regresa a la pantalla de ControlEscolarScreen."""
+        try:
+            app = App.get_running_app()  # Obtén la instancia de la aplicación principal
+            app.root.current = "vista_control_escolar"  # Cambia a la pantalla específica
+            print("Regresando a la pantalla 'vista_control_escolar'")
+        except Exception as e:
+            print(f"Error al regresar a la pantalla: {e}")
 
 
     def show_popup(self, title, message):
@@ -436,12 +433,9 @@ class CCTsWindow(BoxLayout):
             mydb.close()
 
         
-
-
 class CCTsApp(App):
     def build(self):
         return CCTsWindow()
-
 
 if __name__ == '__main__':
     CCTsApp().run()

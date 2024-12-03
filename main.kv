@@ -431,8 +431,8 @@
             orientation: 'vertical'
             spacing: 20
             padding: 50
-            size_hint: 0.6, 0.3
-            pos_hint: {'center_x': 0.5, 'top': 0.7}
+            size_hint: 0.6, 0.7
+            pos_hint: {'center_x': 0.5, 'top': 0.9}
 
             Label:
                 text: 'LEC'
@@ -443,6 +443,76 @@
                 size_hint_y: None
                 height: self.texture_size[1]
 
+            Label:
+                text: "CCT de Servicio: {}".format(root.cct)
+                font_size: 18
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: "Grupo Asignado: {}".format(root.grupo)
+                font_size: 18
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            ScrollView:
+                size_hint: 1, 0.6
+                GridLayout:
+                    id: botones_layout
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 10
+
+                    Button:
+                        text: "Control Escolar"
+                        on_press: root.control_escolar()
+
+<ControlEscolarScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: "Control Escolar - {}".format(root.cct)
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Button:
+                text: 'LEC'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_gestion_lec'
+            
+            Button:
+                text: 'Alumnos'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_gestion_alumnos'
+            
+            Button:
+                text: 'Grupos'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_gestion_grupos_detalle'
+
             Button:
                 text: 'Regresar al Login'
                 size_hint_y: None
@@ -450,6 +520,112 @@
                 on_press:
                     app.root.get_screen('login').children[0].limpiar_campos()
                     app.root.current = 'login'
+
+<vistaGestionLEC>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: "Seleccione opción a realizar en los LEC"
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+            
+            Button:
+                text: 'Asignar Grupo'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.get_screen('vista_asignar_grupo_lec').children[0].cct = app.root.get_screen('vista_control_escolar').children[0].cct
+                    app.root.get_screen('vista_asignar_grupo_lec').children[0].cargar_profesores()
+                    app.root.current = 'vista_asignar_grupo_lec'
+                
+            Button:
+                text: 'Regresar'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_control_escolar'
+
+<vistaAsignarGrupoLEC>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [10, 20, 10, 10]
+        spacing: 20
+
+        # Botón Regresar
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 10
+
+            Button:
+                text: "Regresar"
+                size_hint_x: 0.2
+                on_press: app.root.current = 'vista_gestion_lec'
+
+        Label:
+            text: "Asignar Profesor a Grupo - {}".format(root.cct)
+            font_size: 24
+            size_hint_y: None
+            height: 40
+
+        ScrollView:
+            size_hint: 1, 0.8
+            GridLayout:
+                id: grid_profesores
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+
+<vistaGestionAlumnos>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 50
+            size_hint: 0.6, 0.3
+            pos_hint: {'center_x': 0.5, 'top': 0.7}
+
+            Label:
+                text: "Seleccione opción a realizar en los Alumnos"
+                font_size: 24
+                color: [0, 0, 0, 1]
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1]
+            
+            Button:
+                text: 'Dar Alta'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_alta_alumnos'
+            
+            Button:
+                text: 'Asignar CCT y Grupo'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_asignar_alumnos'
+
+            Button:
+                text: 'Regresar'
+                size_hint_y: None
+                height: 50
+                on_press:
+                    app.root.current = 'vista_control_escolar'
+
 
 <CapacitadorScreen>:
     FloatLayout:

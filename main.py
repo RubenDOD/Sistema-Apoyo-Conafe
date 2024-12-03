@@ -5,6 +5,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
+from kivy.uix.spinner import Spinner
 from functools import partial
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -14,7 +15,11 @@ from FII import MainWidget  # Importa el widget principal de la pantalla FII
 from asignacion import AdminWindowAsignaciones  # Importa AdminWindowAsignaciones desde asignación.py
 from capacitador_aspirante import CapacitadorAspiranteWindow  # Importa la ventana capacitadorAspirante
 from aspirante_seguimiento import AspiranteSeguimientoWindow  # Importa la ventana aspirante_seguimiento
-        
+from CCTs import CCTsWindow
+from alumnos import AlumnosWindow
+from AsignarAlumno import AsignarAlumnosWindow
+from Calificaciones import AlumnosCalificaciones
+
 # Conexión a la base de datos
 connection = mysql.connector.connect(
     host="localhost",
@@ -22,6 +27,14 @@ connection = mysql.connector.connect(
     password="1234",
     database="CONAFE"
 )
+
+def get_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="1234",
+        database="CONAFE"
+    )
 
 # Cargar todos los archivos .kv
 Builder.load_file('main.kv')
@@ -31,6 +44,9 @@ Builder.load_file('aplicarAspirante.kv')  # Asegura la carga de aplicarAspirante
 Builder.load_file('FII.kv')
 Builder.load_file('asignacion.kv')
 Builder.load_file('capacitador_aspirante.kv')
+Builder.load_file('CCTs.kv')
+Builder.load_file("alumnos.kv")
+Builder.load_file("AsignarAlumno.kv")
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -50,6 +66,7 @@ class LoginScreen(CustomBoxLayout):
     def verificar_credenciales(self):
         usuario = self.ids.txt_usuario.text
         contrasena = self.ids.txt_contrasena.text
+        connection = get_connection()  # Obtén una nueva conexión
         cursor = connection.cursor()
         consulta = "SELECT acceso, id_Usuario FROM Usuario WHERE correo=%s AND password=%s"
         cursor.execute(consulta, (usuario, contrasena))
@@ -76,6 +93,9 @@ class LoginScreen(CustomBoxLayout):
             elif acceso == 'Miembro Dirección Territorial':
                 sm.current = 'vista_direccion_territorial'
             elif acceso == 'LEC':
+                lec_screen = sm.get_screen('lec').children[0]
+                lec_screen.id_usuario = id_usuario
+                lec_screen.cargar_informacion()
                 sm.current = 'lec'
             elif acceso == 'Capacitador':
                 sm.current = 'capacitador'
@@ -83,10 +103,27 @@ class LoginScreen(CustomBoxLayout):
                 capacitador_screen.id_usuario = id_usuario
                 print(f"ID de usuario asignado en CapacitadorScreen desde verificar_credenciales: {capacitador_screen.id_usuario}")
                 sm.current = 'capacitador'
+            elif acceso == 'Control Escolar':
+                # Obtener el CCT asociado
+                consulta_cct = "SELECT CCT FROM AreaControlEscolar WHERE id_ACT = %s"
+                cursor.execute(consulta_cct, (id_usuario,))
+                resultado_cct = cursor.fetchone()
+                
+                if resultado_cct:
+                    cct = resultado_cct[0]  # Extraer el valor del CCT
+                else:
+                    cct = "N/A"  # Si no hay un CCT asignado
+
+                # Pasar el valor de CCT a la pantalla
+                control_escolar_screen = sm.get_screen('vista_control_escolar').children[0]
+                control_escolar_screen.cct = cct
+                
+                sm.current = 'vista_control_escolar'
         else:
             self.ids.lbl_estado.text = "Usuario o contraseña incorrectos."
         
         cursor.close()
+        connection.close()
 
     def go_to_register(self):
         App.get_running_app().root.current = 'register'
@@ -549,6 +586,12 @@ class DetalleCCTScreen(Screen):
             UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = %s;
             """
             cursor.execute(query_update_cupos, (clave_centro,))
+
+            # Actualizar cupos disponibles en el CCT
+            query_update_LEC = """
+            UPDATE USUARIO SET acceso = 'LEC' WHERE id_Usuario = %s;
+            """
+            cursor.execute(query_update_LEC, (aspirante_id,))
             db.commit()
             db.close()
 
@@ -586,7 +629,99 @@ class TableroControlScreen(Screen):
         app.root.current = 'fii'
 
 class LECScreen(CustomBoxLayout):
-    pass
+    id_usuario = StringProperty("")  # Almacena el ID del LEC
+    cct = StringProperty("No asignado")  # Almacena el CCT del LEC
+    grupo = StringProperty("Sin grupo asignado")  # Almacena el grupo del LEC
+
+    def cargar_informacion(self):
+        """
+        Carga la información del CCT y del grupo asignado al LEC.
+        """
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        try:
+            # Consulta para obtener el CCT y grupo asignado al LEC
+            query = """
+                SELECT 
+                AsignacionAspiranteCCT.claveCentro AS cct,
+                CCTgrupos.nombre_grupo AS grupo
+                FROM AsignacionAspiranteCCT
+                LEFT JOIN CCTgrupos ON AsignacionAspiranteCCT.id_Aspirante = CCTgrupos.id_profesor
+                WHERE AsignacionAspiranteCCT.id_Aspirante = %s;
+            """
+            cursor.execute(query, (self.id_usuario,))
+            result = cursor.fetchone()
+
+            # Actualizar las propiedades de la pantalla
+            self.cct = result['cct'] if result and result['cct'] else "No asignado"
+            self.grupo = result['grupo'] if result and result['grupo'] else "Sin grupo asignado"
+        except mysql.connector.Error as err:
+            print(f"Error al cargar información del LEC: {err}")
+            self.cct = "Error al cargar"
+            self.grupo = "Error al cargar"
+        finally:
+            cursor.close()
+            connection.close()
+
+        # Actualizar los botones dinámicos según la asignación del grupo
+        self.actualizar_botones()
+
+    def actualizar_botones(self):
+        """
+        Actualiza los botones de la pantalla dinámicamente según el grupo asignado.
+        """
+        self.ids.botones_layout.clear_widgets()  # Limpia los botones existentes
+
+        if self.grupo != "Sin grupo asignado":
+            # Agregar los botones solo si el LEC tiene un grupo asignado
+            botones = [
+                {"text": "Control Escolar", "on_press": self.control_escolar},
+            ]
+            for boton in botones:
+                btn = Button(text=boton['text'], size_hint_y=None, height=50)
+                btn.bind(on_press=boton['on_press'])
+                self.ids.botones_layout.add_widget(btn)
+
+        # Botón de cerrar sesión (siempre presente)
+        btn_cerrar_sesion = Button(
+            text="Cerrar Sesión",
+            size_hint_y=None,
+            height=50,
+            on_press=lambda _: self.cerrar_sesion()
+        )
+        self.ids.botones_layout.add_widget(btn_cerrar_sesion)
+
+    def opciones_grupo(self, instance):
+        print("Opciones del grupo seleccionadas.")
+
+    def control_escolar(self, instance):
+        print("Accediendo a control escolar.")
+        app = App.get_running_app()
+
+        # Obtener la pantalla de calificaciones
+        lec_calificaciones_screen = app.root.get_screen('lec_calificaciones')
+
+        # Obtener el widget AlumnosCalificaciones dentro del Screen
+        lec_calificaciones_widget = lec_calificaciones_screen.children[0]
+
+        # Asignar el CCT y grupo a la pantalla de calificaciones
+        lec_calificaciones_widget.cct = self.cct
+        lec_calificaciones_widget.grupo = self.grupo
+
+        # Llamar al método que carga los alumnos
+        lec_calificaciones_widget.load_alumnos()  # Llamamos el método en el widget correcto
+
+        # Cambiar a la pantalla de calificaciones
+        app.root.current = 'lec_calificaciones'  # Cambia a la pantalla de calificaciones
+
+
+    def cerrar_sesion(self):
+        """
+        Regresa al login y limpia los campos.
+        """
+        app = App.get_running_app()
+        app.root.get_screen('login').children[0].limpiar_campos()
+        app.root.current = 'login'
 
 class CapacitadorScreen(CustomBoxLayout):
     id_usuario = StringProperty()
@@ -611,6 +746,158 @@ class CapacitadorAspiranteScreen(CustomBoxLayout):
         super(CapacitadorAspiranteScreen, self).__init__(**kwargs)
         # Crear una instancia de CapacitadorAspiranteWindow y pasar id_usuario
         self.add_widget(CapacitadorAspiranteWindow(self.id_usuario))
+
+class ControlEscolarScreen(CustomBoxLayout):
+    cct = StringProperty("")  # Propiedad para almacenar el CCT asociado
+
+class vistaAsignarGrupoLEC(CustomBoxLayout):
+    cct = StringProperty("")  # Clave del CCT asociada
+
+    def cargar_profesores(self):
+        """
+        Carga todos los profesores (LEC) asignados al CCT y los grupos disponibles para cada uno.
+        """
+        self.ids.grid_profesores.clear_widgets()  # Limpiar la lista de profesores
+        profesores = self.obtener_lecs_por_cct()
+
+        if profesores:
+            for profesor in profesores:
+                box = BoxLayout(size_hint_y=None, height=50, spacing=10)
+                box.add_widget(Label(text=profesor['nombre'], size_hint_x=0.5))
+
+                # Spinner para grupos disponibles
+                spinner = Spinner(
+                    text="Cargando grupos...",
+                    size_hint_x=0.3
+                )
+                spinner.profesor_id = profesor['id']
+                spinner.bind(on_press=lambda instance: self.cargar_grupos(instance, profesor['id']))
+                box.add_widget(spinner)
+
+                # Botón para confirmar la asignación
+                asignar_btn = Button(
+                    text="Asignar",
+                    size_hint_x=0.2
+                )
+                asignar_btn.spinner = spinner  # Asociar el spinner con el botón
+                asignar_btn.bind(on_press=self.asignar_profesor)
+                box.add_widget(asignar_btn)
+
+                self.ids.grid_profesores.add_widget(box)
+        else:
+            self.ids.grid_profesores.add_widget(Label(text="No hay profesores asignados a este CCT.", size_hint_y=None, height=50))
+
+    def cargar_grupos(self, spinner, profesor_id):
+        """
+        Carga los grupos disponibles para asignar al profesor seleccionado.
+        """
+        grupos = self.obtener_grupos_disponibles()
+
+        if grupos:
+            spinner.values = [grupo['nombre'] for grupo in grupos]
+            spinner.grupo_ids = {grupo['nombre']: grupo['id'] for grupo in grupos}  # Mapeo nombre -> ID
+            spinner.text = "Seleccionar grupo"
+        else:
+            spinner.values = ["No hay grupos disponibles"]
+            spinner.grupo_ids = {}  # Sin mapeo
+            spinner.text = "No hay grupos disponibles"
+
+    def asignar_profesor(self, instance):
+        """
+        Asigna el profesor al grupo seleccionado.
+        """
+        spinner = instance.spinner
+        grupo_nombre = spinner.text
+
+        if grupo_nombre == "No hay grupos disponibles" or grupo_nombre == "Cargando grupos...":
+            print("No se puede asignar. No hay grupos seleccionados o disponibles.")
+            return
+
+        grupo_id = spinner.grupo_ids[grupo_nombre]  # Obtener el ID del grupo
+        profesor_id = spinner.profesor_id
+
+        # Ejecutar la asignación
+        self.asignar_profesor_a_grupo(profesor_id, grupo_id)
+
+        # Recargar la lista de profesores y grupos
+        self.cargar_profesores()
+
+    def obtener_grupos_disponibles(self):
+        """
+        Devuelve los grupos disponibles (sin profesor asignado) en el CCT.
+        """
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        try:
+            query = """
+                SELECT id_grupo AS id, nombre_grupo AS nombre
+                FROM CCTgrupos
+                WHERE id_CCT = %s AND id_profesor IS NULL;
+            """
+            cursor.execute(query, (self.cct,))
+            grupos = cursor.fetchall()
+            return grupos
+        except mysql.connector.Error as err:
+            print(f"Error al obtener grupos disponibles: {err}")
+            return []
+        finally:
+            cursor.close()
+            connection.close()
+
+    def asignar_profesor_a_grupo(self, profesor_id, grupo_id):
+        """
+        Asigna un profesor a un grupo específico.
+        """
+        connection = get_connection()
+        cursor = connection.cursor()
+        try:
+            query = """
+                UPDATE CCTgrupos
+                SET id_profesor = %s
+                WHERE id_grupo = %s;
+            """
+            cursor.execute(query, (profesor_id, grupo_id))
+            connection.commit()
+            print(f"Profesor {profesor_id} asignado al grupo {grupo_id}.")
+        except mysql.connector.Error as err:
+            print(f"Error al asignar profesor: {err}")
+        finally:
+            cursor.close()
+            connection.close()
+
+    def obtener_lecs_por_cct(self):
+        """
+        Consulta todos los LEC asignados al CCT específico.
+        """
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        try:
+            query = """
+                SELECT Aspirante.id_Aspirante AS id, 
+                       CONCAT(Aspirante.nombres, ' ', Aspirante.apellidoPaterno, ' ', Aspirante.apellidoMaterno) AS nombre
+                FROM AsignacionAspiranteCCT
+                JOIN Aspirante ON AsignacionAspiranteCCT.id_Aspirante = Aspirante.id_Aspirante
+                LEFT JOIN CCTgrupos ON Aspirante.id_Aspirante = CCTgrupos.id_profesor AND CCTgrupos.id_CCT = AsignacionAspiranteCCT.claveCentro
+                WHERE AsignacionAspiranteCCT.claveCentro = %s AND CCTgrupos.id_profesor IS NULL;
+            """
+            cursor.execute(query, (self.cct,))
+            lecs = cursor.fetchall()
+            return lecs
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            return []
+        finally:
+            cursor.close()
+            connection.close()
+
+class vistaGestionLEC(CustomBoxLayout):
+    pass
+
+class vistaGestionAlumnos(CustomBoxLayout):
+    pass
+
+class vistaGestionGrupos(CustomBoxLayout):
+    pass
 
 class LoginApp(App):
     def build(self):
@@ -639,6 +926,42 @@ class LoginApp(App):
         screen_lec = Screen(name='lec')
         screen_lec.add_widget(LECScreen())
         sm.add_widget(screen_lec)
+
+        screen_lec_calificaciones = Screen(name='lec_calificaciones')
+        screen_lec_calificaciones.add_widget(AlumnosCalificaciones())
+        sm.add_widget(screen_lec_calificaciones)
+
+        screen_ControlEscolar = Screen(name='vista_control_escolar')
+        screen_ControlEscolar.add_widget(ControlEscolarScreen())
+        sm.add_widget(screen_ControlEscolar)
+
+        screen_vista_gestion_lec = Screen(name='vista_gestion_lec')
+        screen_vista_gestion_lec.add_widget(vistaGestionLEC())
+        sm.add_widget(screen_vista_gestion_lec)
+
+        screen_vista_asignar_grupo_lec = Screen(name='vista_asignar_grupo_lec')
+        screen_vista_asignar_grupo_lec.add_widget(vistaAsignarGrupoLEC())
+        sm.add_widget(screen_vista_asignar_grupo_lec)
+
+        screen_vista_gestion_alumnos = Screen(name='vista_gestion_alumnos')
+        screen_vista_gestion_alumnos.add_widget(vistaGestionAlumnos())
+        sm.add_widget(screen_vista_gestion_alumnos)
+
+        screen_vista_alta_alumnos = Screen(name='vista_alta_alumnos')
+        screen_vista_alta_alumnos.add_widget(AlumnosWindow())
+        sm.add_widget(screen_vista_alta_alumnos)
+    
+        screen_vista_asignar_alumnos = Screen(name='vista_asignar_alumnos')
+        screen_vista_asignar_alumnos.add_widget(AsignarAlumnosWindow())
+        sm.add_widget(screen_vista_asignar_alumnos)
+
+        screen_vista_gestion_grupos = Screen(name='vista_gestion_grupos')
+        screen_vista_gestion_grupos.add_widget(vistaGestionGrupos())
+        sm.add_widget(screen_vista_gestion_grupos)
+
+        screen_vista_gestion_grupos_detalle = Screen(name='vista_gestion_grupos_detalle')
+        screen_vista_gestion_grupos_detalle.add_widget(CCTsWindow())
+        sm.add_widget(screen_vista_gestion_grupos_detalle)
 
         screen_capacitador = Screen(name='capacitador')
         screen_capacitador.add_widget(CapacitadorScreen())
