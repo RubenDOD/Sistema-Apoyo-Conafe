@@ -11,7 +11,7 @@ Builder.load_string('''
         id: table_floor
         RecycleGridLayout:
             id: table_floor_layout
-            cols: 5  # Ajustado para 4 columnas: CURP, nombres, apellido_paterno, nivel
+            cols: 6  # Ajustado para 5 columnas: CURP, nombres, apellido_paterno, nivel, grado
             default_size: (None, 250)
             default_size_hint: (1, None)
             size_hint_y: None

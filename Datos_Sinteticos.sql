@@ -114,7 +114,7 @@ INSERT INTO Usuario (id_Usuario, correo, password, acceso) VALUES (118, 'C118@gm
 
 INSERT INTO Usuario (correo, password, acceso) VALUES ('ACT1@gmail.com', '12345678', 'Control Escolar');
 INSERT INTO Usuario (correo, password, acceso) VALUES ('ACT2@gmail.com', '12345678', 'Control Escolar');
-
+INSERT INTO Usuario (correo, password, acceso) VALUES ('ACT3@gmail.com', '12345678', 'Control Escolar');
 
 -- DATOS CONVOATORIAS
 
@@ -704,7 +704,9 @@ INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 118);
 
 -- Area de Control Escolar
 INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
-
+INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
+INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (121,'CCT-1010-970');
+select * from Usuario;
 -- Grupos CCT-1273-163
 INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 1');
 INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 2');
@@ -720,6 +722,17 @@ INSERT INTO Materias (nombre_materia) VALUES
 ('Educación Física'),
 ('Formación Cívica y Ética')
 ;
+
+INSERT INTO Materias (nombre_materia) VALUES
+    ('Exploración de la Naturaleza y la Sociedad'),
+    ('Educación Artística'),
+    ('Ciencias Naturales'),
+    ('La Entidad donde vivo'),
+    ('Historia'),
+    ('Ciencias'),
+    ('Educación Física'),
+    ('Tecnología');
+
 
 -- Insertar materias para el alumno con CURP 'A1B2C3D4E5F6G7H8'
 INSERT INTO Calificaciones (id_alumno, id_materia, calificacion) VALUES
@@ -740,3 +753,4 @@ INSERT INTO Calificaciones (id_alumno, id_materia, calificacion) VALUES
 ('CTYP710803MCHFTZ29', 5, 0.00),  -- Geografía
 ('CTYP710803MCHFTZ29', 6, 0.00),  -- Educación Física
 ('CTYP710803MCHFTZ29', 7, 0.00);  -- Artes Visuales
+

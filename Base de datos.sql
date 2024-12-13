@@ -133,7 +133,7 @@ CREATE TABLE CCT (
     localidad NVARCHAR(50),
     nivelEducativo NVARCHAR(50),
     turno NVARCHAR(50),
-    cupos_disponibles INT DEFAULT 5
+    cupos_disponibles INT DEFAULT 3
 );
 
 -- Tabla: CentroEducador
@@ -205,6 +205,8 @@ CREATE TABLE CCTgrupos (
 	FOREIGN KEY (id_profesor) REFERENCES Aspirante(id_Aspirante)
 );
 
+SELECT * FROM CCTGrupos;
+
 -- ALTER TABLE CCTgrupos
 -- ADD COLUMN id_profesor INT DEFAULT NULL;
 
@@ -227,6 +229,7 @@ CREATE TABLE alumnoCCT (
     FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
 );
 SELECT * FROM alumnoCCT;
+DELETE FROM alumnoCCT;
 -- ALTER TABLE alumnoCCT MODIFY COLUMN id_alumno NVARCHAR(18) NOT NULL;
 
 
@@ -262,6 +265,9 @@ SELECT * FROM Aspirante;
 SELECT * FROM FII;
 UPDATE Usuario SET acceso='Aspirante' WHERE id_Usuario=10;
 
+SELECT * FROM CCT;
+UPDATE CCT SET cupos_disponibles=3 WHERE claveCentro='CCT-4597-168';
+
 -- SELECTs
 SELECT * FROM Usuario;
 SELECT * FROM Aspirante;
@@ -275,6 +281,12 @@ JOIN Aspirante ON AsignacionAspiranteCCT.id_Aspirante = Aspirante.id_Aspirante
 WHERE AsignacionAspiranteCCT.claveCentro = 'CCT-4597-168';
 
 SELECT * FROM CCTGrupos;
+DELETE FROM CCTGrupos WHERE id_grupo = 4;
 UPDATE CCTGrupos SET id_profesor=null WHERE id_profesor=10;
 
 SELECT * FROM CentroEducador;
+SELECT * FROM AsignacionAspiranteCCT;
+SELECT * FROM calificaciones;
+
+delete from calificaciones;
+delete from CCTGrupos;

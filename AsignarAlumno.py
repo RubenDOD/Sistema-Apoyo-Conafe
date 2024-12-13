@@ -15,11 +15,11 @@ from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 
-#Builder.load_file("AsignarAlumno.kv")
-
 class AsignarAlumnosWindow(BoxLayout):
+    #Builder.load_file("AsignarAlumno.kv")
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
         # Conexión a la base de datos
         self.mydb = mysql.connector.connect(
             host='localhost',
@@ -92,6 +92,7 @@ class AsignarAlumnosWindow(BoxLayout):
 
         # Nivel del alumno
         nivel_alumno = user_info['nivel']
+        grado_alumno = user_info['grado']
 
         # Limpiar el contenido actual
         content.clear_widgets()
@@ -122,6 +123,20 @@ class AsignarAlumnosWindow(BoxLayout):
             color=(0, 0, 0, 1), size_hint_y=None, height=50, 
             halign='left', valign='middle'
         ))
+        user_info_layout.add_widget(Label(
+            text=f"Grado: {grado_alumno}", 
+            color=(0, 0, 0, 1), size_hint_y=None, height=50, 
+            halign='left', valign='middle'
+        ))
+        # Crear un botón de regresar
+        boton_regresar = Button(
+            text="Regresar a la lista de alumnos",
+            size_hint=(1, None),
+            height=50
+        )
+        boton_regresar.bind(on_press=lambda instance: self.go_back_to_users())
+        # Agregar el botón al layout
+        user_info_layout.add_widget(boton_regresar)
 
         # Crear Spinners para Estado, CCT y Grupo
         unique_states = self.get_unique_states()
@@ -153,14 +168,14 @@ class AsignarAlumnosWindow(BoxLayout):
             spinner_cct.values = capacitadores  # Actualiza los valores del segundo Spinner
 
         # Método para actualizar el tercer Spinner cuando cambie el segundo Spinner
-        def on_cct_select(spinner, text):
+        def on_cct_select(spinner, text, grado_alumno):
             cct = text.split()[0]  # Extraer la claveCentro del texto seleccionado
-            grupos = self.get_grupos_cct(cct)
+            grupos = self.get_grupos_cct(cct, grado_alumno)
             spinner_grupo.values = grupos  # Actualiza los valores del tercer Spinner
 
         # Vincular los eventos `text` de los Spinners
         spinner_estado.bind(text=on_state_select)
-        spinner_cct.bind(text=on_cct_select)
+        spinner_cct.bind(text=lambda spinner, text: on_cct_select(spinner, text, grado_alumno))
 
         # Botón para asignar el CCT y Grupo al alumno
         def asignar_cct_grupo(instance):
@@ -259,6 +274,126 @@ class AsignarAlumnosWindow(BoxLayout):
             mycursor.execute(sql, (id_cct, id_alumno, id_grupo))
             mydb.commit()
 
+            #### METER MATERIAS AL ALUMNO ###
+
+            sql = '''
+                SELECT nivel, grado FROM CCTgrupos WHERE id_grupo = '%s'
+            '''
+
+            mycursor.execute(sql, (id_grupo,))
+            result = mycursor.fetchall()
+
+            print (result[0][0], result[0][1])
+
+            if (result[0][0] == "PRIMARIA" or result[0][0] == 'Primaria'):
+                if (result[0][1] == '1'):
+
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Exploración de la Naturaleza y la Sociedad', 
+                    'Formación Cívica y Ética', 'Educación Artística');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+                elif (result[0][1] == '2'):
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias Naturales', 
+                    'La Entidad donde vivo', 'Formación Cívica y Ética', 'Educación Artística');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+                elif (result[0][1] == '3'):
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias Naturales', 'Geografía', 
+                    'Historia', 'Formación Cívica y Ética', 'Educación Artística');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+            elif(result[0][0] == "SECUNDARIA" or result[0][0] == 'Secundaria'):
+                if (result[0][1] == '1'):
+
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
+                    'Geografía', 'Educación Física');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+                elif (result[0][1] == '2'):
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
+                    'Historia', 'Formación Cívica y Ética', 'Educación Física');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+                elif (result[0][1] == '3'):
+                    sql = '''
+                    SELECT id_materia, nombre_materia
+                    FROM Materias
+                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
+                    'Historia', 'Formación Cívica y Ética', 'Educación Física');
+                    '''
+                    mycursor.execute(sql)
+                    ids_materias = mycursor.fetchall()
+                    for materia in ids_materias:
+                        sql = '''
+                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                        VALUES (%s, %s, %s, %s)
+                        '''
+                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
+                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        mydb.commit()
+                
+                     
+
             # Mostrar mensaje de éxito
             self.show_popup("Éxito", "Alumno asignado correctamente.")
             self.reload_users()  # Recargar los usuarios no asignados
@@ -271,7 +406,7 @@ class AsignarAlumnosWindow(BoxLayout):
             mydb.close()
 
 
-    def get_grupos_cct(self, cct):
+    def get_grupos_cct(self, cct, grado):
         """Obtiene los grupos disponibles para un CCT específico."""
         mydb = mysql.connector.connect(
             host='localhost',
@@ -284,9 +419,10 @@ class AsignarAlumnosWindow(BoxLayout):
         # Consulta para obtener grupos basados en el CCT seleccionado
         sql = '''
             SELECT nombre_grupo FROM CCTgrupos
-            WHERE id_CCT = %s
+            WHERE id_CCT = %s and grado = %s
         '''
-        mycursor.execute(sql, (cct,))
+        print(grado)
+        mycursor.execute(sql, (cct, grado))
         result = mycursor.fetchall()
 
         # Formatear resultados para mostrarlos en el dropdown
@@ -335,7 +471,6 @@ class AsignarAlumnosWindow(BoxLayout):
             mycursor.close()
             mydb.close()
 
-    
     def go_back_to_convocatorias(self):
         """Regresa directamente a la pantalla 'vista_gestion_alumnos'."""
         try:
@@ -345,6 +480,15 @@ class AsignarAlumnosWindow(BoxLayout):
         except Exception as e:
             print(f"Error al regresar a la pantalla: {e}")
 
+    # En el botón de regresar (cuando estás viendo los detalles del alumno)
+    def go_back_button(self):
+        """Manejo de regresar desde el detalle del alumno."""
+        self.go_back_to_convocatorias()  # Usamos la función modificada
+
+
+    def go_back_to_users(self):
+        """Regresa a la pantalla principal desde el formulario."""
+        self.ids.scrn_mngr.current = 'scrn_content'
 
     def show_popup(self, title, message):
         """Muestra un Popup con un mensaje."""
@@ -355,16 +499,6 @@ class AsignarAlumnosWindow(BoxLayout):
             auto_dismiss=True
         )
         popup.open()
-
-    # En el botón de regresar (cuando estás viendo los detalles del alumno)
-    def go_back_button(self):
-        """Manejo de regresar desde el detalle del alumno."""
-        self.go_back_to_convocatorias()  # Usamos la función modificada
-
-
-    def go_back_to_users(self):
-        """Regresa a la pantalla principal desde el formulario."""
-        self.ids.scrn_mngr.current = 'vista_asignar_alumnos'
 
     def get_users(self, mode, id):
         mydb = mysql.connector.connect(
@@ -421,6 +555,7 @@ class AsignarAlumnosWindow(BoxLayout):
                 _alumnos['nombres'] = {}
                 _alumnos['apellido_paterno'] = {}
                 _alumnos['nivel'] = {}
+                _alumnos['grado'] = {}
 
                 sql = 'SELECT * FROM alumno WHERE CURP = %s'
                 mycursor.execute(sql, (id,))
@@ -431,12 +566,16 @@ class AsignarAlumnosWindow(BoxLayout):
                     _alumnos['nombres'][idx] = user[1]
                     _alumnos['apellido_paterno'][idx] = user[2]
                     _alumnos['nivel'][idx] = user[5]
+                    _alumnos['grado'][idx] = user[6]
 
                 return _alumnos
         finally:
             # Cierra el cursor y la conexión
             mycursor.close()
             mydb.close()
+
+        
+
 
 class AsignarAlumnosApp(App):
     def build(self):
