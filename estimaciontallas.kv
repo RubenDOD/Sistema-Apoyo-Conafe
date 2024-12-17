@@ -1,0 +1,80 @@
+<EstimacionTallasScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # Fondo blanco
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: 20
+                spacing: 10
+
+                # Título principal
+                Label:
+                    text: "Estimación De Tallas"
+                    font_size: 24
+                    bold: True
+                    color: 0, 0, 0, 1
+                    size_hint_y: None
+                    height: 40
+
+                # Texto de selección de estado
+                Label:
+                    text: "Selección de estado"
+                    font_size: 18
+                    color: 0, 0, 0, 1
+                    size_hint_y: None
+                    height: 30
+
+                # Botón para el Dropdown
+                Button:
+                    id: state_button
+                    text: "Seleccionar Estado"
+                    size_hint_y: None
+                    size_hint_x: 0.5
+                    height: 40
+                    color: 1, 1, 1, 1
+                    pos_hint: {"center_x": 0.5}
+                    on_release: app.root.dropdown.open(self)
+
+                # Texto de unidades a comprar
+                Label:
+                    text: "Unidades a comprar"
+                    font_size: 18
+                    color: 0, 0, 0, 1
+                    size_hint_y: None
+                    height: 30
+
+                # Entrada de texto para unidades
+                TextInput:
+                    id: units_input
+                    hint_text: "Ingrese un número"
+                    input_filter: "int"
+                    multiline: False
+                    size_hint_y: None
+                    size_hint_x: 0.5
+                    height: 40
+                    pos_hint: {"center_x": 0.5}
+                    foreground_color: 0, 0, 0, 1  # Color negro para el texto ingresado
+                    hint_text_color: 0.5, 0.5, 0.5, 1  # Color gris para el texto del placeholder
+
+                # Botón Aceptar
+                Button:
+                    text: "Aceptar"
+                    size_hint_y: None
+                    size_hint_x: 0.5
+                    height: 50
+                    color: 1, 1, 1, 1  # Color negro para el texto del botón
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.on_accept()
