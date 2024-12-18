@@ -1,5 +1,11 @@
 USE CONAFE;
 
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '1234';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '1234';
+FLUSH PRIVILEGES;
+
+
+
 -- DATOS PARA LOS USUARIOS
 INSERT INTO Usuario (correo, password, acceso) VALUES
 ('gutierrez.viveros.cristianr@gmail.com', '12345678', 'Aspirante'),
@@ -130,9 +136,9 @@ VALUES ('Convocatoria 2025', 'https://docs.google.com/forms/d/e/1FAIpQLSfQwO8uRM
 
 -- LOS DATOS DE LOS QUE SE ENCUENTRAN EN EL FORMS ESTÁN AL EJECUTAR JALAR.PY
 -- Después de usar jalar.py ejecuten esta línea para cambiar el nivel educativo de Cristian
-UPDATE InfoEducativaAspirante SET nivelEducativo='Primaria' WHERE id=x;
+UPDATE InfoEducativaAspirante SET nivelEducativo='Primaria' WHERE id_Aspirante=1;
 
-SELECT * FROM Aspirante;
+SELECT * FROM InfoEducativaAspirante;
 
 -- DATOS ASPIRANTES
 INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo, curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento, genero, nacionalidad, estado_solicitud) VALUES (19, 1, '+24(1)8396348984', '385.560.4509x280', 'C019@gmail.com', '67270475485', '26', 'Ricardo', 'Vanegas', 'Olivas', '1994-02-17', 'Masculino', 'Armenia', 'Finalizado');
@@ -238,7 +244,6 @@ INSERT INTO Aspirante (id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, 
 
 
 -- DATOS CCT
-
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-3289-487', 'Escuela 25', 'Aguascalientes', '88071', 'Municipio 21', 'Localidad 9', 'Secundaria', 'Vespertino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-2069-952', 'Escuela 43', 'Aguascalientes', '37169', 'Municipio 25', 'Localidad 23', 'Inicial', 'Vespertino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-4028-241', 'Escuela 88', 'Aguascalientes', '18426', 'Municipio 36', 'Localidad 5', 'Preescolar', 'Matutino');
@@ -263,14 +268,20 @@ INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-1654-538', 'Escuela 157', 'Baja California Sur', '72886', 'Municipio 27', 'Localidad 26', 'Inicial', 'Matutino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-9103-386', 'Escuela 189', 'Baja California Sur', '21673', 'Municipio 10', 'Localidad 11', 'Secundaria', 'Matutino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-7551-698', 'Escuela 199', 'Baja California Sur', '39453', 'Municipio 26', 'Localidad 19', 'Primaria', 'Matutino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-1273-163', 'Escuela 127', 'Campeche', '20670', 'Municipio 8', 'Localidad 2', 'Inicial', 'Vespertino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-7402-632', 'Escuela 190', 'Campeche', '54582', 'Municipio 5', 'Localidad 6', 'Preescolar', 'Vespertino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-7548-461', 'Escuela 125', 'Campeche', '71647', 'Municipio 2', 'Localidad 28', 'Inicial', 'Vespertino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-5246-558', 'Escuela 25', 'Campeche', '35613', 'Municipio 39', 'Localidad 17', 'Inicial', 'Matutino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-5587-653', 'Escuela 151', 'Campeche', '35102', 'Municipio 36', 'Localidad 6', 'Secundaria', 'Matutino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-4016-580', 'Escuela 41', 'Campeche', '27798', 'Municipio 14', 'Localidad 21', 'Inicial', 'Vespertino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-1623-869', 'Escuela 110', 'Campeche', '68119', 'Municipio 26', 'Localidad 16', 'Primaria', 'Vespertino');
-INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-4597-168', 'Escuela 42', 'Campeche', '31279', 'Municipio 1', 'Localidad 28', 'Primaria', 'Matutino');
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-1273-163', 'Escuela 127', 'Campeche', '20670', 'Municipio 8', 'Localidad 2', 'Inicial', 'Vespertino',18.15556,-90.62306);
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-7402-632', 'Escuela 190', 'Campeche', '54582', 'Municipio 5', 'Localidad 6', 'Preescolar', 'Vespertino',18.21639,-90.87972);
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-7548-461', 'Escuela 125', 'Campeche', '71647', 'Municipio 2', 'Localidad 28', 'Inicial', 'Vespertino',17.96889,-90.83556);
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-4016-580', 'Escuela 41', 'Campeche', '27798', 'Municipio 14', 'Localidad 21', 'Inicial', 'Vespertino',19.68806,-90.46083);
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-1623-869', 'Escuela 110', 'Campeche', '68119', 'Municipio 26', 'Localidad 16', 'Primaria', 'Vespertino',19.71333,-90.52361);
+INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno, latitud, longitud) VALUES ('CCT-4597-168', 'Escuela 42', 'Campeche', '31279', 'Municipio 1', 'Localidad 28', 'Primaria', 'Matutino',18.19722,-90.65333);
+
+UPDATE CCT SET latitud=18.15556,longitud=-90.62306 WHERE claveCentro='CCT-1273-163';
+UPDATE CCT SET latitud=18.21639,longitud=-90.87972 WHERE claveCentro='CCT-7402-632';
+UPDATE CCT SET latitud=17.96889,longitud=-90.83556 WHERE claveCentro='CCT-7548-461';
+UPDATE CCT SET latitud=19.68806,longitud=-90.46083 WHERE claveCentro='CCT-4016-580';
+UPDATE CCT SET latitud=19.71333,longitud=-90.52361 WHERE claveCentro='CCT-1623-869';
+UPDATE CCT SET latitud=18.19722,longitud=-90.65333 WHERE claveCentro='CCT-4597-168';
+
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-8567-839', 'Escuela 24', 'Chiapas', '38829', 'Municipio 45', 'Localidad 1', 'Inicial', 'Vespertino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-6589-452', 'Escuela 39', 'Chiapas', '40963', 'Municipio 49', 'Localidad 21', 'Secundaria', 'Matutino');
 INSERT INTO CCT (claveCentro, nombre, estado, codigoPostal, municipio, localidad, nivelEducativo, turno) VALUES ('CCT-1408-944', 'Escuela 159', 'Chiapas', '52380', 'Municipio 19', 'Localidad 10', 'Primaria', 'Matutino');
@@ -605,96 +616,72 @@ INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 19);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 20);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 21);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 22);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 23);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 24);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 25);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 26);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 27);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 28);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 29);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 30);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 31);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 32);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 33);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 34);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 35);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 36);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 37);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 38);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 39);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 40);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 41);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 42);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 43);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 44);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 45);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 46);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 47);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 48);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 49);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 50);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 51);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 52);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 53);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 54);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 55);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 56);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 57);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 58);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 59);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 60);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 61);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 62);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 63);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 64);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 65);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 66);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 67);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 68);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 69);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 70);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 71);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 72);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 73);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 74);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 75);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 76);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 77);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 78);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 79);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 80);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 81);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 82);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 83);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 84);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 85);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 86);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 87);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 88);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 89);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 90);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 91);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 92);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 93);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 94);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 95);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 96);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 97);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 98);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 99);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 100);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 101);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 102);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 103);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 104);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 105);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 106);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 107);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1623-869', 108);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 109);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 110);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5246-558', 111);
-INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-5587-653', 112);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7402-632', 113);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-7548-461', 114);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-1273-163', 115);
@@ -703,7 +690,6 @@ INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 117);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 118);
 
 -- Area de Control Escolar
-INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
 INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
 INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (121,'CCT-1010-970');
 select * from Usuario;
@@ -754,3 +740,5 @@ INSERT INTO Calificaciones (id_alumno, id_materia, calificacion) VALUES
 ('CTYP710803MCHFTZ29', 6, 0.00),  -- Educación Física
 ('CTYP710803MCHFTZ29', 7, 0.00);  -- Artes Visuales
 
+SELECT DISTINCT estado FROM CCT;
+SELECT * FROM CCT where estado = 'Campeche';

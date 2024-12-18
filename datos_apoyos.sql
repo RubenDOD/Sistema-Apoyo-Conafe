@@ -92,3 +92,4 @@ UPDATE usuario SET acceso = 'LEC' where id_Usuario  between 19 and 40;
 
 -- Agregar usuario de departamento de becas
 INSERT INTO Usuario (correo, password, acceso) VALUES ('becas@example.com', '12345678', 'Departamento Becas');
+

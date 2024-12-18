@@ -22,6 +22,8 @@ from CCTs import CCTsWindow
 from alumnos import AlumnosWindow
 from AsignarAlumno import AsignarAlumnosWindow
 from Calificaciones import AlumnosCalificaciones
+from estimaciontallas import EstimacionTallasScreen
+from EntregaEquipamiento import EquipamientoScreen
 
 # Conexión a la base de datos
 connection = mysql.connector.connect(
@@ -52,6 +54,9 @@ Builder.load_file("alumnos.kv")
 Builder.load_file("AsignarAlumno.kv")
 Builder.load_file("interfaz_becas.kv")
 Builder.load_file("progreso_apoyos.kv")
+Builder.load_file("estimaciontallas.kv")
+#Builder.load_file('EntregaEquipamiento.kv')
+
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -127,6 +132,9 @@ class LoginScreen(CustomBoxLayout):
             elif acceso == 'Departamento Becas':
                 print("Creando pantalla de departamento de becas...")
                 sm.current = 'departamento_becas'
+            elif acceso == 'Departamento Equipamiento':
+                print("Creando pantalla de departamento de tallas y equipamiento...")
+                sm.current = 'departamento_equipamiento'
         else:
             self.ids.lbl_estado.text = "Usuario o contraseña incorrectos."
         
@@ -966,6 +974,31 @@ class ApoyosSolicitadosScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(ApoyosSolicitadosScreen, self).__init__(**kwargs)
 
+class TallasEquipamientoScreen(CustomBoxLayout):
+    def __init__(self, **kwargs):
+        super(TallasEquipamientoScreen, self).__init__(**kwargs)
+    
+    def tallas(self):
+        print("Accediendo a Tallas")
+        app = App.get_running_app()
+
+        # Cambia a la pantalla de tallas
+        app.root.current = 'tallas'
+    
+    def equipamiento(self):
+        print("Accediendo a Equipamiento")
+        app = App.get_running_app()
+
+        # Cambia a la pantalla de tallas
+        app.root.current = 'equipamiento'
+
+class EquipamientoScreenWidget(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Cargar la interfaz del equipamiento
+        equipamiento_screen = EquipamientoScreen()
+        self.add_widget(equipamiento_screen.build())
+
 class LoginApp(App):
     def build(self):
         sm = ScreenManager()
@@ -1061,8 +1094,6 @@ class LoginApp(App):
         screen_detalle_cct = DetalleCCTScreen(name='mostrar ccts')
         sm.add_widget(screen_detalle_cct)
 
-        sm.current = 'login'
-
         screen_apoyos_economicos = Screen(name='apoyos_economicos')
         screen_apoyos_economicos.add_widget(ApoyosScreen())
         sm.add_widget(screen_apoyos_economicos)
@@ -1082,6 +1113,20 @@ class LoginApp(App):
         screen_departamento_becas = Screen(name='departamento_becas')
         screen_departamento_becas.add_widget(DepartamentoBecasScreen())
         sm.add_widget(screen_departamento_becas)
+
+        screen_departamento_equipamiento = Screen(name='departamento_equipamiento')
+        screen_departamento_equipamiento.add_widget(TallasEquipamientoScreen())
+        sm.add_widget(screen_departamento_equipamiento)
+
+        screen_tallas = Screen(name='tallas')
+        screen_tallas.add_widget(EstimacionTallasScreen())
+        sm.add_widget(screen_tallas)
+
+        screen_equipamiento = Screen(name='equipamiento')
+        screen_equipamiento.add_widget(EquipamientoScreenWidget())
+        sm.add_widget(screen_equipamiento)
+
+        sm.current = 'login'
 
         return sm
 

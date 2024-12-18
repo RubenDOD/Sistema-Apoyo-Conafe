@@ -1,0 +1,31 @@
+<EquipamientoScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        
+        # Encabezado
+        BoxLayout:
+            size_hint_y: 0.1
+            Button:
+                text: "Cargar Imagen"
+                on_release: root.load_image(self)
+            Button:
+                text: "Guardar"
+                on_release: root.save_state_for_selected_state()
+            Button:
+                text: "Conectar Nodos"
+                on_release: root.map_editor.connect_nodes()
+            Button:
+                text: "Limpiar Mapa"
+                on_release: root.map_editor.clear()
+
+        # Contenido principal
+        MapEditor:
+            id: map_editor
+
+        # Pie de página
+        BoxLayout:
+            size_hint_y: 0.1
+            Button:
+                text: "Seleccionar Estado"
+                id: state_button
+                on_release: state_dropdown.open()

@@ -46,7 +46,7 @@
                     height: 40
                     color: 1, 1, 1, 1
                     pos_hint: {"center_x": 0.5}
-                    on_release: app.root.dropdown.open(self)
+                    on_release: root.dropdown.open(self)  # Cambiado app.root a root
 
                 # Texto de unidades a comprar
                 Label:
@@ -78,3 +78,13 @@
                     color: 1, 1, 1, 1  # Color negro para el texto del botón
                     pos_hint: {"center_x": 0.5}
                     on_release: root.on_accept()
+                
+                # Botón Regresar
+                Button:
+                    text: "Regresar"
+                    size_hint_y: None
+                    size_hint_x: 0.5
+                    height: 50
+                    color: 1, 1, 1, 1  # Color negro para el texto del botón
+                    pos_hint: {"center_x": 0.5}
+                    on_release: app.root.current = "departamento_equipamiento"
