@@ -9,6 +9,9 @@ from kivy.uix.spinner import Spinner
 from functools import partial
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from gestionar_apoyos import ApoyosSolicitadosWindow
+from interfaz_becas import BecasWindow
+from solicitar_apoyo import SolicitarApoyoWindow
 from convocatorias import ConvocatoriaWindow  # Importar ConvocatoriaWindow
 from aplicarAspirante import aplicarAspiranteWindow  # Importa la ventana aplicarAspirante
 from FII import MainWidget  # Importa el widget principal de la pantalla FII
@@ -47,6 +50,8 @@ Builder.load_file('capacitador_aspirante.kv')
 Builder.load_file('CCTs.kv')
 Builder.load_file("alumnos.kv")
 Builder.load_file("AsignarAlumno.kv")
+Builder.load_file("interfaz_becas.kv")
+Builder.load_file("progreso_apoyos.kv")
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -119,6 +124,9 @@ class LoginScreen(CustomBoxLayout):
                 control_escolar_screen.cct = cct
                 
                 sm.current = 'vista_control_escolar'
+            elif acceso == 'Departamento Becas':
+                print("Creando pantalla de departamento de becas...")
+                sm.current = 'departamento_becas'
         else:
             self.ids.lbl_estado.text = "Usuario o contraseña incorrectos."
         
@@ -715,6 +723,32 @@ class LECScreen(CustomBoxLayout):
         app.root.current = 'lec_calificaciones'  # Cambia a la pantalla de calificaciones
 
 
+    def apoyos(self, instance):
+        print("Accediendo a apoyos.")
+        app = App.get_running_app()
+
+        # Crear una instancia de ApoyosWindow
+        apoyos_window = BecasWindow(id_educador = self.id_usuario)
+        apoyos_screen = app.root.get_screen('apoyos_economicos')
+        apoyos_screen.clear_widgets()
+        apoyos_screen.add_widget(apoyos_window)
+
+        # Cambia a la pantalla de apoyos
+        app.root.current = 'apoyos_economicos'
+
+    def solicitar_apoyo(self, instance):
+        print("Accediendo a solicitar apoyo.")
+        app = App.get_running_app()
+
+        # Crear una instancia de SolicitarApoyoWindow
+        solicitar_apoyo_window = SolicitarApoyoWindow(id_educador = self.id_usuario)
+        solicitar_apoyo_screen = app.root.get_screen('solicitar_apoyo')
+        solicitar_apoyo_screen.clear_widgets()
+        solicitar_apoyo_screen.add_widget(solicitar_apoyo_window)
+
+        # Cambia a la pantalla de solicitar apoyo
+        app.root.current = 'solicitar_apoyo'
+
     def cerrar_sesion(self):
         """
         Regresa al login y limpia los campos.
@@ -722,6 +756,21 @@ class LECScreen(CustomBoxLayout):
         app = App.get_running_app()
         app.root.get_screen('login').children[0].limpiar_campos()
         app.root.current = 'login'
+
+
+class SolicitarApoyoScreen(CustomBoxLayout):
+    def __init__(self, **kwargs):
+        super(SolicitarApoyoScreen, self).__init__(**kwargs)
+
+class ApoyosScreen(CustomBoxLayout):
+    id_educador = StringProperty()
+    def __init__(self, **kwargs):
+        super(ApoyosScreen, self).__init__(**kwargs)
+
+class ApoyoProgresoScreen(CustomBoxLayout):
+    def __init__(self, **kwargs):
+        super(ApoyoProgresoScreen, self).__init__(**kwargs)
+
 
 class CapacitadorScreen(CustomBoxLayout):
     id_usuario = StringProperty()
@@ -899,6 +948,24 @@ class vistaGestionAlumnos(CustomBoxLayout):
 class vistaGestionGrupos(CustomBoxLayout):
     pass
 
+class DepartamentoBecasScreen(Screen):
+    def gestionar_apoyos(self, instance):
+        print("Accediendo a la pantalla de gestión de apoyos")
+        app = App.get_running_app()
+
+        # Crear una instancia de la pantalla de gestión de apoyos
+        gestion_apoyos_window = ApoyosSolicitadosWindow()
+        gestion_apoyos_screen = app.root.get_screen('gestion_apoyos')
+        gestion_apoyos_screen.clear_widgets()
+        gestion_apoyos_screen.add_widget(gestion_apoyos_window)
+
+        # Mostrar la pantalla de gestión de apoyos
+        app.root.current = 'gestion_apoyos'
+
+class ApoyosSolicitadosScreen(CustomBoxLayout):
+    def __init__(self, **kwargs):
+        super(ApoyosSolicitadosScreen, self).__init__(**kwargs)
+
 class LoginApp(App):
     def build(self):
         sm = ScreenManager()
@@ -995,6 +1062,26 @@ class LoginApp(App):
         sm.add_widget(screen_detalle_cct)
 
         sm.current = 'login'
+
+        screen_apoyos_economicos = Screen(name='apoyos_economicos')
+        screen_apoyos_economicos.add_widget(ApoyosScreen())
+        sm.add_widget(screen_apoyos_economicos)
+
+        screen_progreso_apoyo = Screen(name='progreso_apoyo')
+        screen_progreso_apoyo.add_widget(ApoyoProgresoScreen())
+        sm.add_widget(screen_progreso_apoyo)
+
+        scree_solicitar_apoyo = Screen(name='solicitar_apoyo')
+        scree_solicitar_apoyo.add_widget(SolicitarApoyoScreen())
+        sm.add_widget(scree_solicitar_apoyo)
+
+        screen_gestion_apoyos = Screen(name='gestion_apoyos')
+        screen_gestion_apoyos.add_widget(ApoyosSolicitadosScreen())
+        sm.add_widget(screen_gestion_apoyos)
+
+        screen_departamento_becas = Screen(name='departamento_becas')
+        screen_departamento_becas.add_widget(DepartamentoBecasScreen())
+        sm.add_widget(screen_departamento_becas)
 
         return sm
 

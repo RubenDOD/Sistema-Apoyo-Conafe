@@ -1,0 +1,44 @@
+<BecasWindow>:
+
+    BoxLayout:
+        orientation: 'vertical'
+        
+        # Top Navigation Bar
+        BoxLayout:
+            id: top_nav
+            size_hint_y: None
+            height: 30
+            size_hint: 1, None
+            canvas.before:
+                Color:
+                    rgba: (.06, .45, .45, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+            Label:
+                text: 'Apoyos Economicos Dashboard'
+                bold: True
+                size_hint: (.8, None)  # Reduce el tamaño para dejar espacio al botón de "Regresar"
+                height: 30
+
+            Button:
+                text: 'Regresar'
+                size_hint: (.1, None)
+                height: 30
+                on_release: root.go_back(self)  # Llama al método para regresar a la pantalla
+
+
+        Label:
+            text: 'Mis Becas'
+            size_hint_y: None
+            height: 50
+        
+        ScrollView:
+            do_scroll_x: False
+            
+            BoxLayout:
+                id: becas_layout
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
