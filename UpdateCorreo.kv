@@ -1,0 +1,72 @@
+<UpdateCorreoWindow>:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 10
+
+    # Fondo azul #278a8a
+    canvas.before:
+        Color:
+            rgba: 0.1529, 0.5412, 0.5412, 1  # Azul #278a8a
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    # Aviso de contacto
+    Label:
+        text: 'Datos de contacto'
+        font_size: '20sp'
+        bold: True
+        size_hint_y: None
+        height: '40dp'
+        color: (0, 0, 0, 1)  # Color del texto (negro)
+
+    Label:
+        text: 'El mail de acceso a tu cuenta permanecerá igual, solo se modifican los datos donde nos comunicamos contigo.'
+        size_hint_y: None
+        height: '40dp'
+        color: (0, 0, 0, 1)  # Color del texto (gris)
+
+    # Campos de datos
+    Label:
+        text: 'Teléfono Fijo'
+        size_hint_y: None
+        height: '40dp'
+
+    TextInput:
+        id: telefono_fijo
+        multiline: False
+        hint_text: 'Ingresa teléfono fijo'
+        size_hint_y: None
+        height: '40dp'
+        on_text: root.validar_telefono(self, self.text)
+
+    Label:
+        text: 'Teléfono Móvil'
+        size_hint_y: None
+        height: '40dp'
+
+    TextInput:
+        id: telefono_movil
+        multiline: False
+        hint_text: 'Ingresa teléfono móvil'
+        size_hint_y: None
+        height: '40dp'
+        on_text: root.validar_telefono(self, self.text)
+
+    Label:
+        text: 'Correo'
+        size_hint_y: None
+        height: '40dp'
+
+    TextInput:
+        id: correo
+        multiline: False
+        hint_text: 'Ingresa correo'
+        size_hint_y: None
+        height: '40dp'
+
+    Button:
+        text: 'Guardar cambios'
+        size_hint_y: None
+        height: '50dp'
+        on_press: root.guardar_cambios()

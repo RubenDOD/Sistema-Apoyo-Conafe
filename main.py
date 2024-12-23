@@ -22,8 +22,10 @@ from CCTs import CCTsWindow
 from alumnos import AlumnosWindow
 from AsignarAlumno import AsignarAlumnosWindow
 from Calificaciones import AlumnosCalificaciones
+from Regularizaciones import Regularizaciones
 from estimaciontallas import EstimacionTallasScreen
 from EntregaEquipamiento import EquipamientoScreen
+from UpdateCorreo import UpdateCorreoWindow
 
 # Conexión a la base de datos
 connection = mysql.connector.connect(
@@ -55,7 +57,8 @@ Builder.load_file("AsignarAlumno.kv")
 Builder.load_file("interfaz_becas.kv")
 Builder.load_file("progreso_apoyos.kv")
 Builder.load_file("estimaciontallas.kv")
-#Builder.load_file('EntregaEquipamiento.kv')
+Builder.load_file("UpdateCorreo.kv")
+
 
 
 class CustomBoxLayout(BoxLayout):
@@ -692,6 +695,7 @@ class LECScreen(CustomBoxLayout):
             # Agregar los botones solo si el LEC tiene un grupo asignado
             botones = [
                 {"text": "Control Escolar", "on_press": self.control_escolar},
+                {"text": "Regularizaciones", "on_press": self.control_escolarReg},
             ]
             for boton in botones:
                 btn = Button(text=boton['text'], size_hint_y=None, height=50)
@@ -707,8 +711,33 @@ class LECScreen(CustomBoxLayout):
         )
         self.ids.botones_layout.add_widget(btn_cerrar_sesion)
 
-    def opciones_grupo(self, instance):
-        print("Opciones del grupo seleccionadas.")
+        # Botón de update Correo (siempre presente)
+        btn_actualizar_contacto = Button(
+            text="Actualizar Contacto",
+            size_hint_y=None,
+            height=50,
+            on_press=lambda _: self.update_contacto()
+        )
+        self.ids.botones_layout.add_widget(btn_actualizar_contacto)
+
+    def opciones_grupo(self):
+        print("Opciones del grupo seleccionadas.", self.id_usuario)
+        
+    def update_contacto(self):
+        print("Accediendo a cambiar correo.")
+        app = App.get_running_app()
+
+        # Obtener la pantalla de calificaciones
+        lec_cambiarCorreo_screen = app.root.get_screen('lec_cambiarCorreo')
+
+        # Obtener el widget AlumnosCalificaciones dentro del Screen
+        lec_cambiarCorreo_widget = lec_cambiarCorreo_screen.children[0]
+
+        # Asignar el CCT y grupo a la pantalla de calificaciones
+        lec_cambiarCorreo_widget.id_aspirante = self.id_usuario
+
+        # Cambiar a la pantalla de calificaciones
+        app.root.current = 'lec_cambiarCorreo'  # Cambia a la pantalla de calificaciones
 
     def control_escolar(self, instance):
         print("Accediendo a control escolar.")
@@ -724,11 +753,31 @@ class LECScreen(CustomBoxLayout):
         lec_calificaciones_widget.cct = self.cct
         lec_calificaciones_widget.grupo = self.grupo
 
+        
+
         # Llamar al método que carga los alumnos
         lec_calificaciones_widget.load_alumnos()  # Llamamos el método en el widget correcto
 
         # Cambiar a la pantalla de calificaciones
         app.root.current = 'lec_calificaciones'  # Cambia a la pantalla de calificaciones
+    
+    def control_escolarReg(self, instance):
+        print("Accediendo a control escolar.")
+        app = App.get_running_app()
+
+
+        lec_regularizaciones_screen = app.root.get_screen('lec_regularizaciones')
+
+
+        lec_regularizaciones_widget = lec_regularizaciones_screen.children[0]
+
+        lec_regularizaciones_widget.cct = self.cct
+        lec_regularizaciones_widget.grupo = self.grupo
+
+        lec_regularizaciones_widget.load_alumnos()  # Llamamos el método en el widget correcto
+
+        # Cambiar a la pantalla de calificaciones
+        app.root.current = 'lec_regularizaciones'  # Cambia a la pantalla de calificaciones
 
 
     def apoyos(self, instance):
@@ -1030,6 +1079,14 @@ class LoginApp(App):
         screen_lec_calificaciones = Screen(name='lec_calificaciones')
         screen_lec_calificaciones.add_widget(AlumnosCalificaciones())
         sm.add_widget(screen_lec_calificaciones)
+
+        screen_lec_cambiarCorreo = Screen(name='lec_cambiarCorreo')
+        screen_lec_cambiarCorreo.add_widget(UpdateCorreoWindow())
+        sm.add_widget(screen_lec_cambiarCorreo)
+
+        screen_lec_regularizaciones = Screen(name='lec_regularizaciones')
+        screen_lec_regularizaciones.add_widget(Regularizaciones())
+        sm.add_widget(screen_lec_regularizaciones)
 
         screen_ControlEscolar = Screen(name='vista_control_escolar')
         screen_ControlEscolar.add_widget(ControlEscolarScreen())

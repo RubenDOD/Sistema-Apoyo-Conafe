@@ -690,8 +690,10 @@ INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4016-580', 117);
 INSERT INTO CentroEducador (claveCentro, id_LEC) VALUES ('CCT-4597-168', 118);
 
 -- Area de Control Escolar
-INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-4597-168');
-INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (121,'CCT-1010-970');
+INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (119,'CCT-4597-168');
+INSERT INTO AreaControlEscolar (id_ACT,CCT) VALUES (120,'CCT-1010-970');
+SET SQL_SAFE_UPDATES = 1;
+
 select * from Usuario;
 -- Grupos CCT-1273-163
 INSERT INTO CCTgrupos (id_CCT,nombre_grupo) VALUES ('CCT-4597-168','Grupo Básico 1');

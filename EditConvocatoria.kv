@@ -1,0 +1,84 @@
+<EditConvocatoriaWindow>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 10
+
+        # Fondo de la pantalla (Teal oscuro)
+        canvas.before:
+            Color:
+                rgba: 0.06, 0.52, 0.52, 1  # Teal oscuro
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Label con fondo negro y texto blanco para "Nombre de Convocatoria"
+        Label:
+            text: "Nombre de Convocatoria:"
+            color: 1, 1, 1, 1  # Texto blanco
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1  # Fondo negro
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+        TextInput:
+            id: nombre_input
+            multiline: False
+            hint_text: "Ingresa el nombre de la convocatoria"
+            size_hint_y: None
+            height: "40dp"
+            on_text: root.nombre_input.text = self.text
+
+        # Label con fondo negro y texto blanco para "URL de Convocatoria"
+        Label:
+            text: "URL de Convocatoria:"
+            color: 1, 1, 1, 1  # Texto blanco
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1  # Fondo negro
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+        TextInput:
+            id: url_input
+            multiline: False
+            hint_text: "Ingresa la URL de la convocatoria"
+            size_hint_y: None
+            height: "40dp"
+            on_text: root.url_input.text = self.text
+
+        # Label con fondo negro y texto blanco para "URL del Formulario"
+        Label:
+            text: "URL del Formulario:"
+            color: 1, 1, 1, 1  # Texto blanco
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1  # Fondo negro
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+
+        TextInput:
+            id: url_form_input
+            multiline: False
+            hint_text: "Ingresa la URL del formulario"
+            size_hint_y: None
+            height: "40dp"
+            on_text: root.url_form_input.text = self.text
+
+        # Botón para actualizar la convocatoria
+        Button:
+            text: "Actualizar Convocatoria"
+            size_hint_y: None
+            height: "50dp"
+            on_press: root.actualizar_convocatoria(self)
+
+        # Botón para regresar a la pantalla anterior
+        Button:
+            text: "Regresar"
+            size_hint_y: None
+            height: "50dp"
+            on_press: root.manager.current = 'scrn_content'  # Regresa a la pantalla de contenido

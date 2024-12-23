@@ -15,6 +15,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from admin import AdminWindow
+from EditConvocatoria import EditConvocatoriaWindow
 
 class ConvocatoriaWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -39,6 +40,7 @@ class ConvocatoriaWindow(BoxLayout):
         convo_layout = BoxLayout()  # Asegura que el layout sea compatible con `addConvoApp`
         convo_layout.add_widget(AddConvoScreen(convocatoria_window=self))
         convo_screen.add_widget(convo_layout)
+
         
         self.ids.scrn_mngr.add_widget(convo_screen)
 
@@ -71,7 +73,24 @@ class ConvocatoriaWindow(BoxLayout):
             self.users = self.get_users("General", 0)
             conv_id = self.users['ID'][idx]
             self.ver_user(idx, conv_id)
+        elif button_text == 'Cambios':
+            self.users = self.get_users("General", 0)
+            conv_id = self.users['ID'][idx]
+            self.editar_convocatoria(conv_id)
+        
         self.reload_users()
+
+    
+
+    def editar_convocatoria(self, conv_id):
+        # Verifica si la pantalla ya está en el ScreenManager
+        if 'edit_convo_app' not in self.ids.scrn_mngr.screen_names:
+            # Si no está registrada, añade la pantalla
+            edit_screen = EditConvocatoriaWindow(conv_id=conv_id, name='edit_convo_app')
+            self.ids.scrn_mngr.add_widget(edit_screen)
+        
+        # Cambia a la pantalla de edición
+        self.ids.scrn_mngr.current = 'edit_convo_app'
 
     def abrir_convocatoria(self, conv_id):
         # Conexión a la base de datos
@@ -174,61 +193,6 @@ class ConvocatoriaWindow(BoxLayout):
             
             return _convocatorias
 
-    
-    def get_products(self):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='pos'
-        )
-        mycursor = mydb.cursor()
-        _stocks = OrderedDict()
-        _stocks['product_code'] = {}
-        _stocks['product_name'] = {}
-        _stocks['product_weight'] = {}
-        _stocks['in_stock'] = {}
-        _stocks['sold'] = {}
-        _stocks['order'] = {}
-        _stocks['last_purchase'] = {}
-
-        product_code = []
-        product_name = []
-        product_weight = []
-        in_stock = []
-        sold = []
-        order = []
-        last_purchase = []
-        sql = 'SELECT * FROM stocks'
-        mycursor.execute(sql)
-        products = mycursor.fetchall()
-        for product in products:
-            product_code.append(product[1])
-            name = product[2]
-            if len(name) > 10:
-                name = name[:10] + '...'
-            product_name.append(name)
-            product_weight.append(product[3])
-            in_stock.append(product[5])
-            sold.append(product[6])
-            order.append(product[7])
-            last_purchase.append(product[8])
-        # print(designations)
-        products_length = len(product_code)
-        idx = 0
-        while idx < products_length:
-            _stocks['product_code'][idx] = product_code[idx]
-            _stocks['product_name'][idx] = product_name[idx]
-            _stocks['product_weight'][idx] = product_weight[idx]
-            _stocks['in_stock'][idx] = in_stock[idx]
-            _stocks['sold'][idx] = sold[idx]
-            _stocks['order'][idx] = order[idx]
-            _stocks['last_purchase'][idx] = last_purchase[idx]
-           
-
-            idx += 1
-        
-        return _stocks
         
     def change_screen(self, instance):
         if instance.text == 'Manage Users':

@@ -137,6 +137,8 @@ CREATE TABLE CCT (
     longitud DECIMAL(9, 6) -- Almacena la longitud en formato decimal
 );
 
+
+
 -- Tabla: CentroEducador
 CREATE TABLE CentroEducador (
     claveCentro NVARCHAR(50),
@@ -170,7 +172,7 @@ CREATE TABLE alumno (
     grado NVARCHAR(255)
 );
 
--- ALTER TABLE alumno MODIFY COLUMN CURP NVARCHAR(18) NOT NULL;
+ALTER TABLE alumno MODIFY COLUMN CURP NVARCHAR(18) NOT NULL;
 
 -- Tabla: Materias
 CREATE TABLE Materias (
@@ -212,6 +214,7 @@ CREATE TABLE alumnoCCT (
     FOREIGN KEY (id_alumno) REFERENCES alumno(CURP),
     FOREIGN KEY (id_grupo) REFERENCES CCTgrupos(id_grupo)
 );
+ALTER TABLE alumnoCCT MODIFY COLUMN id_alumno NVARCHAR(18);
 
 -- Tabla: AsignacionAspiranteCCT
 CREATE TABLE AsignacionAspiranteCCT (
@@ -346,7 +349,7 @@ UPDATE CCTGrupos SET id_profesor=null WHERE id_profesor=10;
 SELECT * FROM CentroEducador;
 SELECT * FROM AsignacionAspiranteCCT;
 SELECT * FROM calificaciones;
-
+SELECT * FROM alumno;
 delete from calificaciones;
 delete from CCTGrupos;
 

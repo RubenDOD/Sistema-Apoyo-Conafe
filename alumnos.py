@@ -99,7 +99,7 @@ class AlumnosWindow(BoxLayout):
             self.show_popup("Revisar datos", "Todos los campos son obligatorios.")
             return
 
-        if len(curp) < 16 or len(curp) > 18:
+        if len(curp) < 10 or len(curp) > 18:
             self.show_popup("Revisar datos", "El CURP debe tener al menos 16 caracteres y maximo 18.")
             return
 
@@ -134,19 +134,21 @@ class AlumnosWindow(BoxLayout):
         except ValueError:
             self.show_popup("Revisar datos", "La fecha ingresada no es válida.")
             return
-
+        print(curp)
         # Inserción en la base de datos
         try:
             sql = """
                 INSERT INTO alumno (CURP, nombres, apellido_paterno, apellido_materno, fechaNacimiento, nivel, grado)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
+            
             values = (curp, nombres, apellido_paterno, apellido_materno, fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado)
             self.mycursor.execute(sql, values)
             self.mydb.commit()
             self.show_popup("Éxito", "Usuario agregado exitosamente.")  # Mostrar Popup de éxito
         except Exception as e:
             self.show_popup("Error", f"Error al guardar el usuario: {e}")
+        
 
         # Limpiar formulario
         self.ids.curp.text = ''
