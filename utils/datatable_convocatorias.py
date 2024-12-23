@@ -12,7 +12,7 @@ Builder.load_string('''
         id: table_floor
         RecycleGridLayout:
             id: table_floor_layout
-            cols: 5  # Número de columnas actualizado para incluir "Aspirantes"
+            cols: 6  # Número de columnas actualizado para incluir "Aspirantes"
             default_size: (None, 250)
             default_size_hint: (1, None)
             size_hint_y: None
@@ -40,7 +40,7 @@ class DataTableConv(BoxLayout):
 
         col_titles = [k for k in table.keys()]
         rows_len = len(table[col_titles[0]])
-        self.columns = len(col_titles) + 1  # Agregamos dos columnas para los botones de acción y aspirantes
+        self.columns = len(col_titles) + 2  # Agregamos dos columnas para los botones de acción y aspirantes
         table_data = []
 
         # Encabezados de la tabla
@@ -55,6 +55,7 @@ class DataTableConv(BoxLayout):
                 
         table_data.append({'text': 'Acción', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
         table_data.append({'text': 'Aspirantes', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
+        table_data.append({'text': 'Gestion', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 50, 'bcolor': (.06, .45, .45, 1)})
 
         # Agregar filas de datos y botones, comenzando desde el segundo elemento (índice 1)
         for r in range(rows_len):
@@ -74,6 +75,10 @@ class DataTableConv(BoxLayout):
             # Botón de "Aspirantes"
             aspirantes_button = {'text': 'Ver', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 30, 'bcolor': (.25, .55, .25, 1), 'index': r, 'callback': callback}
             table_data.append(aspirantes_button)
+
+            # Botón de "Aspirantes"
+            cambios_button = {'text': 'Cambios', 'size_hint_x': 0.2, 'size_hint_y': None, 'height': 30, 'bcolor': (.25, .55, .25, 1), 'index': r, 'callback': callback}
+            table_data.append(cambios_button)
 
         # Configurar columnas y datos en el layout
         self.ids.table_floor_layout.cols = self.columns
