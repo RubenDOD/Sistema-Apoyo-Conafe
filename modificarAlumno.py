@@ -102,7 +102,7 @@ class ModificarAlumnoWindow(BoxLayout):
         """Elimina un alumno de la base de datos."""
         try:
             sql = "DELETE FROM alumno WHERE CURP = ?"
-            execute_query(sql, (curp,))
+            execute_non_query(sql, (curp,))
             self.show_popup("Éxito", f"Alumno con CURP {curp} eliminado exitosamente.")
             self.reload_users()
         except Exception as e:
