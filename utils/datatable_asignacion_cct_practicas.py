@@ -2,8 +2,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
-import mysql.connector
-
+from db_connection import execute_query
 
 class DataTableAsignacionCCT(BoxLayout):
     def __init__(self, **kwargs):
@@ -15,26 +14,14 @@ class DataTableAsignacionCCT(BoxLayout):
     def create_table(self):
         print("Ejecutando create_table()...")  # Debug
         try:
-            # Conexión a la base de datos
-            print("Conectando a la base de datos...")  # Debug
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = mydb.cursor()
-
-            # Recuperar datos de aspirantes con estado_solicitud = 'Finalizado'
+            # Consulta para recuperar datos de aspirantes con estado_solicitud = 'Finalizado'
             query = """
             SELECT id_Aspirante, CONCAT(nombres, ' ', apellidoPaterno, ' ', apellidoMaterno) AS nombre_completo
             FROM Aspirante
             WHERE estado_solicitud = 'Finalizado';
             """
             print("Ejecutando consulta SQL...")  # Debug
-            cursor.execute(query)
-            aspirantes = cursor.fetchall()
-            mydb.close()
+            aspirantes = execute_query(query)
 
             print("Datos recuperados de la base de datos:", aspirantes)  # Debug
 
@@ -44,10 +31,10 @@ class DataTableAsignacionCCT(BoxLayout):
 
             if aspirantes:
                 for aspirante in aspirantes:
-                    print(f"Añadiendo aspirante: {aspirante[1]}")  # Debug
+                    print(f"Añadiendo aspirante: {aspirante['nombre_completo']}")  # Debug
                     # Columna: Nombre completo
                     table.add_widget(Button(
-                        text=aspirante[1],
+                        text=aspirante['nombre_completo'],
                         size_hint_y=None,
                         height=40,
                         halign='left',
@@ -62,7 +49,7 @@ class DataTableAsignacionCCT(BoxLayout):
                         background_color=(0.7, 0, 0, 1),
                         color=(1, 1, 1, 1)
                     )
-                    asignar_btn.bind(on_release=lambda btn, asp_id=aspirante[0]: self.asignar_cct(asp_id))
+                    asignar_btn.bind(on_release=lambda btn, asp_id=aspirante['id_Aspirante']: self.asignar_cct(asp_id))
                     table.add_widget(asignar_btn)
             else:
                 # Mensaje si no hay datos
@@ -73,8 +60,8 @@ class DataTableAsignacionCCT(BoxLayout):
             scroll.add_widget(table)
             self.add_widget(scroll)
 
-        except mysql.connector.Error as err:
-            print(f"Error de conexión a la base de datos: {err}")  # Debug
+        except Exception as err:
+            print(f"Error al recuperar los datos: {err}")  # Debug
 
     def asignar_cct(self, aspirante_id):
         print(f"Aspirante seleccionado para asignar CCT: {aspirante_id}")  # Debug

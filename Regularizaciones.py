@@ -8,8 +8,9 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from db_connection import execute_query
 
+
 class Regularizaciones(BoxLayout):
-    def __init__(self, cct=None, grupo=None,**kwargs):
+    def __init__(self, cct=None, grupo=None, **kwargs):
         super(Regularizaciones, self).__init__(**kwargs)
         self.orientation = "vertical"
         self.padding = 10
@@ -35,40 +36,48 @@ class Regularizaciones(BoxLayout):
         self.add_widget(self.regresar_button)
 
     def load_alumnos(self):
-        """Carga los alumnos desde la base de datos"""
+        """Carga los alumnos desde la base de datos."""
         query = """
-            SELECT 
-                a.CURP, 
-                CONCAT(a.apellido_paterno, ' ', a.apellido_materno, ' ', a.nombres) AS nombre_completo
-            FROM 
-                alumno a
-            JOIN 
-                alumnoCCT ac ON a.CURP = ac.id_alumno
-            JOIN 
-                CCTgrupos cg ON ac.id_grupo = cg.id_grupo
-            JOIN
-                Calificaciones c ON c.id_alumno = a.CURP
-            WHERE 
-                ac.id_CCT = %s AND cg.nombre_grupo = %s
-                AND c.calificacion < 6
-            GROUP BY
-                a.CURP;
+        SELECT 
+            a.CURP, 
+            CONCAT(a.apellido_paterno, ' ', a.apellido_materno, ' ', a.nombres) AS nombre_completo
+        FROM 
+            alumno a
+        JOIN 
+            alumnoCCT ac ON a.CURP = ac.id_alumno
+        JOIN 
+            CCTgrupos cg ON ac.id_grupo = cg.id_grupo
+        JOIN
+            Calificaciones c ON c.id_alumno = a.CURP
+        WHERE 
+            ac.id_CCT = %s AND cg.nombre_grupo = %s
+            AND c.calificacion < 6
+        GROUP BY
+            a.CURP
         """
-        rows = execute_query(query, (self.cct, self.grupo))
-
-        # Crear botones para cada alumno
-        if rows:
-            for row in rows:
-                curp, nombre_completo = row['CURP'], row['nombre_completo']
-                alumno_button = Button(text=nombre_completo, size_hint_y=None, height=50)
-                alumno_button.bind(on_press=lambda instance, curp=curp: self.show_details(curp))
-                self.records_layout.add_widget(alumno_button)
-        else:
-            self.records_layout.add_widget(Label(text="No hay alumnos con calificaciones menores a 6."))
+        try:
+            rows = execute_query(query, (self.cct, self.grupo))
+            if rows:
+                for row in rows:
+                    curp, nombre_completo = row["CURP"], row["nombre_completo"]
+                    alumno_button = Button(
+                        text=nombre_completo,
+                        size_hint_y=None,
+                        height=50,
+                    )
+                    # Asocia un evento para abrir la ventana de calificaciones
+                    alumno_button.bind(on_press=lambda instance, curp=curp: self.show_details(curp))
+                    self.records_layout.add_widget(alumno_button)
+            else:
+                self.records_layout.add_widget(Label(text="No hay alumnos con calificaciones menores a 6."))
+        except Exception as e:
+            self.show_error(f"Error obteniendo alumnos: {e}")
 
     def show_details(self, curp):
-        """Muestra las calificaciones del alumno en un popup"""
+        """Muestra las calificaciones del alumno en un popup."""
         popup_layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
+
+        # Título de la ventana
         popup_layout.add_widget(Label(text=f"Calificaciones del alumno {curp}", size_hint_y=None, height=40))
 
         # Contenedor de calificaciones en formato tabla
@@ -84,43 +93,47 @@ class Regularizaciones(BoxLayout):
         table_layout.add_widget(Label(text="Fecha", bold=True, size_hint_y=None, height=30))
         table_layout.add_widget(Label(text="Actualizar", bold=True, size_hint_y=None, height=30))
 
-        # Cargar las calificaciones del alumno
-        query = """
-            SELECT c.id_calificacion, m.nombre_materia, c.calificacion, c.fecha_registro
-            FROM Calificaciones c
-            JOIN Materias m ON c.id_materia = m.id_materia
-            WHERE c.id_alumno = %s AND c.calificacion < 6
-        """
-        rows = execute_query(query, (curp,))
+        # Variable para calcular el promedio
         total_calificaciones = 0
         num_calificaciones = 0
 
-        if rows:
-            for row in rows:
-                id_calificacion = row['id_calificacion']
-                materia = row['nombre_materia']
-                calificacion = row['calificacion']
-                fecha = row['fecha_registro']
+        # Cargar las calificaciones del alumno
+        query = """
+        SELECT c.id_calificacion, m.nombre_materia, c.calificacion, c.fecha_registro
+        FROM Calificaciones c
+        JOIN Materias m ON c.id_materia = m.id_materia
+        WHERE c.id_alumno = %s AND c.calificacion < 6
+        """
+        try:
+            rows = execute_query(query, (curp,))
+            if rows:
+                for row in rows:
+                    id_calificacion, materia, calificacion, fecha = row.values()
+                    table_layout.add_widget(Label(text=materia, size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=str(calificacion), size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=str(fecha), size_hint_y=None, height=30))
 
-                table_layout.add_widget(Label(text=materia, size_hint_y=None, height=30))
-                table_layout.add_widget(Label(text=str(calificacion), size_hint_y=None, height=30))
-                table_layout.add_widget(Label(text=str(fecha), size_hint_y=None, height=30))
+                    # Botón para actualizar calificación
+                    update_button = Button(text="Actualizar", size_hint_y=None, height=30)
+                    update_button.bind(
+                        on_press=lambda instance, id_c=id_calificacion, curr_cal=calificacion: self.update_calificacion_popup(
+                            id_c, curr_cal
+                        )
+                    )
+                    table_layout.add_widget(update_button)
 
-                # Botón para actualizar calificación
-                update_button = Button(text="Actualizar", size_hint_y=None, height=30)
-                update_button.bind(
-                    on_press=lambda instance, id_c=id_calificacion, curr_cal=calificacion: self.update_calificacion_popup(id_c, curr_cal)
-                )
-                table_layout.add_widget(update_button)
-
-                # Acumular para el cálculo del promedio
-                total_calificaciones += calificacion
-                num_calificaciones += 1
-        else:
-            table_layout.add_widget(Label(text="No hay calificaciones menores a 6.", size_hint_y=None, height=30))
+                    # Acumular para el cálculo del promedio
+                    total_calificaciones += calificacion
+                    num_calificaciones += 1
+            else:
+                table_layout.add_widget(Label(text="No hay calificaciones menores a 6.", size_hint_y=None, height=30))
+        except Exception as e:
+            table_layout.add_widget(Label(text=f"Error: {e}", size_hint_y=None, height=30))
 
         # Calcular promedio
         promedio = total_calificaciones / num_calificaciones if num_calificaciones > 0 else 0
+
+        # Mostrar el promedio
         popup_layout.add_widget(Label(text=f"Promedio Final: {promedio:.2f}", size_hint_y=None, height=40))
 
         # Botón de cerrar
@@ -128,11 +141,16 @@ class Regularizaciones(BoxLayout):
         close_button.bind(on_press=lambda instance: popup.dismiss())
         popup_layout.add_widget(close_button)
 
-        popup = Popup(title="Detalles del Alumno", content=popup_layout, size_hint=(0.9, 0.9))
+        # Mostrar el popup
+        popup = Popup(
+            title="Detalles del Alumno",
+            content=popup_layout,
+            size_hint=(0.9, 0.9),
+        )
         popup.open()
 
     def update_calificacion_popup(self, id_calificacion, current_calificacion):
-        """Ventana emergente para ingresar nueva calificación"""
+        """Ventana emergente para ingresar nueva calificación."""
         update_layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
 
         # Mensaje informativo
@@ -163,7 +181,7 @@ class Regularizaciones(BoxLayout):
         popup.open()
 
     def update_calificacion(self, id_calificacion, nueva_calificacion):
-        """Actualiza la calificación en la base de datos"""
+        """Actualiza la calificación en la base de datos."""
         try:
             nueva_calificacion = float(nueva_calificacion)
         except ValueError:
@@ -171,11 +189,14 @@ class Regularizaciones(BoxLayout):
             return
 
         query = "UPDATE Calificaciones SET calificacion = %s WHERE id_calificacion = %s"
-        execute_query(query, (nueva_calificacion, id_calificacion))
-        self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
+        try:
+            execute_query(query, (nueva_calificacion, id_calificacion))
+            self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
+        except Exception as e:
+            self.show_error(f"Error actualizando calificación: {e}")
 
     def show_error(self, message):
-        """Mostrar error en un popup"""
+        """Mostrar error en un popup."""
         popup_layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
         popup_layout.add_widget(Label(text=message, size_hint_y=None, height=40))
         close_button = Button(text="Cerrar", size_hint_y=None, height=50)
@@ -188,11 +209,12 @@ class Regularizaciones(BoxLayout):
         )
         close_button.bind(on_press=popup.dismiss)
         popup.open()
-    
+
     def regresar(self, instance):
-        """Regresa a la pantalla anterior"""
+        """Regresa a la pantalla anterior."""
         app = App.get_running_app()
         app.root.current = 'lec'  # Cambia por el nombre de la pantalla anterior
+
 
 class RegularizacionesApp(App):
     def build(self):

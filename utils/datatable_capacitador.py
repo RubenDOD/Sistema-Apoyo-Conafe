@@ -6,7 +6,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle
-import mysql.connector
+from db_connection import execute_query
 
 class DataTableCapacitadorAspirante(BoxLayout):
     def __init__(self, table = '', db_config=None, id_capacitador=None,**kwargs):
@@ -226,16 +226,7 @@ class DataTableCapacitadorAspirante(BoxLayout):
         self.go_back(instance)
     
     def actualizar_base_datos(self, id_aspirante, nuevo_estado, observacion):
-        conn = None  # Inicializa la variable para evitar UnboundLocalError
         try:
-            # Verifica que la configuración no sea None
-            if not self.db_config:
-                raise ValueError("La configuración de la base de datos no está definida (db_config es None).")
-            
-            # Intenta conectar a la base de datos
-            conn = mysql.connector.connect(**self.db_config)
-            cursor = conn.cursor()
-
             # Consulta SQL para actualizar los datos
             query = """
             UPDATE FII
@@ -243,21 +234,10 @@ class DataTableCapacitadorAspirante(BoxLayout):
             WHERE id_Aspirante = %s
             """
             # Ejecuta la consulta
-            cursor.execute(query, (nuevo_estado, observacion, id_aspirante))
-
-            # Confirma los cambios
-            conn.commit()
+            execute_query(query, (nuevo_estado, observacion, id_aspirante))
             print(f"Se actualizó el aspirante {id_aspirante} con estado '{nuevo_estado}' y observación '{observacion}'.")
-        
-        except mysql.connector.Error as err:
-            print(f"Error al conectar o actualizar la base de datos: {err}")
-        except ValueError as ve:
-            print(f"Error en la configuración de la base de datos: {ve}")
-        finally:
-            # Cierra la conexión si fue abierta
-            if conn and conn.is_connected():
-                conn.close()
-                print("Conexión a la base de datos cerrada.")
-    
+        except Exception as err:
+            print(f"Error al actualizar la base de datos: {err}")
+
     def go_back(self, instance):
         App.get_running_app().root.current = 'capacitador'
