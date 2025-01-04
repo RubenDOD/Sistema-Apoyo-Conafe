@@ -236,13 +236,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
             return _users   
     
     def get_products(self):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='pos'
-        )
-        mycursor = mydb.cursor()
+        # Inicializar estructura para almacenar los datos
         _stocks = OrderedDict()
         _stocks['product_code'] = {}
         _stocks['product_name'] = {}
@@ -252,44 +246,49 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         _stocks['order'] = {}
         _stocks['last_purchase'] = {}
 
-        product_code = []
-        product_name = []
-        product_weight = []
-        in_stock = []
-        sold = []
-        order = []
-        last_purchase = []
+        # Consulta para obtener los productos
         sql = 'SELECT * FROM stocks'
-        mycursor.execute(sql)
-        products = mycursor.fetchall()
-        for product in products:
-            product_code.append(product[1])
-            name = product[2]
-            if len(name) > 10:
-                name = name[:10] + '...'
-            product_name.append(name)
-            product_weight.append(product[3])
-            in_stock.append(product[5])
-            sold.append(product[6])
-            order.append(product[7])
-            last_purchase.append(product[8])
-        # print(designations)
-        products_length = len(product_code)
-        idx = 0
-        while idx < products_length:
-            _stocks['product_code'][idx] = product_code[idx]
-            _stocks['product_name'][idx] = product_name[idx]
-            _stocks['product_weight'][idx] = product_weight[idx]
-            _stocks['in_stock'][idx] = in_stock[idx]
-            _stocks['sold'][idx] = sold[idx]
-            _stocks['order'][idx] = order[idx]
-            _stocks['last_purchase'][idx] = last_purchase[idx]
-           
+        try:
+            products = execute_query(sql)
+            product_code = []
+            product_name = []
+            product_weight = []
+            in_stock = []
+            sold = []
+            order = []
+            last_purchase = []
 
-            idx += 1
-        
+            # Procesar resultados de la consulta
+            for product in products:
+                product_code.append(product[1])
+                name = product[2]
+                if len(name) > 10:
+                    name = name[:10] + '...'
+                product_name.append(name)
+                product_weight.append(product[3])
+                in_stock.append(product[5])
+                sold.append(product[6])
+                order.append(product[7])
+                last_purchase.append(product[8])
+
+            products_length = len(product_code)
+            idx = 0
+            while idx < products_length:
+                _stocks['product_code'][idx] = product_code[idx]
+                _stocks['product_name'][idx] = product_name[idx]
+                _stocks['product_weight'][idx] = product_weight[idx]
+                _stocks['in_stock'][idx] = in_stock[idx]
+                _stocks['sold'][idx] = sold[idx]
+                _stocks['order'][idx] = order[idx]
+                _stocks['last_purchase'][idx] = last_purchase[idx]
+                idx += 1
+
+        except Exception as e:
+            print(f"Error al obtener productos: {e}")
+            return {}
+
         return _stocks
-        
+    
     def change_screen(self, instance):
         if instance.text == 'Manage Products':
             self.ids.scrn_mngr.current = 'scrn_product_content'
