@@ -24,7 +24,7 @@ from AsignarAlumno import AsignarAlumnosWindow
 from Calificaciones import AlumnosCalificaciones
 from Regularizaciones import Regularizaciones
 from estimaciontallas import EstimacionTallasScreen
-from EntregaEquipamiento import EquipamientoScreen
+from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
 
 # Conexión a la base de datos
@@ -58,8 +58,7 @@ Builder.load_file("interfaz_becas.kv")
 Builder.load_file("progreso_apoyos.kv")
 Builder.load_file("estimaciontallas.kv")
 Builder.load_file("UpdateCorreo.kv")
-
-
+Builder.load_file("EE.kv")
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -1044,9 +1043,9 @@ class TallasEquipamientoScreen(CustomBoxLayout):
 class EquipamientoScreenWidget(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        aux = EquipamientoScreen()
         # Cargar la interfaz del equipamiento
-        equipamiento_screen = EquipamientoScreen()
-        self.add_widget(equipamiento_screen.build())
+        self.add_widget(aux)
 
 class LoginApp(App):
     def build(self):
@@ -1180,7 +1179,7 @@ class LoginApp(App):
         sm.add_widget(screen_tallas)
 
         screen_equipamiento = Screen(name='equipamiento')
-        screen_equipamiento.add_widget(EquipamientoScreenWidget())
+        screen_equipamiento.add_widget(EquipamientoScreen())
         sm.add_widget(screen_equipamiento)
 
         sm.current = 'login'

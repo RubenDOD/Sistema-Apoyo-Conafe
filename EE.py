@@ -19,40 +19,9 @@ import requests
 from polyline import decode
 from simplification.cutil import simplify_coords
 from kivy.uix.scrollview import ScrollView
-
-Window.clearcolor = (1, 1, 1, 1)  # RGB blanco y opacidad completa
+import polyline
 
 class EquipamientoScreen(BoxLayout):
-
-    def build(self):
-        layout = BoxLayout(orientation='vertical')
-
-        # Título superior
-        title = Label(text="Entrega de Equipamiento", size_hint_y=0.1, font_size=24, bold=True, halign="center", color=[0,0,0,1])
-        layout.add_widget(title)
-
-        footer = BoxLayout(size_hint_y=0.1)
-
-        state_dropdown = DropDown()
-        print("Se cargaran los estados")
-        self.load_states(state_dropdown)
-        print("Estados cargados correctamente")
-
-        print("Se aplicara un boton por cada estado para cuando se seleccione un estado")
-        state_button = Button(text="Seleccionar Estado")
-        state_button.bind(on_release=state_dropdown.open)
-        state_dropdown.bind(on_select=lambda instance, x: self.update_state_selection(state_button, x))
-        footer.add_widget(state_button)
-        print("Se configuró correctamente")
-
-        # Botón de regresar
-        btn_back = Button(text="Regresar")
-        btn_back.bind(on_release=self.go_back)
-        footer.add_widget(btn_back)
-
-        layout.add_widget(footer)
-
-        return layout
 
     def go_back(self, instance):
         # Implementa aquí la funcionalidad deseada, como cerrar la pantalla o navegar al menú principal
@@ -61,13 +30,12 @@ class EquipamientoScreen(BoxLayout):
     def update_state_selection(self, button, state_name):
         print("Mostrando estados")
         button.text = state_name
-        self.map_editor.available_ccts = self.get_ccts_by_state(state_name)
-        self.map_editor.selected_state = state_name  # Guardar el estado seleccionado
+        available_ccts = self.get_ccts_by_state(state_name)
 
         API_KEY = "AIzaSyAZC4UtWCoYayInA-CyzJ4lKso8PcJLtok"  # Reemplaza con tu clave de Google Maps API
 
         # Convertir las coordenadas a strings "lat,lng"
-        original_waypoints = ["{},{}".format(lat, lng) for lat, lng in self.map_editor.available_ccts]
+        original_waypoints = ["{},{}".format(lat, lng) for lat, lng in available_ccts]
         validated_waypoints = []
 
         # Verificar accesibilidad de cada waypoint
@@ -119,6 +87,20 @@ class EquipamientoScreen(BoxLayout):
         centro_lng = sum(longitudes) / len(longitudes)
         centro = f"{centro_lat},{centro_lng}"
 
+        # Calcular nivel de zoom según la dispersión de los puntos
+        lat_range = max(latitudes) - min(latitudes)
+        lng_range = max(longitudes) - min(longitudes)
+        max_range = max(lat_range, lng_range)
+
+        if max_range < 0.05:
+            zoom = 14
+        elif max_range < 0.1:
+            zoom = 12
+        elif max_range < 0.5:
+            zoom = 10
+        else:
+            zoom = 8
+
         # Directions API: calcular la ruta óptima
         directions_url = "https://maps.googleapis.com/maps/api/directions/json"
         params = {
@@ -154,36 +136,46 @@ class EquipamientoScreen(BoxLayout):
         tolerance = 0.0005  # Ajusta la tolerancia según el nivel de detalle deseado
         simplified_coordinates = simplify_coords(all_coordinates, tolerance)
 
-        # Formatear las coordenadas como 'lat,lng'
-        formatted_coordinates = ["{:.6f},{:.6f}".format(lat, lng) for lat, lng in simplified_coordinates]
+        # Codificar las coordenadas simplificadas usando polyline
+        encoded_path = polyline.encode([(lat, lng) for lat, lng in simplified_coordinates])
 
         # Parámetro `path` para la ruta optimizada
-        path_param = "path=color:blue|weight:10|" + "|".join(formatted_coordinates)
+        path_param = f"path=enc:{encoded_path}|color:blue|weight:10"
 
-        # Parámetro `markers` para resaltar waypoints
-        markers_param = "markers=color:red|size:mid|" + "|".join(validated_waypoints)
+        # Parámetro `markers` para resaltar waypoints con números
+        markers_list = [
+            f"markers=color:red|label:{i+1}|{validated_waypoints[i]}"
+            for i in range(len(validated_waypoints))
+        ]
+        markers_param = "&".join(markers_list)
 
         # Parámetros de la solicitud a Static Maps
         static_map_params = {
             "size": "800x600",      # Tamaño de la imagen
             "path": path_param,     # Ruta optimizada
             "center": centro,       # Centro del mapa
-            "zoom": 8,             # Nivel de zoom
+            "zoom": zoom,             # Nivel de zoom
             "key": API_KEY,         # Clave de la API
             "markers": markers_param  # Marcadores para los waypoints
         }
 
+        # Concatenar parámetros para incluir marcadores
+        static_map_url_with_params = f"{static_map_url}?{'&'.join(f'{key}={value}' for key, value in static_map_params.items())}&{markers_param}"
+
         # Solicitar Static Maps
-        static_map_response = requests.get(static_map_url, params=static_map_params)
+        static_map_response = requests.get(static_map_url_with_params)
 
         # Guardar la imagen
         if static_map_response.status_code == 200:
             with open(f"{state_name}.png", "wb") as file:
                 file.write(static_map_response.content)
+            self.ids.map_image.source = f"{state_name}.png"
+            self.ids.map_image.reload()
             print(f"Imagen guardada como '{state_name}.png'")
         else:
             print(f"Error al generar el mapa: {static_map_response.text}")
 
+        
         # Crear un layout para el contenido del ScrollView
         content = BoxLayout(orientation="vertical", size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))  # Ajustar tamaño dinámico
@@ -219,18 +211,9 @@ class EquipamientoScreen(BoxLayout):
         popup.open()
 
     def set_image_widget(self, image_path):
-        self.map_image = Image(
-            source=image_path,
-            allow_stretch=True,
-            keep_ratio=False,
-            size=self.size,
-            pos=self.pos
-        )
-
-    def set_image(self, selection, popup):
-        if selection:
-            self.set_image_widget(selection[0])
-        popup.dismiss()
+        """Actualiza el widget de imagen con el mapa generado."""
+        self.map_image.source = image_path
+        self.map_image.reload()
 
     def load_states(self, dropdown):
         conn = mysql.connector.connect(
@@ -263,6 +246,12 @@ class EquipamientoScreen(BoxLayout):
         conn.close()
         return [[float(latitud),float(longitud)] for clave, nombre, latitud, longitud in ccts]
         #return [[f"{clave} ({nombre})",(float(latitud),float(longitud))] for clave, nombre, latitud, longitud in ccts]
+
+    def open_dropdown(self, button):
+        dropdown = DropDown()
+        self.load_states(dropdown)  # Carga los estados en el dropdown
+        dropdown.open(button)
+        dropdown.bind(on_select=lambda instance, x: self.update_state_selection(button, x))
 
 class MainApp(App):
     def build(self):

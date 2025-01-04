@@ -1,0 +1,40 @@
+<EquipamientoScreen>:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 10
+
+    # Título
+    Label:
+        text: "Entrega de equipamiento"
+        font_size: '24sp'
+        size_hint_y: None
+        height: 50
+        halign: 'center'
+        valign: 'middle'
+        text_size: self.size
+        color: (0,0,0,1)
+
+    # Imagen para el mapa o visualización
+    Image:
+        id: map_image
+        allow_stretch: True
+        keep_ratio: False
+        size_hint_y: 0.6
+
+    # Contenedor de los botones
+    BoxLayout:
+        orientation: 'horizontal'
+        spacing: 10
+        size_hint_y: None
+        height: 50
+
+        # Botón de selección de estados
+        Button:
+            id: state_button
+            text: "Seleccionar estado"
+            on_release: root.open_dropdown(self)
+
+        # Botón para regresar
+        Button:
+            text: "Regresar"
+            on_release: app.root.current = "departamento_equipamiento"
