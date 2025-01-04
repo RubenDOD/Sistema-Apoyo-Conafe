@@ -200,7 +200,7 @@ class CCTsWindow(BoxLayout):
 
             # Muestra un popup de éxito
             self.reload_users()  # Recargar los usuarios no asignados
-            self.go_back_to_convocatorias()
+            self.go_back_to_users()
 
         except Exception as err:
             self.show_popup("Error", f"Ocurrió un error: {err}")
