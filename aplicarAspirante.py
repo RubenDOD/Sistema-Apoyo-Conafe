@@ -80,7 +80,7 @@ class aplicarAspiranteWindow(BoxLayout):
             _convocatorias['nombre'] = {}
             _convocatorias['status'] = {}
 
-            sql = 'SELECT * FROM ConvocatoriaActual WHERE estado_convocatoria = "Abierta"'
+            sql = "SELECT * FROM ConvocatoriaActual WHERE estado_convocatoria = 'Abierta'"
             users = execute_query(sql)
 
             ids = [user[0] for user in users]

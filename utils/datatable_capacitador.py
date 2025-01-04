@@ -9,14 +9,10 @@ from kivy.graphics import Color, Rectangle
 from db_connection import execute_query
 
 class DataTableCapacitadorAspirante(BoxLayout):
-    def __init__(self, table = '', db_config=None, id_capacitador=None,**kwargs):
+    def __init__(self, table = '', id_capacitador=None,**kwargs):
         super().__init__(orientation='vertical',**kwargs)
-        # Configuración de conexión a la base de datos  
-        if not isinstance(db_config, dict):
-            raise ValueError("db_config debe ser un diccionario con la configuración de la base de datos.")
 
         self.id_capacitador = id_capacitador
-        self.db_config = db_config
 
         # Contenedor principal con fondo blanco
         with self.canvas.before:
