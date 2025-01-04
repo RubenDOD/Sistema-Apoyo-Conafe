@@ -7,6 +7,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 
 class Regularizaciones(BoxLayout):
@@ -190,7 +191,7 @@ class Regularizaciones(BoxLayout):
 
         query = "UPDATE Calificaciones SET calificacion = %s WHERE id_calificacion = %s"
         try:
-            execute_query(query, (nueva_calificacion, id_calificacion))
+            execute_non_query(query, (nueva_calificacion, id_calificacion))
             self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
         except Exception as e:
             self.show_error(f"Error actualizando calificación: {e}")

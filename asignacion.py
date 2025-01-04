@@ -7,6 +7,7 @@ from collections import OrderedDict
 from utils.datatable_asignaciones import DataTableAsignacion	
 from datetime import datetime
 import hashlib
+from db_connection import execute_non_query
 from db_connection import execute_query
 from kivy.uix.boxlayout import BoxLayout
 import webbrowser
@@ -189,7 +190,7 @@ class AdminWindowAsignaciones(BoxLayout):
 
         # Si hay cupo disponible, procede a asignar el aspirante
         sql = 'UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?'
-        execute_query(sql, ("Asignado", aspirante_id))
+        execute_non_query(sql, ("Asignado", aspirante_id))
 
         # Inserta en la tabla FII
         sql = '''
@@ -200,7 +201,7 @@ class AdminWindowAsignaciones(BoxLayout):
         fecha_finalizacion = datetime.now().date()  # Puede especificar la fecha finalización si es necesaria
         observaciones = "Observación inicial"  # Cambiar o eliminar si no es necesaria
 
-        execute_query(sql, (capacitador_id, aspirante_id, self.selected_cct_key, "En inicio", fecha_inicio, fecha_finalizacion, observaciones))
+        execute_non_query(sql, (capacitador_id, aspirante_id, self.selected_cct_key, "En inicio", fecha_inicio, fecha_finalizacion, observaciones))
 
         # Confirmación visual
         print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id} en la tabla FII.")

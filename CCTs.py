@@ -14,6 +14,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
+from db_connection import execute_non_query
 
 class CCTsWindow(BoxLayout):
     #Builder.load_file("AsignarAlumno.kv")
@@ -165,7 +166,7 @@ class CCTsWindow(BoxLayout):
                 INSERT INTO CCTgrupos (id_CCT, nombre_grupo, nivel, grado)
                 VALUES (?, ?, ?, ?)
             '''
-            execute_query(sql_insert, (id_cct, group_name, nivel, grade))
+            execute_non_query(sql_insert, (id_cct, group_name, nivel, grade))
 
             # Mostrar mensaje de éxito
             self.show_popup("Éxito", f"Grupo '{group_name}' añadido correctamente al CCT {id_cct}.")
@@ -195,7 +196,7 @@ class CCTsWindow(BoxLayout):
                 INSERT INTO alumnoCCT (id_CCT, id_alumno, id_grupo)
                 VALUES (?, ?, ?)
             '''
-            execute_query(sql, (id_cct, id_alumno, id_grupo))
+            execute_non_query(sql, (id_cct, id_alumno, id_grupo))
 
             # Muestra un popup de éxito
             self.reload_users()  # Recargar los usuarios no asignados

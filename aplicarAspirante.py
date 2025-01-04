@@ -13,6 +13,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from db_connection import execute_query
 
+
 class aplicarAspiranteWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -10,6 +10,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class SolicitarApoyoWindow(BoxLayout):
     def __init__(self, id_educador,**kwargs):
@@ -133,7 +134,7 @@ class SolicitarApoyoWindow(BoxLayout):
             INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo)
             VALUES (%s, %s, 'pendiente')
         """
-        execute_query(insert_query, (apoyo['id_apoyo'], self.id_educador))
+        execute_non_query(insert_query, (apoyo['id_apoyo'], self.id_educador))
 
         # Mostrar mensaje de éxito
         popup = Popup(

@@ -4,6 +4,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class EditConvocatoriaWindow(Screen):
     def __init__(self, conv_id=None, **kwargs):
@@ -67,7 +68,7 @@ class EditConvocatoriaWindow(Screen):
                 SET nombre_convocatoria = ?, url_convocatoria = ?, url_forms = ?
                 WHERE id_Convo = ?
             """
-            execute_query(sql, (nuevo_nombre, nueva_url, nueva_url_form, self.conv_id))
+            execute_non_query(sql, (nuevo_nombre, nueva_url, nueva_url_form, self.conv_id))
 
             # Regresar a la pantalla anterior
             self.manager.current = 'scrn_content'

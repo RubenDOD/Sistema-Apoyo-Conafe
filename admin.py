@@ -12,6 +12,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from kivy.uix.scrollview import ScrollView
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
     def __init__(self, conv, **kwargs):
@@ -56,7 +57,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         """
         try:
             update_sql = "UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?"
-            execute_query(update_sql, ("Aceptado", user_id))
+            execute_non_query(update_sql, ("Aceptado", user_id))
             print(f"El usuario con ID {user_id} ahora tiene acceso 'Aceptado'.")
             self.reload_users()
         except Exception as err:
@@ -68,7 +69,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         """
         try:
             update_sql = "UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?"
-            execute_query(update_sql, ("Rechazado", user_id))
+            execute_non_query(update_sql, ("Rechazado", user_id))
             print(f"El usuario con ID {user_id} ahora tiene acceso 'Rechazado'.")
             self.reload_users()
         except Exception as err:

@@ -28,6 +28,7 @@ from estimaciontallas import EstimacionTallasScreen
 from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 # Cargar todos los archivos .kv
 Builder.load_file('main.kv')
@@ -163,7 +164,7 @@ class RegisterScreen(CustomBoxLayout):
             return
 
         consulta_registro = f"INSERT INTO Usuario (correo, password, acceso) VALUES ('{usuario}, '{contrasena}', '{rol}')"
-        execute_query(consulta_registro)
+        execute_non_query(consulta_registro)
         
         self.ids.lbl_estado.text = "Registro exitoso. Ahora puedes iniciar sesión."
         App.get_running_app().root.current = 'login'

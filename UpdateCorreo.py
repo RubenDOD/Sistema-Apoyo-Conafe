@@ -6,6 +6,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.lang import Builder
 from db_connection import execute_query
+from db_connection import execute_non_query
 import re  # Para validación del correo
 
 class UpdateCorreoWindow(BoxLayout):
@@ -68,7 +69,7 @@ class UpdateCorreoWindow(BoxLayout):
         WHERE id_Aspirante = %s
         """
         try:
-            execute_query(update_query, (telefono_fijo, telefono_movil, correo, self.aspirante_id))
+            execute_non_query(update_query, (telefono_fijo, telefono_movil, correo, self.aspirante_id))
             print("Datos actualizados exitosamente.")
         except Exception as e:
             self.mostrar_error(f"Error al actualizar los datos: {e}")

@@ -11,6 +11,7 @@ from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
 import re
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class ApoyosSolicitadosWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -240,7 +241,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         SET estado_apoyo = %s, observaciones = %s, fecha_pago = %s
         WHERE id_apoyo = %s AND id_educador = %s
         """
-        execute_query(update_query, (nuevo_estado, observaciones, fecha_pago, apoyo['id_apoyo'], apoyo['id_educador']))
+        execute_non_query(update_query, (nuevo_estado, observaciones, fecha_pago, apoyo['id_apoyo'], apoyo['id_educador']))
         self.conexion.commit()
 
         popup.dismiss()

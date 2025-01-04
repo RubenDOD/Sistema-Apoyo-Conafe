@@ -43,6 +43,25 @@ def execute_query(query, params=None):
         print("Error al ejecutar la consulta:", e)
         raise
 
+def execute_non_query(query, params=None):
+    """
+    Ejecuta una consulta SQL en la base de datos que no devuelve resultados.
+    Args:
+        query (str): Consulta SQL a ejecutar.
+        params (tuple): Parámetros para consultas parametrizadas (opcional).
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params or ())
+        conn.commit()  # Confirmar los cambios
+        cursor.close()
+        conn.close()
+        print("Consulta no devuelve resultados ejecutada correctamente y conexión cerrada.")
+    except Exception as e:
+        print("Error al ejecutar la consulta:", e)
+        raise
+
 def close_connection(conn):
     """
     Cierra la conexión a la base de datos.

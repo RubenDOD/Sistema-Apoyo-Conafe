@@ -10,6 +10,7 @@ from utils.datatable_alumnosMod import DataTableAlumnosMod
 from datetime import datetime
 import hashlib
 from db_connection import execute_query
+from db_connection import execute_non_query
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
@@ -206,7 +207,7 @@ class ModificarAlumnoWindow(BoxLayout):
                 nombres, apellido_paterno, apellido_materno,
                 fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado, curp
             )
-            execute_query(update_query, values)
+            execute_non_query(update_query, values)
             self.show_popup("Éxito", "Datos de usuario actualizados exitosamente.")
         except Exception as e:
             self.show_popup("Error", f"Error al actualizar los datos del usuario: {e}")

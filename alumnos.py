@@ -12,6 +12,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class AlumnosWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -133,7 +134,7 @@ class AlumnosWindow(BoxLayout):
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             values = (curp, nombres, apellido_paterno, apellido_materno, fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado)
-            execute_query(sql, values)
+            execute_non_query(sql, values)
             self.show_popup("Éxito", "Usuario agregado exitosamente.")  # Mostrar Popup de éxito
         except Exception as e:
             self.show_popup("Error", f"Error al guardar el usuario: {e}")

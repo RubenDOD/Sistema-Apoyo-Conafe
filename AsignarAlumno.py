@@ -9,6 +9,7 @@ from collections import OrderedDict
 from utils.datatable_alumnosAsign import DataTableAlumnosAsign
 from datetime import datetime
 import hashlib
+from db_connection import execute_non_query
 from db_connection import execute_query
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
@@ -225,13 +226,13 @@ class AsignarAlumnosWindow(BoxLayout):
                 INSERT INTO alumnoCCT (id_CCT, id_alumno, id_grupo)
                 VALUES (?, ?, ?)
             '''
-            execute_query(sql, (id_cct, id_alumno, id_grupo))
+            execute_non_query(sql, (id_cct, id_alumno, id_grupo))
 
             # Consulta para obtener nivel y grado del grupo
             sql = '''
                 SELECT nivel, grado FROM CCTgrupos WHERE id_grupo = ?
             '''
-            result = execute_query(sql, (id_grupo,))
+            result = execute_non_query(sql, (id_grupo,))
 
             if result:
                 nivel, grado = result[0]
@@ -282,7 +283,7 @@ class AsignarAlumnosWindow(BoxLayout):
                             VALUES (?, ?, ?, ?)
                         '''
                         fecha_actual = datetime.now()
-                        execute_query(sql, (id_alumno, materia[0], 0.0, fecha_actual))
+                        execute_non_query(sql, (id_alumno, materia[0], 0.0, fecha_actual))
 
             # Mostrar mensaje de éxito
             self.show_popup("Éxito", "Alumno asignado correctamente.")

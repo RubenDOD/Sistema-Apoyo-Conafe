@@ -7,6 +7,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 class AlumnosCalificaciones(BoxLayout):
     def __init__(self, cct=None, grupo=None,**kwargs):
@@ -191,7 +192,7 @@ class AlumnosCalificaciones(BoxLayout):
         try:
             # Conectar a la base de datos y actualizar calificación
             query = "UPDATE Calificaciones SET calificacion = ? WHERE id_calificacion = ?"
-            execute_query(query, (nueva_calificacion, id_calificacion))
+            execute_non_query(query, (nueva_calificacion, id_calificacion))
             self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
         except Exception as e:
             self.show_error(f"Error actualizando calificación: {e}")

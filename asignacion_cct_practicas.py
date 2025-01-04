@@ -7,6 +7,7 @@ from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from functools import partial
 from db_connection import execute_query
+from db_connection import execute_non_query
 
 # Builder.load_file('asignacion_cct_practicas.kv')  # Asegúrate de que el archivo tenga este nombre
 
@@ -217,12 +218,12 @@ class DetalleCCTScreen(Screen):
             INSERT INTO AsignacionAspiranteCCT (id_Aspirante, claveCentro, fecha_asignacion)
             VALUES (%s, %s, CURDATE());
             """
-            execute_query(query_assign, (aspirante_id, clave_centro))
+            execute_non_query(query_assign, (aspirante_id, clave_centro))
 
             query_update_cupos = """
             UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = %s;
             """
-            execute_query(query_update_cupos, (clave_centro,))
+            execute_non_query(query_update_cupos, (clave_centro,))
 
             print("CCT asignado correctamente.")
 

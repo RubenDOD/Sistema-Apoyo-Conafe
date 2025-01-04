@@ -8,6 +8,7 @@ from utils.datatable_convocatorias import DataTableConv
 from datetime import datetime
 import hashlib
 from db_connection import execute_query
+from db_connection import execute_non_query
 from añadir_convocatoria import AddConvoScreen
 from kivy.uix.boxlayout import BoxLayout
 import webbrowser
@@ -86,7 +87,7 @@ class ConvocatoriaWindow(BoxLayout):
         """Abre una convocatoria cambiando su estado en la base de datos."""
         try:
             sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = ? WHERE id_Convo = ?"
-            execute_query(sql, ("Abierta", conv_id))
+            execute_non_query(sql, ("Abierta", conv_id))
             print(f"Convocatoria {conv_id} abierta con éxito.")
         except Exception as e:
             print(f"Error al abrir convocatoria {conv_id}: {e}")
@@ -95,7 +96,7 @@ class ConvocatoriaWindow(BoxLayout):
         """Cierra una convocatoria cambiando su estado en la base de datos."""
         try:
             sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = ? WHERE id_Convo = ?"
-            execute_query(sql, ("Cerrada", conv_id))
+            execute_non_query(sql, ("Cerrada", conv_id))
             self.reload_users()
             print(f"Convocatoria {conv_id} cerrada con éxito.")
         except Exception as e:

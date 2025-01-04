@@ -9,6 +9,7 @@ from tkinter.filedialog import askopenfilename
 from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
 from db_connection import execute_query
+from db_connection import execute_non_query
 import validators
 import requests
 
@@ -121,7 +122,7 @@ class AddConvoScreen(Screen):
                 """
                 data = (nombre_convocatoria, self.url_documento, self.url_forms, 'Cerrada')
 
-                execute_query(sql, data)
+                execute_non_query(sql, data)
 
                 print("Convocatoria añadida con éxito.")
                 print("Datos:", nombre_convocatoria, self.url_documento, self.url_forms, "Cerrada")
