@@ -7,7 +7,7 @@ from collections import OrderedDict
 from utils.datatable_asignaciones import DataTableAsignacion	
 from datetime import datetime
 import hashlib
-import mysql.connector
+from db_connection import execute_query
 from kivy.uix.boxlayout import BoxLayout
 import webbrowser
 from kivy.uix.scrollview import ScrollView
@@ -21,14 +21,6 @@ class AdminWindowAsignaciones(BoxLayout):
         super().__init__(**kwargs)
         #Builder.load_file("admin.kv")  # Carga explícita de admin.kv
         self.selected_cct_key = None
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='conafe'
-        )
-        self.mycursor = self.mydb.cursor()
-
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
         userstable = DataTableAsignacion(table=users, callback=self.button_callback)  # Pasa button_callback aquí
@@ -161,39 +153,31 @@ class AdminWindowAsignaciones(BoxLayout):
             return
 
         # Separar el nombre del capacitador para encontrar su ID en la base de datos
-        capacitador_nombre = selected_capacitador.split()  # Divide el nombre completo
-        nombres, apellidoPaterno, apellidoMaterno = capacitador_nombre[0], capacitador_nombre[1], capacitador_nombre[2]
+        capacitador_nombre = selected_capacitador.split()
+        if len(capacitador_nombre) < 3:
+            print("Formato de nombre de capacitador inválido.")
+            return
 
-        # Conectar a la base de datos
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+        nombres, apellidoPaterno, apellidoMaterno = capacitador_nombre[0], capacitador_nombre[1], capacitador_nombre[2]
 
         # Encuentra el id_Capacitador en base al nombre y apellidos
         sql = '''
             SELECT id_Usuario FROM Usuario
             JOIN Aspirante ON Usuario.id_Usuario = Aspirante.id_Aspirante
-            WHERE Aspirante.nombres = %s AND Aspirante.apellidoPaterno = %s AND Aspirante.apellidoMaterno = %s
+            WHERE Aspirante.nombres = ? AND Aspirante.apellidoPaterno = ? AND Aspirante.apellidoMaterno = ?
         '''
-        mycursor.execute(sql, (nombres, apellidoPaterno, apellidoMaterno))
-        capacitador_id_result = mycursor.fetchone()
+        capacitador_id_result = execute_query(sql, (nombres, apellidoPaterno, apellidoMaterno))
 
         if not capacitador_id_result:
             print("Capacitador no encontrado en la base de datos.")
-            mycursor.close()
-            mydb.close()
             return
 
-        capacitador_id = capacitador_id_result[0]
+        capacitador_id = capacitador_id_result[0][0]
 
         # Verificar si el capacitador ya tiene al menos un aspirante asignado en la tabla `FII`
-        sql = 'SELECT COUNT(*) FROM FII WHERE id_Capacitador = %s'
-        mycursor.execute(sql, (capacitador_id,))
-        count = mycursor.fetchone()[0]
+        sql = 'SELECT COUNT(*) FROM FII WHERE id_Capacitador = ?'
+        count_result = execute_query(sql, (capacitador_id,))
+        count = count_result[0][0] if count_result else 0
 
         if count >= 1:
             # Mostrar un popup indicando que el capacitador ya tiene el cupo lleno
@@ -201,30 +185,22 @@ class AdminWindowAsignaciones(BoxLayout):
                           content=Label(text='Cupos llenos para este capacitador'),
                           size_hint=(0.6, 0.4))
             popup.open()
-            mycursor.close()
-            mydb.close()
             return
 
         # Si hay cupo disponible, procede a asignar el aspirante
-        sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
-        mycursor.execute(sql, ("Asignado", aspirante_id))
+        sql = 'UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?'
+        execute_query(sql, ("Asignado", aspirante_id))
 
         # Inserta en la tabla FII
         sql = '''
             INSERT INTO FII (id_Capacitador, id_Aspirante, id_CCT, estadoCapacitacion, fechaInicio, fechaFinalizacion, observaciones)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         '''
         fecha_inicio = datetime.now().date()
-        fecha_finalizacion = datetime.now().date()  # Puede especificar la fecha finalización si es necesaria, o dejarla nula
+        fecha_finalizacion = datetime.now().date()  # Puede especificar la fecha finalización si es necesaria
         observaciones = "Observación inicial"  # Cambiar o eliminar si no es necesaria
 
-        mycursor.execute(sql, (capacitador_id, aspirante_id, self.selected_cct_key, "En inicio", fecha_inicio, fecha_finalizacion, observaciones))
-
-        mydb.commit()
-
-        # Cerrar la conexión a la base de datos
-        mycursor.close()
-        mydb.close()
+        execute_query(sql, (capacitador_id, aspirante_id, self.selected_cct_key, "En inicio", fecha_inicio, fecha_finalizacion, observaciones))
 
         # Confirmación visual
         print(f"Aspirante con ID {aspirante_id} ha sido asignado al capacitador con ID {capacitador_id} en la tabla FII.")
@@ -234,38 +210,16 @@ class AdminWindowAsignaciones(BoxLayout):
         self.reload_users()  # Recarga la lista de usuarios actualizada
 
     def get_dropdown_options(self, estado):
-        # Conecta a la base de datos y obtiene las opciones
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-        
         # Ejecuta el query para obtener claveCentro, nombre y municipio
-        sql = 'SELECT claveCentro, nombre, municipio, localidad FROM CCT WHERE CCT.estado = %s'
-        mycursor.execute(sql, (estado,))
-        result = mycursor.fetchall()
-        
+        sql = 'SELECT claveCentro, nombre, municipio, localidad FROM CCT WHERE CCT.estado = ?'
+        result = execute_query(sql, (estado,))
+
         # Formatea los resultados para mostrarlos en el dropdown
-        options = [f"{claveCentro} - {nombre}, {municipio}, {localidad},  " for claveCentro, nombre, municipio, localidad in result]
-        
-        mycursor.close()
-        mydb.close()
-        
+        options = [f"{claveCentro} - {nombre}, {municipio}, {localidad}" for claveCentro, nombre, municipio, localidad in result]
+
         return options
 
     def get_capacitadores_by_cct(self, claveCentro):
-        # Conectar a la base de datos y obtener capacitadores para el CCT seleccionado
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
         # Consulta para obtener nombres de capacitadores asignados a un CCT específico
         sql = '''
             SELECT Aspirante.nombres, Aspirante.apellidoPaterno, Aspirante.apellidoMaterno 
@@ -273,21 +227,14 @@ class AdminWindowAsignaciones(BoxLayout):
             JOIN LEC ON CentroEducador.id_LEC = LEC.id_Usuario
             JOIN Usuario ON LEC.id_Usuario = Usuario.id_Usuario
             JOIN Aspirante ON Usuario.id_Usuario = Aspirante.id_Aspirante
-            WHERE CentroEducador.claveCentro = %s AND Usuario.acceso = 'Capacitador'
+            WHERE CentroEducador.claveCentro = ? AND Usuario.acceso = 'Capacitador'
         '''
-        mycursor.execute(sql, (claveCentro,))
-        result = mycursor.fetchall()
+        result = execute_query(sql, (claveCentro,))
 
         # Formatear resultados para mostrarlos en el dropdown
         capacitadores = [f"{nombres} {apellidoPaterno} {apellidoMaterno}" for nombres, apellidoPaterno, apellidoMaterno in result]
 
-        mycursor.close()
-        mydb.close()
-
         return capacitadores
-
-
-
 
     def ver_documento(self, url):
         # Lógica para abrir el documento específico
@@ -299,48 +246,23 @@ class AdminWindowAsignaciones(BoxLayout):
     def go_back(self, instance):
         self.ids.scrn_mngr.current = 'scrn_content'
 
-
-    
-
     def get_users(self, mode, id):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
         if mode == "General":
             _users = OrderedDict()
             _users['ID'] = {}
             _users['first_names'] = {}
             _users['last_names'] = {}
             _users['user_names'] = {}
-            ids = []
-            first_names = []
-            last_names = []
-            user_names = []
 
-            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s'
-            mycursor.execute(sql, ("Aceptado",))
+            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = ?'
+            users = execute_query(sql, ("Aceptado",))
 
-            users = mycursor.fetchall()
-            for user in users:
-                ids.append(user[0])
-                first_names.append(user[7])
-                last_names.append(user[8])
-                user_names.append(user[9])
-            # print(designations)
-            users_length = len(first_names)
-            idx = 0
-            while idx < users_length:
-                _users['ID'][idx] = ids[idx]
-                _users['first_names'][idx] = first_names[idx]
-                _users['last_names'][idx] = last_names[idx]
-                _users['user_names'][idx] = user_names[idx]
+            for idx, user in enumerate(users):
+                _users['ID'][idx] = user[0]
+                _users['first_names'][idx] = user[7]
+                _users['last_names'][idx] = user[8]
+                _users['user_names'][idx] = user[9]
 
-                idx += 1
             print(_users)
             return _users
         else:
@@ -352,58 +274,41 @@ class AdminWindowAsignaciones(BoxLayout):
             ]
 
             # Crear OrderedDict usando una comprensión
-
             _users = OrderedDict((key, {}) for key in keys)
 
-            sql = 'SELECT * FROM Aspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
+            sql = 'SELECT * FROM Aspirante WHERE id_Aspirante = ?'
+            users = execute_query(sql, (id,))
 
-            users = mycursor.fetchall()
-            idx = 0
+            sql = 'SELECT nombre_convocatoria FROM ConvocatoriaActual WHERE id_Convo = ?'
+            conv = execute_query(sql, (users[0][1],))
 
-            sql = 'SELECT nombre_convocatoria FROM ConvocatoriaActual WHERE id_Convo = %s'
-            mycursor.execute(sql, (users[0][1],))
-            conv = mycursor.fetchall()
-
-            for user in users:
+            for idx, user in enumerate(users):
                 _users['ID'][idx] = user[0]
                 _users['Convocatoria'][idx] = conv[0][0]
                 _users['nombres'][idx] = user[7]
                 _users['apellidoPat'][idx] = user[8]
                 _users['apellidoMat'][idx] = user[9]
                 _users['Fecha Nacimiento'][idx] = user[10]
-            
-            
-            sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
 
-            users = mycursor.fetchall()
+            sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = ?'
+            residencias = execute_query(sql, (id,))
 
-            for user in users:
-                _users['Codigo Postal'][idx] = user[1]
-                _users['Estado'][idx] = user[2]
-                _users['Municipio'][idx] = user[3]
-            
-            sql = 'SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
+            for idx, residencia in enumerate(residencias):
+                _users['Codigo Postal'][idx] = residencia[1]
+                _users['Estado'][idx] = residencia[2]
+                _users['Municipio'][idx] = residencia[3]
 
-            users = mycursor.fetchall()
+            sql = 'SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = ?'
+            participaciones = execute_query(sql, (id,))
 
-            for user in users:
-                _users['Estado Preferente'][idx] = user[1]
-                _users['Ciclo'][idx] = user[2]
-                _users['Municipio Deseado'][idx] = user[4]
+            for idx, participacion in enumerate(participaciones):
+                _users['Estado Preferente'][idx] = participacion[1]
+                _users['Ciclo'][idx] = participacion[2]
+                _users['Municipio Deseado'][idx] = participacion[4]
 
             return _users
 
     def get_products(self):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='pos'
-        )
-        mycursor = mydb.cursor()
         _stocks = OrderedDict()
         _stocks['product_code'] = {}
         _stocks['product_name'] = {}
@@ -413,42 +318,21 @@ class AdminWindowAsignaciones(BoxLayout):
         _stocks['order'] = {}
         _stocks['last_purchase'] = {}
 
-        product_code = []
-        product_name = []
-        product_weight = []
-        in_stock = []
-        sold = []
-        order = []
-        last_purchase = []
         sql = 'SELECT * FROM stocks'
-        mycursor.execute(sql)
-        products = mycursor.fetchall()
-        for product in products:
-            product_code.append(product[1])
+        products = execute_query(sql)
+
+        for idx, product in enumerate(products):
+            _stocks['product_code'][idx] = product[1]
             name = product[2]
             if len(name) > 10:
                 name = name[:10] + '...'
-            product_name.append(name)
-            product_weight.append(product[3])
-            in_stock.append(product[5])
-            sold.append(product[6])
-            order.append(product[7])
-            last_purchase.append(product[8])
-        # print(designations)
-        products_length = len(product_code)
-        idx = 0
-        while idx < products_length:
-            _stocks['product_code'][idx] = product_code[idx]
-            _stocks['product_name'][idx] = product_name[idx]
-            _stocks['product_weight'][idx] = product_weight[idx]
-            _stocks['in_stock'][idx] = in_stock[idx]
-            _stocks['sold'][idx] = sold[idx]
-            _stocks['order'][idx] = order[idx]
-            _stocks['last_purchase'][idx] = last_purchase[idx]
-           
+            _stocks['product_name'][idx] = name
+            _stocks['product_weight'][idx] = product[3]
+            _stocks['in_stock'][idx] = product[5]
+            _stocks['sold'][idx] = product[6]
+            _stocks['order'][idx] = product[7]
+            _stocks['last_purchase'][idx] = product[8]
 
-            idx += 1
-        
         return _stocks
         
     def change_screen(self, instance):
@@ -458,7 +342,6 @@ class AdminWindowAsignaciones(BoxLayout):
             self.ids.scrn_mngr.current = 'scrn_content'
         else:
             self.ids.scrn_mngr.current = 'scrn_view' 
-
 
 class AdminAppAsignaciones(App):
     def build(self):

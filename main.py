@@ -1,5 +1,6 @@
 import re
 import mysql.connector
+import pyodbc
 from kivy.properties import StringProperty
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -26,22 +27,7 @@ from Regularizaciones import Regularizaciones
 from estimaciontallas import EstimacionTallasScreen
 from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
-
-# Conexión a la base de datos
-connection = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="1234",
-    database="CONAFE"
-)
-
-def get_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="1234",
-        database="CONAFE"
-    )
+from db_connection import execute_query
 
 # Cargar todos los archivos .kv
 Builder.load_file('main.kv')
@@ -78,14 +64,13 @@ class LoginScreen(CustomBoxLayout):
     def verificar_credenciales(self):
         usuario = self.ids.txt_usuario.text
         contrasena = self.ids.txt_contrasena.text
-        connection = get_connection()  # Obtén una nueva conexión
-        cursor = connection.cursor()
-        consulta = "SELECT acceso, id_Usuario FROM Usuario WHERE correo=%s AND password=%s"
-        cursor.execute(consulta, (usuario, contrasena))
-        resultado = cursor.fetchone()
+        consulta = f"SELECT acceso, id_Usuario FROM Usuario WHERE correo='{usuario}' AND password='{contrasena}'"
+        resultado = execute_query(consulta)
+
+        print(resultado)
         
         if resultado:
-            acceso, id_usuario = resultado
+            acceso, id_usuario = resultado[0]
             id_usuario = str(id_usuario)
             self.ids.lbl_estado.text = "Login exitoso!"
             
@@ -117,9 +102,8 @@ class LoginScreen(CustomBoxLayout):
                 sm.current = 'capacitador'
             elif acceso == 'Control Escolar':
                 # Obtener el CCT asociado
-                consulta_cct = "SELECT CCT FROM AreaControlEscolar WHERE id_ACT = %s"
-                cursor.execute(consulta_cct, (id_usuario,))
-                resultado_cct = cursor.fetchone()
+                consulta_cct = f"SELECT CCT FROM AreaControlEscolar WHERE id_ACT = '{id_usuario}'"
+                resultado_cct = execute_query(consulta_cct)
                 
                 if resultado_cct:
                     cct = resultado_cct[0]  # Extraer el valor del CCT
@@ -139,9 +123,6 @@ class LoginScreen(CustomBoxLayout):
                 sm.current = 'departamento_equipamiento'
         else:
             self.ids.lbl_estado.text = "Usuario o contraseña incorrectos."
-        
-        cursor.close()
-        connection.close()
 
     def go_to_register(self):
         App.get_running_app().root.current = 'register'
@@ -174,20 +155,15 @@ class RegisterScreen(CustomBoxLayout):
             self.ids.lbl_estado.text = "El correo debe tener la terminación @conafe.gob.mx para este rol."
             return
 
-        cursor = connection.cursor()
-        consulta_verificacion = "SELECT * FROM Usuario WHERE correo=%s"
-        cursor.execute(consulta_verificacion, (usuario,))
-        resultado = cursor.fetchone()
+        consulta_verificacion = f"SELECT * FROM Usuario WHERE correo='{usuario}'"
+        resultado = execute_query(consulta_verificacion)
         
         if resultado:
             self.ids.lbl_estado.text = "El usuario ya está registrado."
-            cursor.close()
             return
 
-        consulta_registro = "INSERT INTO Usuario (correo, password, acceso) VALUES (%s, %s, %s)"
-        cursor.execute(consulta_registro, (usuario, contrasena, rol))
-        connection.commit()
-        cursor.close()
+        consulta_registro = f"INSERT INTO Usuario (correo, password, acceso) VALUES ('{usuario}, '{contrasena}', '{rol}')"
+        execute_query(consulta_registro)
         
         self.ids.lbl_estado.text = "Registro exitoso. Ahora puedes iniciar sesión."
         App.get_running_app().root.current = 'login'
@@ -655,20 +631,18 @@ class LECScreen(CustomBoxLayout):
         """
         Carga la información del CCT y del grupo asignado al LEC.
         """
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+
         try:
             # Consulta para obtener el CCT y grupo asignado al LEC
-            query = """
+            query = f"""
                 SELECT 
                 AsignacionAspiranteCCT.claveCentro AS cct,
                 CCTgrupos.nombre_grupo AS grupo
                 FROM AsignacionAspiranteCCT
                 LEFT JOIN CCTgrupos ON AsignacionAspiranteCCT.id_Aspirante = CCTgrupos.id_profesor
-                WHERE AsignacionAspiranteCCT.id_Aspirante = %s;
+                WHERE AsignacionAspiranteCCT.id_Aspirante = '{self.id_usuario}';
             """
-            cursor.execute(query, (self.id_usuario,))
-            result = cursor.fetchone()
+            result = execute_query(query)
 
             # Actualizar las propiedades de la pantalla
             self.cct = result['cct'] if result and result['cct'] else "No asignado"
@@ -677,9 +651,6 @@ class LECScreen(CustomBoxLayout):
             print(f"Error al cargar información del LEC: {err}")
             self.cct = "Error al cargar"
             self.grupo = "Error al cargar"
-        finally:
-            cursor.close()
-            connection.close()
 
         # Actualizar los botones dinámicos según la asignación del grupo
         self.actualizar_botones()
@@ -931,69 +902,54 @@ class vistaAsignarGrupoLEC(CustomBoxLayout):
         """
         Devuelve los grupos disponibles (sin profesor asignado) en el CCT.
         """
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
         try:
             query = """
                 SELECT id_grupo AS id, nombre_grupo AS nombre
                 FROM CCTgrupos
-                WHERE id_CCT = %s AND id_profesor IS NULL;
+                WHERE id_CCT = ? AND id_profesor IS NULL;
             """
-            cursor.execute(query, (self.cct,))
-            grupos = cursor.fetchall()
-            return grupos
-        except mysql.connector.Error as err:
+            grupos = execute_query(query, (self.cct,))
+            return [{"id": grupo[0], "nombre": grupo[1]} for grupo in grupos]
+        except Exception as err:
             print(f"Error al obtener grupos disponibles: {err}")
             return []
-        finally:
-            cursor.close()
-            connection.close()
+
 
     def asignar_profesor_a_grupo(self, profesor_id, grupo_id):
         """
         Asigna un profesor a un grupo específico.
         """
-        connection = get_connection()
-        cursor = connection.cursor()
         try:
             query = """
                 UPDATE CCTgrupos
-                SET id_profesor = %s
-                WHERE id_grupo = %s;
+                SET id_profesor = ?
+                WHERE id_grupo = ?;
             """
-            cursor.execute(query, (profesor_id, grupo_id))
-            connection.commit()
+            execute_query(query, (profesor_id, grupo_id))
             print(f"Profesor {profesor_id} asignado al grupo {grupo_id}.")
-        except mysql.connector.Error as err:
+        except Exception as err:
             print(f"Error al asignar profesor: {err}")
-        finally:
-            cursor.close()
-            connection.close()
+
 
     def obtener_lecs_por_cct(self):
         """
         Consulta todos los LEC asignados al CCT específico.
         """
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
         try:
             query = """
                 SELECT Aspirante.id_Aspirante AS id, 
-                       CONCAT(Aspirante.nombres, ' ', Aspirante.apellidoPaterno, ' ', Aspirante.apellidoMaterno) AS nombre
+                    CONCAT(Aspirante.nombres, ' ', Aspirante.apellidoPaterno, ' ', Aspirante.apellidoMaterno) AS nombre
                 FROM AsignacionAspiranteCCT
                 JOIN Aspirante ON AsignacionAspiranteCCT.id_Aspirante = Aspirante.id_Aspirante
                 LEFT JOIN CCTgrupos ON Aspirante.id_Aspirante = CCTgrupos.id_profesor AND CCTgrupos.id_CCT = AsignacionAspiranteCCT.claveCentro
-                WHERE AsignacionAspiranteCCT.claveCentro = %s AND CCTgrupos.id_profesor IS NULL;
+                WHERE AsignacionAspiranteCCT.claveCentro = ? AND CCTgrupos.id_profesor IS NULL;
             """
-            cursor.execute(query, (self.cct,))
-            lecs = cursor.fetchall()
-            return lecs
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
+            lecs = execute_query(query, (self.cct,))
+            return [{"id": lec[0], "nombre": lec[1]} for lec in lecs]
+        except Exception as err:
+            print(f"Error al obtener LECs: {err}")
             return []
-        finally:
-            cursor.close()
-            connection.close()
+
 
 class vistaGestionLEC(CustomBoxLayout):
     pass

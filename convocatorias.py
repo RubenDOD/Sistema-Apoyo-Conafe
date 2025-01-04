@@ -7,7 +7,7 @@ from collections import OrderedDict
 from utils.datatable_convocatorias import DataTableConv
 from datetime import datetime
 import hashlib
-import mysql.connector
+from db_connection import execute_query
 from añadir_convocatoria import AddConvoScreen
 from kivy.uix.boxlayout import BoxLayout
 import webbrowser
@@ -22,14 +22,6 @@ class ConvocatoriaWindow(BoxLayout):
         super().__init__(**kwargs)
         Builder.load_file("convocatorias.kv")  # Carga explícita de admin.kv
         Builder.load_file("admin.kv")
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
-
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
         userstable = DataTableConv(table=users, callback=self.button_callback)  # Pasa button_callback aquí
@@ -80,8 +72,6 @@ class ConvocatoriaWindow(BoxLayout):
         
         self.reload_users()
 
-    
-
     def editar_convocatoria(self, conv_id):
         # Verifica si la pantalla ya está en el ScreenManager
         if 'edit_convo_app' not in self.ids.scrn_mngr.screen_names:
@@ -93,43 +83,23 @@ class ConvocatoriaWindow(BoxLayout):
         self.ids.scrn_mngr.current = 'edit_convo_app'
 
     def abrir_convocatoria(self, conv_id):
-        # Conexión a la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
-
-        sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = %s WHERE id_Convo = %s"
-        cursor.execute(sql, ("Abierta", conv_id))
-        db.commit()  # Guarda los cambios
-
-        # Cierra el cursor y la conexión
-        cursor.close()
-        db.close()
-        print(f"Convocatoria {conv_id} abierta con éxito.")
+        """Abre una convocatoria cambiando su estado en la base de datos."""
+        try:
+            sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = ? WHERE id_Convo = ?"
+            execute_query(sql, ("Abierta", conv_id))
+            print(f"Convocatoria {conv_id} abierta con éxito.")
+        except Exception as e:
+            print(f"Error al abrir convocatoria {conv_id}: {e}")
 
     def cerrar_convocatoria(self, conv_id):
-        # Conexión a la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
-        self.reload_users()
-
-        sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = %s WHERE id_Convo = %s"
-        cursor.execute(sql, ("Cerrada", conv_id))
-        db.commit()  # Guarda los cambios
-
-        # Cierra el cursor y la conexión
-        cursor.close()
-        db.close()
-        print(f"Convocatoria {conv_id} Cerrada con éxito.")
+        """Cierra una convocatoria cambiando su estado en la base de datos."""
+        try:
+            sql = "UPDATE ConvocatoriaActual SET estado_convocatoria = ? WHERE id_Convo = ?"
+            execute_query(sql, ("Cerrada", conv_id))
+            self.reload_users()
+            print(f"Convocatoria {conv_id} cerrada con éxito.")
+        except Exception as e:
+            print(f"Error al cerrar convocatoria {conv_id}: {e}")
 
     def ver_user(self, idx, conv_id):
         # Eliminar pantalla 'AdminWindow' si ya existe, para evitar duplicados
@@ -156,43 +126,39 @@ class ConvocatoriaWindow(BoxLayout):
         self.reload_users   
 
     def get_users(self, mode, id):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+        """Obtiene la lista de usuarios o convocatorias desde la base de datos."""
+        try:
+            if mode == "General":
+                _convocatorias = OrderedDict()
+                _convocatorias['ID'] = {}
+                _convocatorias['nombre'] = {}
+                _convocatorias['status'] = {}
 
-        if mode == "General":
-            _convocatorias = OrderedDict()
-            _convocatorias['ID'] = {}
-            _convocatorias['nombre'] = {}
-            _convocatorias['status'] = {}
-            ids = []
-            nombres = []
-            status = []
+                ids = []
+                nombres = []
+                status = []
 
+                sql = 'SELECT * FROM ConvocatoriaActual'
+                users = execute_query(sql)
 
-            sql = 'SELECT * FROM ConvocatoriaActual'
-            mycursor.execute(sql)
+                for user in users:
+                    ids.append(user[0])
+                    nombres.append(user[1])
+                    status.append(user[4])
 
-            users = mycursor.fetchall()
-            for user in users:
-                ids.append(user[0])
-                nombres.append(user[1])
-                status.append(user[4])
+                users_length = len(nombres)
+                idx = 0
+                while idx < users_length:
+                    _convocatorias['ID'][idx] = ids[idx]
+                    _convocatorias['nombre'][idx] = nombres[idx]
+                    _convocatorias['status'][idx] = status[idx]
+                    idx += 1
 
-            users_length = len(nombres)
-            idx = 0
-            while idx < users_length:
-                _convocatorias['ID'][idx] = ids[idx]
-                _convocatorias['nombre'][idx] = nombres[idx]
-                _convocatorias['status'][idx] = status[idx]
-                idx += 1
-            
-            return _convocatorias
+                return _convocatorias
 
+        except Exception as e:
+            print(f"Error al obtener usuarios: {e}")
+            return None
         
     def change_screen(self, instance):
         if instance.text == 'Manage Users':

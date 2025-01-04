@@ -8,24 +8,14 @@ from kivy.uix.label import Label
 from collections import OrderedDict
 from utils.datatable_alumnos import DataTableAlumnos
 from datetime import datetime
-import hashlib
-import mysql.connector
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
+from db_connection import execute_query
 
 class AlumnosWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Conexión a la base de datos
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
 
         # Cargar contenido inicial
         content = self.ids.scrn_contents
@@ -100,7 +90,7 @@ class AlumnosWindow(BoxLayout):
             return
 
         if len(curp) < 10 or len(curp) > 18:
-            self.show_popup("Revisar datos", "El CURP debe tener al menos 16 caracteres y maximo 18.")
+            self.show_popup("Revisar datos", "El CURP debe tener al menos 16 caracteres y máximo 18.")
             return
 
         if len(nombres) < 2 or len(nombres) > 50:
@@ -111,14 +101,15 @@ class AlumnosWindow(BoxLayout):
             self.show_popup("Revisar datos", "El apellido paterno debe tener al menos 2 caracteres y menos de 25.")
             return
 
-        if len(apellido_materno) < 2 or len(apellido_paterno) > 25:
+        if len(apellido_materno) < 2 or len(apellido_materno) > 25:
             self.show_popup("Revisar datos", "El apellido materno debe tener al menos 2 caracteres y menos de 25.")
             return
 
         # Verificar si el CURP ya existe
         try:
-            self.mycursor.execute("SELECT COUNT(*) FROM alumno WHERE CURP = %s", (curp,))
-            if self.mycursor.fetchone()[0] > 0:
+            sql = "SELECT COUNT(*) FROM alumno WHERE CURP = ?"
+            result = execute_query(sql, (curp,))
+            if result[0][0] > 0:
                 self.show_popup("Error", "El CURP ya está registrado.")
                 return
         except Exception as e:
@@ -134,21 +125,18 @@ class AlumnosWindow(BoxLayout):
         except ValueError:
             self.show_popup("Revisar datos", "La fecha ingresada no es válida.")
             return
-        print(curp)
+
         # Inserción en la base de datos
         try:
             sql = """
                 INSERT INTO alumno (CURP, nombres, apellido_paterno, apellido_materno, fechaNacimiento, nivel, grado)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """
-            
             values = (curp, nombres, apellido_paterno, apellido_materno, fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado)
-            self.mycursor.execute(sql, values)
-            self.mydb.commit()
+            execute_query(sql, values)
             self.show_popup("Éxito", "Usuario agregado exitosamente.")  # Mostrar Popup de éxito
         except Exception as e:
             self.show_popup("Error", f"Error al guardar el usuario: {e}")
-        
 
         # Limpiar formulario
         self.ids.curp.text = ''
@@ -171,7 +159,6 @@ class AlumnosWindow(BoxLayout):
         )
         popup.open()
 
-
     def go_back_to_users(self):
         """Regresa a la pantalla principal desde el formulario."""
         self.ids.scrn_mngr.current = 'scrn_content'
@@ -184,37 +171,21 @@ class AlumnosWindow(BoxLayout):
             _alumnos['nombres'] = {}
             _alumnos['apellido_paterno'] = {}
             _alumnos['nivel'] = {}
-            ids = []
-            nombres = []
-            apellidos = []
-            niveles = []
 
-            sql = 'SELECT * FROM alumno'
-            self.mycursor.execute(sql)
+            sql = 'SELECT CURP, nombres, apellido_paterno, nivel FROM alumno'
+            users = execute_query(sql)
 
-            users = self.mycursor.fetchall()
-            for user in users:
-                ids.append(user[0])
-                nombres.append(user[1])
-                apellidos.append(user[2])
-                niveles.append(user[5])
-
-            users_length = len(nombres)
-            idx = 0
-            while idx < users_length:
-                _alumnos['CURP'][idx] = ids[idx]
-                _alumnos['nombres'][idx] = nombres[idx]
-                _alumnos['apellido_paterno'][idx] = apellidos[idx]
-                _alumnos['nivel'][idx] = niveles[idx]
-                idx += 1
+            for idx, user in enumerate(users):
+                _alumnos['CURP'][idx] = user[0]
+                _alumnos['nombres'][idx] = user[1]
+                _alumnos['apellido_paterno'][idx] = user[2]
+                _alumnos['nivel'][idx] = user[3]
 
             return _alumnos
-
 
 class AlumnosApp(App):
     def build(self):
         return AlumnosWindow()
-
 
 if __name__ == '__main__':
     AlumnosApp().run()

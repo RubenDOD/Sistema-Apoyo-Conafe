@@ -7,7 +7,6 @@ from collections import OrderedDict
 from utils.datatable_convocatorias import DataTableConv
 from datetime import datetime
 import hashlib
-import mysql.connector
 from añadir_convocatoria import AddConvoScreen
 from kivy.uix.boxlayout import BoxLayout
 import webbrowser
@@ -17,7 +16,7 @@ from kivy.uix.screenmanager import Screen
 from admin import AdminWindow
 from kivy.properties import StringProperty
 from utils.datatable_capacitador import DataTableCapacitadorAspirante
-
+from db_connection import execute_query
 
 class CapacitadorAspiranteWindow(BoxLayout):
     # id_usuario = StringProperty()
@@ -25,25 +24,15 @@ class CapacitadorAspiranteWindow(BoxLayout):
         super().__init__(**kwargs)
         self.id_usuario = id_usuario
         # Builder.load_file("capacitador_aspirante.kv")  # Carga explícita de admin.kv
-        self.db_config = {
-            'host':'localhost',
-            'user':'root',
-            'passwd':'1234',
-            'database':'CONAFE'
-        }
 
         print("id desde el window", id_usuario)
         content = self.ids.scrn_contents
         content.clear_widgets()
-        aspirantes = self.get_info_aspirantes("General", id_usuario, dbconfig=self.db_config)
-        aspirantesTable = DataTableCapacitadorAspirante(table=aspirantes, db_config=self.db_config, id_capacitador=self.id_usuario)  # Pasa button_callback aqui
+        aspirantes = self.get_info_aspirantes("General", id_usuario)
+        aspirantesTable = DataTableCapacitadorAspirante(table=aspirantes, id_capacitador=self.id_usuario)  # Pasa button_callback aqui
         content.add_widget(aspirantesTable)
 
-
-    def get_info_aspirantes(self, mode, id_usuario, dbconfig=None):
-        mydb = mysql.connector.connect(**dbconfig)
-        mycursor = mydb.cursor()
-
+    def get_info_aspirantes(self, mode, id_usuario):
         print("id dentro de la consulta ", id_usuario)
 
         if mode == "General":
@@ -56,6 +45,7 @@ class CapacitadorAspiranteWindow(BoxLayout):
             _datosAspirante['estadoCapacitacion'] = {}
             _datosAspirante['apellidoPaterno'] = {}
             _datosAspirante['apellidoMaterno'] = {}
+
             ids = []
             nombres = []
             fechasInicio = []
@@ -81,12 +71,11 @@ class CapacitadorAspiranteWindow(BoxLayout):
             JOIN 
                 Aspirante a ON ca.id_Aspirante = a.id_Aspirante
             WHERE 
-                ca.id_Capacitador = %s
+                ca.id_Capacitador = ?
             """
         
-            mycursor.execute(sql, (id_usuario,))
+            aspirantes = execute_query(sql, (id_usuario,))
 
-            aspirantes = mycursor.fetchall()
             for user in aspirantes:
                 ids.append(user[0])
                 nombres.append(user[1])

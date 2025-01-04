@@ -1,25 +1,15 @@
 from kivy.app import App
-from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
-from kivy.graphics import Color, Rectangle
 from kivy.uix.button import Button
-from kivy.uix.image import Image
 from kivy.uix.dropdown import DropDown
 from kivy.uix.label import Label
-from kivy.graphics import Color, Line, Ellipse
-from kivy.core.window import Window
-from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.popup import Popup
-from kivy.uix.modalview import ModalView
-from math import sqrt
 import mysql.connector
-import json
-import random
 import requests
 from polyline import decode
 from simplification.cutil import simplify_coords
 from kivy.uix.scrollview import ScrollView
-import polyline
+from db_connection import execute_query
 
 class EquipamientoScreen(BoxLayout):
 
@@ -136,11 +126,11 @@ class EquipamientoScreen(BoxLayout):
         tolerance = 0.0005  # Ajusta la tolerancia según el nivel de detalle deseado
         simplified_coordinates = simplify_coords(all_coordinates, tolerance)
 
-        # Codificar las coordenadas simplificadas usando polyline
-        encoded_path = polyline.encode([(lat, lng) for lat, lng in simplified_coordinates])
+        # Formatear las coordenadas como 'lat,lng'
+        formatted_coordinates = ["{:.6f},{:.6f}".format(lat, lng) for lat, lng in simplified_coordinates]
 
         # Parámetro `path` para la ruta optimizada
-        path_param = f"path=enc:{encoded_path}|color:blue|weight:10"
+        path_param = "path=color:blue|weight:10|" + "|".join(formatted_coordinates)
 
         # Parámetro `markers` para resaltar waypoints con números
         markers_list = [
@@ -216,37 +206,29 @@ class EquipamientoScreen(BoxLayout):
         self.map_image.reload()
 
     def load_states(self, dropdown):
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="1234",
-            database="conafe"
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT estado FROM CCT")
-        states = cursor.fetchall()
+        try:
+            sql = "SELECT DISTINCT estado FROM CCT"
+            states = execute_query(sql)
 
-        for state in states:
-            state_name = state[0]
-            btn = Button(text=state_name, size_hint_y=None, height=44)
-            btn.bind(on_release=lambda btn: dropdown.select(btn.text))
-            dropdown.add_widget(btn)
-        conn.close()
+            for state in states:
+                state_name = state[0]
+                btn = Button(text=state_name, size_hint_y=None, height=44)
+                btn.bind(on_release=lambda btn: dropdown.select(btn.text))
+                dropdown.add_widget(btn)
+
+        except Exception as e:
+            print(f"Error al cargar estados: {e}")
 
     def get_ccts_by_state(self, state):
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="1234",
-            database="conafe"
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT claveCentro, nombre, latitud, longitud FROM CCT WHERE estado = %s", (state,))
-        ccts = cursor.fetchall()
-        conn.close()
-        return [[float(latitud),float(longitud)] for clave, nombre, latitud, longitud in ccts]
-        #return [[f"{clave} ({nombre})",(float(latitud),float(longitud))] for clave, nombre, latitud, longitud in ccts]
+        try:
+            sql = "SELECT claveCentro, nombre, latitud, longitud FROM CCT WHERE estado = ?"
+            ccts = execute_query(sql, (state,))
+            return [[float(latitud), float(longitud)] for clave, nombre, latitud, longitud in ccts]
 
+        except Exception as e:
+            print(f"Error al obtener CCTs: {e}")
+            return []
+        
     def open_dropdown(self, button):
         dropdown = DropDown()
         self.load_states(dropdown)  # Carga los estados en el dropdown

@@ -10,7 +10,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
 import re
-import mysql.connector
+from db_connection import execute_query
 
 class ApoyosSolicitadosWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -22,15 +22,6 @@ class ApoyosSolicitadosWindow(BoxLayout):
             self.rect = Rectangle(size=self.size, pos=self.pos)
         # Actualiza el rectángulo cuando el tamaño o posición cambian
         self.bind(size=self._update_rect, pos=self._update_rect)
-
-        self.conexion = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234',
-            database='conafe'
-        )
-        self.cursor = self.conexion.cursor(dictionary=True)
-
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -81,7 +72,6 @@ class ApoyosSolicitadosWindow(BoxLayout):
         self.rect.size = self.size
         self.rect.pos = self.pos
 
-
     def crear_grid_apoyos(self):
         # Limpiar el contenido anterior del scroll_view
         self.scroll_view.clear_widgets()
@@ -109,8 +99,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         JOIN apoyo_economico aeco ON ae.id_apoyo = aeco.id_apoyo
         JOIN Usuario u ON ae.id_educador = u.id_Usuario
         """
-        self.cursor.execute(query)
-        apoyos = self.cursor.fetchall()
+        apoyos = execute_query(query)
 
         # Lista de estados posibles
         estados = ['Aceptado', 'Rechazado', 'Congelado']
@@ -158,8 +147,8 @@ class ApoyosSolicitadosWindow(BoxLayout):
         JOIN Aspirante ON maestro.id_Usuario = Aspirante.id_Aspirante
         WHERE u.id_Usuario = %s
         """
-        self.cursor.execute(query, (id_educador,))
-        aspirante = self.cursor.fetchone()
+        aspirante = execute_query(query, (id_educador,))
+
         if aspirante:
             contenido = BoxLayout(orientation='vertical', spacing=10, padding=10)
             contenido.add_widget(Label(text=f"Correo: {aspirante['correo']}"))
@@ -251,7 +240,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         SET estado_apoyo = %s, observaciones = %s, fecha_pago = %s
         WHERE id_apoyo = %s AND id_educador = %s
         """
-        self.cursor.execute(update_query, (nuevo_estado, observaciones, fecha_pago, apoyo['id_apoyo'], apoyo['id_educador']))
+        execute_query(update_query, (nuevo_estado, observaciones, fecha_pago, apoyo['id_apoyo'], apoyo['id_educador']))
         self.conexion.commit()
 
         popup.dismiss()
@@ -266,11 +255,6 @@ class ApoyosSolicitadosWindow(BoxLayout):
 
         # Refrescar la lista de apoyos
         self.crear_grid_apoyos()
-
-
-    def on_stop(self):
-        self.cursor.close()
-        self.conexion.close()
 
     def go_back(self, instance):
         App.get_running_app().root.current = 'departamento_becas'

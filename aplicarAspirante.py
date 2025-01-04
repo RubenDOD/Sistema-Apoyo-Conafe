@@ -7,24 +7,16 @@ from collections import OrderedDict
 from utils.datatable_convocatoriasUser import DataTableConvUser
 from datetime import datetime
 import hashlib
-import mysql.connector
-from kivy.uix.boxlayout import BoxLayout
 import webbrowser
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
+from db_connection import execute_query
 
 class aplicarAspiranteWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Builder.load_file("aplicarAspirante.kv")  # Carga explícita de admin.kv
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
 
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
@@ -58,107 +50,57 @@ class aplicarAspiranteWindow(BoxLayout):
             self.abrir_forms(conv_id)
 
     def abrir_documento(self, conv_id):
-        # Conexión a la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
+        # Consulta la URL del documento
+        sql = "SELECT url_convocatoria FROM ConvocatoriaActual WHERE id_Convo = ?"
+        url = execute_query(sql, (conv_id,))
 
-        sql = "SELECT url_convocatoria FROM ConvocatoriaActual WHERE id_Convo = %s"
-        cursor.execute(sql, (conv_id,))
-
-        # Obtiene la URL y la abre
-        url = cursor.fetchone()
+        # Abre la URL en el navegador
         if url:
-            webbrowser.open(url[0])  # Abre la URL en el navegador
+            webbrowser.open(url[0][0])  # Abre la URL en el navegador
             print(f"Convocatoria {conv_id} abierta con éxito.")
         else:
             print(f"No se encontró la convocatoria con ID {conv_id}.")
-
-        # Cierra el cursor y la conexión
-        cursor.close()
-        db.close()
-
-        
 
     def abrir_forms(self, conv_id):
-        # Conexión a la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
+        # Consulta la URL del formulario
+        sql = "SELECT url_forms FROM ConvocatoriaActual WHERE id_Convo = ?"
+        url = execute_query(sql, (conv_id,))
 
-        sql = "SELECT url_forms FROM ConvocatoriaActual WHERE id_Convo = %s"
-        cursor.execute(sql, (conv_id,))
-
-        # Obtiene la URL y la abre
-        url = cursor.fetchone()
+        # Abre la URL en el navegador
         if url:
-            webbrowser.open(url[0])  # Abre la URL en el navegador
-            print(f"Convocatoria {conv_id} abierta con éxito.")
+            webbrowser.open(url[0][0])  # Abre la URL en el navegador
+            print(f"Formulario {conv_id} abierto con éxito.")
         else:
-            print(f"No se encontró la convocatoria con ID {conv_id}.")
-
-        # Cierra el cursor y la conexión
-        cursor.close()
-        db.close()
-
+            print(f"No se encontró el formulario con ID {conv_id}.")
 
     def get_users(self, mode, id):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
         if mode == "General":
             _convocatorias = OrderedDict()
             _convocatorias['ID'] = {}
             _convocatorias['nombre'] = {}
             _convocatorias['status'] = {}
-            ids = []
-            nombres = []
-            status = []
-
 
             sql = 'SELECT * FROM ConvocatoriaActual WHERE estado_convocatoria = "Abierta"'
-            mycursor.execute(sql)
+            users = execute_query(sql)
 
-            users = mycursor.fetchall()
-            for user in users:
-                ids.append(user[0])
-                nombres.append(user[1])
-                status.append(user[4])
+            ids = [user[0] for user in users]
+            nombres = [user[1] for user in users]
+            status = [user[4] for user in users]
 
-            users_length = len(nombres)
-            idx = 0
-            while idx < users_length:
+            for idx, _ in enumerate(users):
                 _convocatorias['ID'][idx] = ids[idx]
                 _convocatorias['nombre'][idx] = nombres[idx]
                 _convocatorias['status'][idx] = status[idx]
-                idx += 1
-            
-            return _convocatorias
 
+            return _convocatorias
 
     def change_screen(self, instance):
         if instance.text == 'Manage Users':
             self.ids.scrn_mngr.current = 'scrn_content'
 
-
-
 class aplicarAspiranteApp(App):
     def build(self):
-
         return aplicarAspiranteWindow()
 
-if __name__=='__main__':
+if __name__ == '__main__':
     aplicarAspiranteApp().run()

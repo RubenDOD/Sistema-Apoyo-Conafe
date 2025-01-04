@@ -3,7 +3,6 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.lang import Builder
 from datetime import datetime
 import hashlib
-import mysql.connector
 import webbrowser
 from collections import OrderedDict
 from utils.datatable import DataTable
@@ -12,20 +11,13 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from kivy.uix.scrollview import ScrollView
+from db_connection import execute_query
 
 class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
     def __init__(self, conv, **kwargs):
         super().__init__(**kwargs)
         self.conv = conv
         Builder.load_file("admin.kv")  # Carga explícita de admin.kv
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
-
         content = self.ids.scrn_contents
         users = self.get_users("General", 0, conv)
         userstable = DataTable(table=users, callback=self.button_callback)
@@ -59,44 +51,28 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
             self.ver_user(user_id, self.conv)
 
     def aceptar_user(self, user_id):
-        # Conexión a la base de datos
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
-        # Actualizar el estado en ambas tablas usando `user_id`
-        update_sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
-        mycursor.execute(update_sql, ("Aceptado", user_id))
-        
-        mydb.commit()  # Guarda los cambios
-
-        print(f"El usuario con ID {user_id} ahora tiene acceso 'Aceptado'.")
-        mycursor.close()
-        self.reload_users()
+        """
+        Acepta a un usuario actualizando su estado en la base de datos.
+        """
+        try:
+            update_sql = "UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?"
+            execute_query(update_sql, ("Aceptado", user_id))
+            print(f"El usuario con ID {user_id} ahora tiene acceso 'Aceptado'.")
+            self.reload_users()
+        except Exception as err:
+            print(f"Error al aceptar al usuario con ID {user_id}: {err}")
 
     def rechazar_user(self, user_id):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
-        update_sql = 'UPDATE Aspirante SET estado_solicitud = %s WHERE id_Aspirante = %s'
-        mycursor.execute(update_sql, ("Rechazado", user_id))
-        mydb.commit()  # Guarda los cambios
-
-        print(f"El usuario con ID {user_id} ahora tiene acceso 'Rechazado'.")
-        mycursor.close()
-        self.reload_users()
-
-
-
+        """
+        Rechaza a un usuario actualizando su estado en la base de datos.
+        """
+        try:
+            update_sql = "UPDATE Aspirante SET estado_solicitud = ? WHERE id_Aspirante = ?"
+            execute_query(update_sql, ("Rechazado", user_id))
+            print(f"El usuario con ID {user_id} ahora tiene acceso 'Rechazado'.")
+            self.reload_users()
+        except Exception as err:
+            print(f"Error al rechazar al usuario con ID {user_id}: {err}")
 
     def ver_user(self, idx, conv):
         content = self.ids.scrn_view
@@ -154,51 +130,40 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
     def go_back(self, instance):
         self.ids.scrn_mngr.current = 'scrn_content'
 
-
-
     def get_users(self, mode, id, conv):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
-
+        """
+        Obtiene información de usuarios dependiendo del modo especificado.
+        """
         if mode == "General":
             _users = OrderedDict()
             _users['ID'] = {}
             _users['first_names'] = {}
             _users['last_names'] = {}
             _users['user_names'] = {}
+
+            query = "SELECT * FROM Aspirante WHERE estado_solicitud = ? AND convocatoria = ?"
+            users = execute_query(query, ("Pendiente", conv))
+
             ids = []
             first_names = []
             last_names = []
             user_names = []
 
-            sql = 'SELECT * FROM Aspirante WHERE estado_solicitud = %s AND convocatoria = %s'
-            mycursor.execute(sql, ("Pendiente", conv))
-
-            users = mycursor.fetchall()
             for user in users:
                 ids.append(user[0])
                 first_names.append(user[6])
                 last_names.append(user[7])
                 user_names.append(user[8])
-            # print(designations)
-            users_length = len(first_names)
-            idx = 0
-            while idx < users_length:
+
+            for idx, _ in enumerate(first_names):
                 _users['ID'][idx] = ids[idx]
                 _users['first_names'][idx] = first_names[idx]
                 _users['last_names'][idx] = last_names[idx]
                 _users['user_names'][idx] = user_names[idx]
 
-                idx += 1
-            
             return _users
+
         else:
-            # Lista de claves
             keys = [
                 'ID', 'nombres', 'apellidoPat', 'apellidoMat', 'Fecha Nacimiento', 'edad',
                 'genero', 'telefono', 'nacionalidad', 'CURP', 'correo', 
@@ -207,15 +172,11 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 'Estado Preferente', 'Ciclo', 'Municipio Deseado', 'Doc1', 'Doc2', 'Doc3'
             ]
 
-            # Crear OrderedDict usando una comprensión
-
             _users = OrderedDict((key, {}) for key in keys)
 
-
-            sql = 'SELECT * FROM Aspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
-
-            users = mycursor.fetchall()
+            # Consulta información general del aspirante
+            query = "SELECT * FROM Aspirante WHERE id_Aspirante = ?"
+            users = execute_query(query, (id,))
             idx = 0
 
             for user in users:
@@ -230,11 +191,10 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['nacionalidad'][idx] = user[12]
                 _users['CURP'][idx] = user[5]
                 _users['correo'][idx] = user[4]
-            
-            sql = 'SELECT * FROM InfoEducativaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
 
-            users = mycursor.fetchall()
+            # Consulta información educativa
+            query = "SELECT * FROM InfoEducativaAspirante WHERE id_Aspirante = ?"
+            users = execute_query(query, (id,))
 
             for user in users:
                 _users['nivelEducativo'][idx] = user[2]
@@ -246,38 +206,34 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
                 _users['Profesion'][idx] = user[10]
                 _users['Requisito para titulo'][idx] = user[11]
 
-            sql = 'SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
-
-            users = mycursor.fetchall()
+            # Consulta información de residencia
+            query = "SELECT * FROM ResidenciaAspirante WHERE id_Aspirante = ?"
+            users = execute_query(query, (id,))
 
             for user in users:
                 _users['Codigo Postal'][idx] = user[1]
                 _users['Estado'][idx] = user[2]
                 _users['Municipio'][idx] = user[3]
-            
-            sql = 'SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
 
-            users = mycursor.fetchall()
+            # Consulta participación del aspirante
+            query = "SELECT * FROM ParticipacionAspirante WHERE id_Aspirante = ?"
+            users = execute_query(query, (id,))
 
             for user in users:
                 _users['Estado Preferente'][idx] = user[1]
                 _users['Ciclo'][idx] = user[2]
                 _users['Municipio Deseado'][idx] = user[4]
 
-            sql = 'SELECT * FROM DocumentosAspirante WHERE id_Aspirante = %s'
-            mycursor.execute(sql, (id,))
-
-            users = mycursor.fetchall()
+            # Consulta documentos del aspirante
+            query = "SELECT * FROM DocumentosAspirante WHERE id_Aspirante = ?"
+            users = execute_query(query, (id,))
 
             for user in users:
                 _users['Doc1'][idx] = user[1]
                 _users['Doc2'][idx] = user[2]
                 _users['Doc3'][idx] = user[3]
 
-            return _users
-
+            return _users   
     
     def get_products(self):
         mydb = mysql.connector.connect(

@@ -9,11 +9,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle
-
-
-import mysql.connector
-
-
+from db_connection import execute_query
 
 class SolicitarApoyoWindow(BoxLayout):
     def __init__(self, id_educador,**kwargs):
@@ -27,14 +23,6 @@ class SolicitarApoyoWindow(BoxLayout):
         self.bind(size=self._update_rect, pos=self._update_rect)
 
         self.id_educador = id_educador  # ID de usuario predeterminado
-        self.conexion = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234',
-            database='CONAFE'
-        )
-        self.cursor = self.conexion.cursor(dictionary=True)
-
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -121,42 +109,40 @@ class SolicitarApoyoWindow(BoxLayout):
         popup.open()
 
     def solicitar_apoyo(self, apoyo):
+        """Solicita un apoyo para el educador si aún no lo tiene."""
         # Verificar si el usuario ya tiene un apoyo
         query = "SELECT * FROM apoyo_educador WHERE id_educador = %s"
-        self.cursor.execute(query, (self.id_educador,))
-        resultado = self.cursor.fetchall()
+        resultado = execute_query(query, (self.id_educador,))
 
         print("Apoyos con los que ya cuenta el usuario:", resultado)
 
-        tiene_beca = False
+        # Verificar si el usuario ya tiene el apoyo solicitado
         for result in resultado:
-            id_apoyo_resultado = result['id_apoyo']
-
-            # Verificar si el usuario ya el apoyo solicitado
-            if id_apoyo_resultado == apoyo['id_apoyo']:
-                # El usuario ya tiene un apoyo
-                popup = Popup(title='Error',
-                            content=Label(text='Ya cuentas con este apoyo.'),
-                            size_hint=(0.6, 0.4))
+            if result['id_apoyo'] == apoyo['id_apoyo']:
+                # Mostrar mensaje de error si el apoyo ya existe
+                popup = Popup(
+                    title='Error',
+                    content=Label(text='Ya cuentas con este apoyo.'),
+                    size_hint=(0.6, 0.4)
+                )
                 popup.open()
-                tiene_beca = True
-                break
+                return
 
-        if not tiene_beca:
-            # Insertar el nuevo apoyo para el usuario
-            insert_query = "INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo) VALUES (%s, %s, 'pendiente')"
-            self.cursor.execute(insert_query, (apoyo['id_apoyo'], self.id_educador))
-            self.conexion.commit()
+        # Insertar el nuevo apoyo para el usuario
+        insert_query = """
+            INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo)
+            VALUES (%s, %s, 'pendiente')
+        """
+        execute_query(insert_query, (apoyo['id_apoyo'], self.id_educador))
 
-            popup = Popup(title='Éxito',
-                    content=Label(text='Has solicitado el apoyo exitosamente.'),
-                    size_hint=(0.6, 0.4))
-            popup.open()
+        # Mostrar mensaje de éxito
+        popup = Popup(
+            title='Éxito',
+            content=Label(text='Has solicitado el apoyo exitosamente.'),
+            size_hint=(0.6, 0.4)
+        )
+        popup.open()
 
-    def on_stop(self):
-        self.cursor.close()
-        self.conexion.close()
-        
     def go_back(self, instance):
         App.get_running_app().root.current = 'lec'
 

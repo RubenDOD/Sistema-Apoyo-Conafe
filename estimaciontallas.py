@@ -1,4 +1,4 @@
-import mysql.connector
+from db_connection import execute_query
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.dropdown import DropDown
@@ -6,7 +6,6 @@ from kivy.uix.button import Button
 from kivy.lang import Builder
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
-
 
 class EstimacionTallasScreen(BoxLayout):
 
@@ -47,29 +46,21 @@ class EstimacionTallasScreen(BoxLayout):
     def fetch_and_calculate(self, units, state):
         """Busca los datos en la base de datos y realiza los cálculos."""
         try:
-            # Conexión a la base de datos
-            conn = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = conn.cursor(dictionary=True)
-            
             # Consulta los datos del estado
-            query = f"""
+            query = """
                 SELECT 
                     CUERPO_CHICO, CUERPO_MEDIANO, CUERPO_GRANDE, 
                     CALZADO_H_MENOR, CALZADO_H_MEDIO, CALZADO_H_MAYOR, 
                     CALZADO_M_MENOR, CALZADO_M_MEDIO, CALZADO_M_MAYOR
                 FROM tallasPromedio
-                WHERE ESTADO = %s
+                WHERE ESTADO = ?
             """
-            cursor.execute(query, (state,))
-            row = cursor.fetchone()
+            row = execute_query(query, (state,))
 
             if not row:
                 return "No se encontraron datos para el estado seleccionado."
+
+            row = row[0]
 
             # Calcular tallas de cuerpo
             resultados = {
@@ -113,12 +104,8 @@ class EstimacionTallasScreen(BoxLayout):
 
             return result_text
 
-        except mysql.connector.Error as err:
-            return f"Error al conectar a la base de datos: {err}"
-        finally:
-            if conn.is_connected():
-                cursor.close()
-                conn.close()
+        except Exception as err:
+            return f"Error al realizar los cálculos: {err}"
 
     def show_popup(self, title, message):
         """Muestra un popup con el mensaje proporcionado."""
@@ -128,11 +115,9 @@ class EstimacionTallasScreen(BoxLayout):
                       auto_dismiss=True)
         popup.open()
 
-
 class EstimacionTallasApp(App):
     def build(self):
         return EstimacionTallasScreen()
-
 
 if __name__ == '__main__':
     EstimacionTallasApp().run()

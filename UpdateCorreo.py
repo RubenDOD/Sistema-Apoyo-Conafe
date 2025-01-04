@@ -7,9 +7,8 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
-import mysql.connector
+from db_connection import execute_query
 import re  # Para validación del correo
-
 
 class UpdateCorreoWindow(BoxLayout):
     def __init__(self, id_aspirante = None, **kwargs):
@@ -20,40 +19,45 @@ class UpdateCorreoWindow(BoxLayout):
         # Cargar los datos del aspirante
         self.cargar_datos()
 
-    def cargar_datos(self):
-        # Conexión a la base de datos MySQL
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
+    def solicitar_apoyo(self, apoyo):
+        """Solicita un apoyo para el educador si aún no lo tiene."""
+        # Verificar si el usuario ya tiene un apoyo
+        query = "SELECT * FROM apoyo_educador WHERE id_educador = %s"
+        resultado = execute_query(query, (self.id_educador,))
 
-        cursor = conn.cursor()
+        print("Apoyos con los que ya cuenta el usuario:", resultado)
 
-        # Consultar los datos actuales del aspirante
-        select_query = """
-        SELECT telefonoFijo, telefonoMovil, correo
-        FROM Aspirante
-        WHERE id_Aspirante = %s
+        # Verificar si el usuario ya tiene el apoyo solicitado
+        for result in resultado:
+            if result['id_apoyo'] == apoyo['id_apoyo']:
+                # Mostrar mensaje de error si el apoyo ya existe
+                popup = Popup(
+                    title='Error',
+                    content=Label(text='Ya cuentas con este apoyo.'),
+                    size_hint=(0.6, 0.4)
+                )
+                popup.open()
+                return
+
+        # Insertar el nuevo apoyo para el usuario
+        insert_query = """
+            INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo)
+            VALUES (%s, %s, 'pendiente')
         """
-        cursor.execute(select_query, (self.aspirante_id,))
-        result = cursor.fetchone()
+        execute_query(insert_query, (apoyo['id_apoyo'], self.id_educador))
 
-        # Cargar los datos en los TextInput
-        if result:
-            self.ids.telefono_fijo.text = result[0]
-            self.ids.telefono_movil.text = result[1]
-            self.ids.correo.text = result[2]
-
-        # Cerrar conexión
-        cursor.close()
-        conn.close()
+        # Mostrar mensaje de éxito
+        popup = Popup(
+            title='Éxito',
+            content=Label(text='Has solicitado el apoyo exitosamente.'),
+            size_hint=(0.6, 0.4)
+        )
+        popup.open()
 
     def guardar_cambios(self):
-        telefono_fijo = self.ids.telefono_fijo.text
-        telefono_movil = self.ids.telefono_movil.text
-        correo = self.ids.correo.text
+        telefono_fijo = self.ids.telefono_fijo.text.strip()
+        telefono_movil = self.ids.telefono_movil.text.strip()
+        correo = self.ids.correo.text.strip()
 
         # Validaciones
         if not self.validar_correo(correo):
@@ -76,31 +80,17 @@ class UpdateCorreoWindow(BoxLayout):
             self.mostrar_error("No se pueden dejar campos vacíos.")
             return
 
-        # Conexión a la base de datos MySQL
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-
-        cursor = conn.cursor()
-
         # Actualizar los datos del aspirante en la base de datos
         update_query = """
         UPDATE Aspirante
         SET telefonoFijo = %s, telefonoMovil = %s, correo = %s
         WHERE id_Aspirante = %s
         """
-        cursor.execute(update_query, (telefono_fijo, telefono_movil, correo, self.aspirante_id))
-
-        # Confirmar los cambios y cerrar conexión
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        # Mensaje de confirmación
-        print("Datos actualizados exitosamente.")
+        try:
+            execute_query(update_query, (telefono_fijo, telefono_movil, correo, self.aspirante_id))
+            self.mostrar_mensaje("Éxito", "Datos actualizados exitosamente.")
+        except Exception as e:
+            self.mostrar_error(f"Error al actualizar los datos: {e}")
 
     def mostrar_error(self, mensaje):
         # Crear un popup para mostrar el mensaje de error

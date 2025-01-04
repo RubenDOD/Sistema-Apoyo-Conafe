@@ -9,7 +9,7 @@ from collections import OrderedDict
 from utils.datatable_alumnosMod import DataTableAlumnosMod
 from datetime import datetime
 import hashlib
-import mysql.connector
+from db_connection import execute_query
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
@@ -18,15 +18,6 @@ from kivy.uix.screenmanager import Screen
 class ModificarAlumnoWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Conexión a la base de datos
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
-
         # Cargar contenido inicial
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
@@ -109,17 +100,11 @@ class ModificarAlumnoWindow(BoxLayout):
     def delete_user(self, curp):
         """Elimina un alumno de la base de datos."""
         try:
-            # Eliminar el alumno con el CURP especificado
-            sql = "DELETE FROM alumno WHERE CURP = %s"
-            self.mycursor.execute(sql, (curp,))
-            self.mydb.commit()
-            
-            # Mostrar un mensaje de éxito
+            sql = "DELETE FROM alumno WHERE CURP = ?"
+            execute_query(sql, (curp,))
             self.show_popup("Éxito", f"Alumno con CURP {curp} eliminado exitosamente.")
-            self.reload_users()  # Recargar la lista de usuarios después de eliminar
-
+            self.reload_users()
         except Exception as e:
-            # Mostrar un mensaje de error si ocurre algún problema
             self.show_popup("Error", f"Error al eliminar el alumno: {e}")
 
     def only_letters(self, substring, from_undo):
@@ -166,39 +151,29 @@ class ModificarAlumnoWindow(BoxLayout):
         anio = self.ids.anio.text.strip()
         nivel = self.ids.nivel.text.strip()
         grado = self.ids.grado.text.strip()
-        print(curp)
-        # Validaciones
+
+        # Validaciones de entrada
         if not all([curp, nombres, apellido_paterno, dia, mes, anio, nivel, grado]):
             self.show_popup("Revisar datos", "Todos los campos son obligatorios.")
             return
 
-        if len(curp) < 10 or len(curp) > 18:
-            self.show_popup("Revisar datos", "El CURP debe tener al menos 10 caracteres y máximo 18.")
+        if not (10 <= len(curp) <= 18):
+            self.show_popup("Revisar datos", "El CURP debe tener entre 10 y 18 caracteres.")
             return
 
-        if len(nombres) < 2 or len(nombres) > 50:
-            self.show_popup("Revisar datos", "El nombre debe tener al menos 2 caracteres y menos de 50.")
+        if not (2 <= len(nombres) <= 50):
+            self.show_popup("Revisar datos", "El nombre debe tener entre 2 y 50 caracteres.")
             return
 
-        if len(apellido_paterno) < 2 or len(apellido_paterno) > 25:
-            self.show_popup("Revisar datos", "El apellido paterno debe tener al menos 2 caracteres y menos de 25.")
+        if not (2 <= len(apellido_paterno) <= 25):
+            self.show_popup("Revisar datos", "El apellido paterno debe tener entre 2 y 25 caracteres.")
             return
 
-        if len(apellido_materno) < 2 or len(apellido_materno) > 25:
-            self.show_popup("Revisar datos", "El apellido materno debe tener al menos 2 caracteres y menos de 25.")
+        if not (2 <= len(apellido_materno) <= 25):
+            self.show_popup("Revisar datos", "El apellido materno debe tener entre 2 y 25 caracteres.")
             return
 
-        # Verificar si el CURP existe en la base de datos
-        try:
-            self.mycursor.execute("SELECT COUNT(*) FROM alumno WHERE CURP = %s", (curp,))
-            if self.mycursor.fetchone()[0] == 0:
-                self.show_popup("Error", "El CURP no está registrado.")
-                return
-        except Exception as e:
-            self.show_popup("Error", f"Error al verificar el CURP: {e}")
-            return
-
-        # Validar la fecha de nacimiento
+        # Validar fecha de nacimiento
         try:
             fecha_nacimiento = datetime.strptime(f"{anio}-{mes}-{dia}", "%Y-%m-%d")
             if fecha_nacimiento.year < 1980:
@@ -208,19 +183,31 @@ class ModificarAlumnoWindow(BoxLayout):
             self.show_popup("Revisar datos", "La fecha ingresada no es válida.")
             return
 
-        # Actualización de los datos en la base de datos
+        # Verificar si el CURP existe en la base de datos
         try:
-            sql = """
+            check_query = "SELECT COUNT(*) FROM alumno WHERE CURP = %s"
+            result = execute_query(check_query, (curp,))
+            if result[0]['COUNT(*)'] == 0:
+                self.show_popup("Error", "El CURP no está registrado.")
+                return
+        except Exception as e:
+            self.show_popup("Error", f"Error al verificar el CURP: {e}")
+            return
+
+        # Actualizar datos del usuario
+        try:
+            update_query = """
                 UPDATE alumno
-                SET nombres = %s, apellido_paterno = %s, apellido_materno = %s, 
+                SET nombres = %s, apellido_paterno = %s, apellido_materno = %s,
                     fechaNacimiento = %s, nivel = %s, grado = %s
                 WHERE CURP = %s
             """
-            values = (nombres, apellido_paterno, apellido_materno, 
-                    fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado, curp)
-            self.mycursor.execute(sql, values)
-            self.mydb.commit()
-            self.show_popup("Éxito", "Datos de usuario actualizados exitosamente.")  # Mostrar Popup de éxito
+            values = (
+                nombres, apellido_paterno, apellido_materno,
+                fecha_nacimiento.strftime("%Y-%m-%d"), nivel, grado, curp
+            )
+            execute_query(update_query, values)
+            self.show_popup("Éxito", "Datos de usuario actualizados exitosamente.")
         except Exception as e:
             self.show_popup("Error", f"Error al actualizar los datos del usuario: {e}")
 
@@ -235,105 +222,78 @@ class ModificarAlumnoWindow(BoxLayout):
         self.ids.nivel.text = 'Seleccionar Nivel'
         self.ids.grado.text = 'Seleccionar Grado'
 
-
-    def show_popup(self, title, message):
-        """Muestra un Popup con un mensaje."""
-        popup = Popup(
-            title=title,
-            content=Label(text=message),
-            size_hint=(0.8, 0.4),
-            auto_dismiss=True
-        )
-        popup.open()
-
+        def show_popup(self, title, message):
+            """Muestra un Popup con un mensaje."""
+            popup = Popup(
+                title=title,
+                content=Label(text=message),
+                size_hint=(0.8, 0.4),
+                auto_dismiss=True
+            )
+            popup.open()
 
     def go_back_to_users(self):
         """Regresa a la pantalla principal desde el formulario."""
         self.ids.scrn_mngr.current = 'scrn_content'
 
     def get_users(self, mode, id):
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            mycursor = mydb.cursor()
-            
-            try:
-                """Obtiene la lista de usuarios desde la base de datos."""
-                if mode == "General":
-                    _alumnos = OrderedDict()
-                    _alumnos['CURP'] = {}
-                    _alumnos['nombres'] = {}
-                    _alumnos['apellido_paterno'] = {}
-                    _alumnos['nivel'] = {}
-                    ids = []
-                    nombres = []
-                    apellidos = []
-                    niveles = []
+        """Obtiene la lista de usuarios desde la base de datos."""
+        try:
+            if mode == "General":
+                _alumnos = OrderedDict()
+                _alumnos['CURP'] = {}
+                _alumnos['nombres'] = {}
+                _alumnos['apellido_paterno'] = {}
+                _alumnos['nivel'] = {}
 
-                    # Consulta para obtener alumnos que no están en la tabla alumnoCCT
-                    sql = '''
-                        SELECT a.CURP, a.nombres, a.apellido_paterno, a.nivel
-                        FROM alumno a
-                        LEFT JOIN alumnoCCT ac ON a.CURP = ac.id_alumno
-                        WHERE ac.id_alumno IS NULL
-                    '''
-                    mycursor.execute(sql)
+                # Consulta para obtener alumnos que no están en la tabla alumnoCCT
+                sql = '''
+                    SELECT a.CURP, a.nombres, a.apellido_paterno, a.nivel
+                    FROM alumno a
+                    LEFT JOIN alumnoCCT ac ON a.CURP = ac.id_alumno
+                    WHERE ac.id_alumno IS NULL
+                '''
+                users = execute_query(sql)
 
-                    users = mycursor.fetchall()
-                    for user in users:
-                        ids.append(user[0])  # CURP
-                        nombres.append(user[1])  # Nombres
-                        apellidos.append(user[2])  # Apellido paterno
-                        niveles.append(user[3])  # Nivel
+                for idx, user in enumerate(users):
+                    _alumnos['CURP'][idx] = user['CURP']
+                    _alumnos['nombres'][idx] = user['nombres']
+                    _alumnos['apellido_paterno'][idx] = user['apellido_paterno']
+                    _alumnos['nivel'][idx] = user['nivel']
 
-                    users_length = len(nombres)
-                    idx = 0
-                    while idx < users_length:
-                        _alumnos['CURP'][idx] = ids[idx]
-                        _alumnos['nombres'][idx] = nombres[idx]
-                        _alumnos['apellido_paterno'][idx] = apellidos[idx]
-                        _alumnos['nivel'][idx] = niveles[idx]
-                        idx += 1
+                return _alumnos
 
-                    return _alumnos
+            else:  # Filtrar por CURP
+                _alumnos = OrderedDict()
+                _alumnos['CURP'] = {}
+                _alumnos['nombres'] = {}
+                _alumnos['apellido_paterno'] = {}
+                _alumnos['apellido_materno'] = {}
+                _alumnos['fechaNacimiento'] = {}
+                _alumnos['nivel'] = {}
+                _alumnos['grado'] = {}
 
-                else:  # Filtrar por CURP
-                    _alumnos = OrderedDict()
-                    _alumnos['CURP'] = {}
-                    _alumnos['nombres'] = {}
-                    _alumnos['apellido_paterno'] = {}
-                    _alumnos['apellido_materno'] = {}
-                    _alumnos['fechaNacimiento'] = {}
-                    _alumnos['nivel'] = {}
-                    _alumnos['grado'] = {}
+                sql = 'SELECT * FROM alumno WHERE CURP = %s'
+                users = execute_query(sql, (id,))
 
-                    sql = 'SELECT * FROM alumno WHERE CURP = %s'
-                    mycursor.execute(sql, (id,))
-                    users = mycursor.fetchall()
+                for idx, user in enumerate(users):
+                    _alumnos['CURP'][idx] = user['CURP']
+                    _alumnos['nombres'][idx] = user['nombres']
+                    _alumnos['apellido_paterno'][idx] = user['apellido_paterno']
+                    _alumnos['apellido_materno'][idx] = user['apellido_materno']
+                    _alumnos['fechaNacimiento'][idx] = user['fechaNacimiento']
+                    _alumnos['nivel'][idx] = user['nivel']
+                    _alumnos['grado'][idx] = user['grado']
 
-                    for idx, user in enumerate(users):
-                        _alumnos['CURP'][idx] = user[0]
-                        _alumnos['nombres'][idx] = user[1]
-                        _alumnos['apellido_paterno'][idx] = user[2]
-                        _alumnos['apellido_materno'][idx] = user[3]
-                        _alumnos['fechaNacimiento'][idx] = user[4]
-                        _alumnos['nivel'][idx] = user[5]
-                        _alumnos['grado'][idx] = user[6]
+                return _alumnos
 
-                    return _alumnos
-            finally:
-                # Cierra el cursor y la conexión
-                mycursor.close()
-                mydb.close()
-
+        except Exception as e:
+            self.show_popup("Error", f"Error al obtener usuarios: {e}")
+            return {}
 
 class ModificarAlumnoApp(App):
     def build(self):
         return ModificarAlumnoWindow()
-
 
 if __name__ == '__main__':
     ModificarAlumnoApp().run()

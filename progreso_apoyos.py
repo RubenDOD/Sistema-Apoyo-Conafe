@@ -1,17 +1,12 @@
-import kivy
 from kivy.app import App
-from kivy.graphics import Line
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
-from kivy.uix.popup import Popup
 from datetime import datetime
 from kivy.uix.image import Image
-from kivy.uix.gridlayout import GridLayout
-from kivy.properties import StringProperty, NumericProperty
-import mysql.connector
+from db_connection import execute_query
 import json
 from datetime import datetime
 from kivy.graphics import Color, Rectangle
@@ -35,14 +30,6 @@ class BecaProgresoWindow(BoxLayout):
         print(f"ID del apoyo: {self.id_apoyo}")
         # self.id_educador = 1  # ID del usuario que verá el progreso
 
-        self.conexion = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234',
-            database='conafe'
-        )
-        self.cursor = self.conexion.cursor(dictionary=True)
-
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -58,7 +45,6 @@ class BecaProgresoWindow(BoxLayout):
         scroll_view.add_widget(self.progreso_layout)
         self.add_widget(scroll_view)
 
-
         # Cargar datos
         self.cargar_datos()
 
@@ -69,7 +55,6 @@ class BecaProgresoWindow(BoxLayout):
             # Dibujar el fondo de la barra de navegación
             Color(0.06, 0.45, 0.45, 1)  # Color verde azulado
             self.rect = Rectangle(size=nav_bar.size, pos=nav_bar.pos)
-
 
         # Asegurar que el fondo se actualice con el tamaño y posición
         nav_bar.bind(size=self._update_rect, pos=self._update_rect)
@@ -114,8 +99,8 @@ class BecaProgresoWindow(BoxLayout):
         WHERE ae.id_educador = %s AND ae.estado_apoyo = 'Aceptado'
         AND ae.id_apoyo = %s
         """
-        self.cursor.execute(query, (self.id_educador, self.id_apoyo,))
-        apoyo = self.cursor.fetchone()
+        apoyo = execute_query(query, (self.id_educador, self.id_apoyo))
+        
         print(f"Apoyo obtenido: {apoyo}")   
         if not apoyo:
             self.progreso_layout.add_widget(Label(text="El apoyo aún no es aceptado por el departamento de apoyos.", size_hint_y=None, height=40))
@@ -197,8 +182,6 @@ class BecaProgresoWindow(BoxLayout):
     
     def go_back(self, instance):
         App.get_running_app().root.current = 'apoyos_economicos'
-
-    
 
 class BecaProgresoApp(App):
     def build(self):

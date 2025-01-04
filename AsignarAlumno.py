@@ -9,7 +9,7 @@ from collections import OrderedDict
 from utils.datatable_alumnosAsign import DataTableAlumnosAsign
 from datetime import datetime
 import hashlib
-import mysql.connector
+from db_connection import execute_query
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
@@ -19,16 +19,6 @@ class AsignarAlumnosWindow(BoxLayout):
     #Builder.load_file("AsignarAlumno.kv")
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
-        # Conexión a la base de datos
-        self.mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        self.mycursor = self.mydb.cursor()
-
         # Cargar contenido inicial
         content = self.ids.scrn_contents
         users = self.get_users("General", 0)
@@ -59,28 +49,16 @@ class AsignarAlumnosWindow(BoxLayout):
     def get_unique_states(self):
         """Obtiene los estados únicos de la base de datos."""
         try:
-            # Conexión a la base de datos
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            mycursor = mydb.cursor()
-
             # Ejecutar consulta para obtener estados únicos
             sql = 'SELECT DISTINCT estado FROM CCT'
-            mycursor.execute(sql)
-            result = mycursor.fetchall()
+            result = execute_query(sql)
 
             # Convertir resultados a una lista
             states = [row[0] for row in result]
 
-            mycursor.close()
-            mydb.close()
             return states
 
-        except mysql.connector.Error as e:
+        except Exception as e:
             print(f"Error al obtener los estados: {e}")
             return []
 
@@ -222,33 +200,18 @@ class AsignarAlumnosWindow(BoxLayout):
     def get_grupo_id(self, cct, grupo):
         """Obtiene el ID del grupo basado en la claveCentro y el nombre del grupo."""
         try:
-            # Conexión a la base de datos
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            mycursor = mydb.cursor()
-
             # Consulta para obtener el ID del grupo
             sql = '''
                 SELECT id_grupo FROM CCTgrupos
-                WHERE id_CCT = %s AND nombre_grupo = %s
+                WHERE id_CCT = ? AND nombre_grupo = ?
             '''
-            mycursor.execute(sql, (cct, grupo))
-            result = mycursor.fetchone()
+            result = execute_query(sql, (cct, grupo))
 
-            return result[0] if result else None
+            return result[0][0] if result else None
 
-        except mysql.connector.Error as e:
+        except Exception as e:
             print(f"Error al obtener el ID del grupo: {e}")
             return None
-
-        finally:
-            mycursor.close()
-            mydb.close()
-
 
     def asignar_alumno_cct(self, id_alumno, id_cct, id_grupo):
         """Asigna un alumno a un CCT y grupo específico."""
@@ -257,220 +220,119 @@ class AsignarAlumnosWindow(BoxLayout):
             return
 
         try:
-            # Conexión a la base de datos
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            mycursor = mydb.cursor()
-
             # Inserción en la tabla alumnoCCT
             sql = '''
                 INSERT INTO alumnoCCT (id_CCT, id_alumno, id_grupo)
-                VALUES (%s, %s, %s)
+                VALUES (?, ?, ?)
             '''
-            mycursor.execute(sql, (id_cct, id_alumno, id_grupo))
-            mydb.commit()
+            execute_query(sql, (id_cct, id_alumno, id_grupo))
 
-            #### METER MATERIAS AL ALUMNO ###
-
+            # Consulta para obtener nivel y grado del grupo
             sql = '''
-                SELECT nivel, grado FROM CCTgrupos WHERE id_grupo = '%s'
+                SELECT nivel, grado FROM CCTgrupos WHERE id_grupo = ?
             '''
+            result = execute_query(sql, (id_grupo,))
 
-            mycursor.execute(sql, (id_grupo,))
-            result = mycursor.fetchall()
+            if result:
+                nivel, grado = result[0]
 
-            print (result[0][0], result[0][1])
+                # Determinar las materias según nivel y grado
+                materias_sql = None
+                if nivel in ["PRIMARIA", "Primaria"]:
+                    if grado == '1':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Exploración de la Naturaleza y la Sociedad', 
+                            'Formación Cívica y Ética', 'Educación Artística');
+                        '''
+                    elif grado == '2':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Ciencias Naturales', 
+                            'La Entidad donde vivo', 'Formación Cívica y Ética', 'Educación Artística');
+                        '''
+                    elif grado == '3':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Ciencias Naturales', 'Geografía', 
+                            'Historia', 'Formación Cívica y Ética', 'Educación Artística');
+                        '''
+                elif nivel in ["SECUNDARIA", "Secundaria"]:
+                    if grado == '1':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Ciencias', 'Geografía', 'Educación Física');
+                        '''
+                    elif grado == '2':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Ciencias', 'Historia', 'Formación Cívica y Ética', 'Educación Física');
+                        '''
+                    elif grado == '3':
+                        materias_sql = '''
+                            SELECT id_materia FROM Materias WHERE nombre_materia IN 
+                            ('Español', 'Matemáticas', 'Ciencias', 'Historia', 'Formación Cívica y Ética', 'Educación Física');
+                        '''
 
-            if (result[0][0] == "PRIMARIA" or result[0][0] == 'Primaria'):
-                if (result[0][1] == '1'):
-
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Exploración de la Naturaleza y la Sociedad', 
-                    'Formación Cívica y Ética', 'Educación Artística');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
+                if materias_sql:
+                    materias = execute_query(materias_sql)
+                    for materia in materias:
                         sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
+                            INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
+                            VALUES (?, ?, ?, ?)
                         '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-                elif (result[0][1] == '2'):
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias Naturales', 
-                    'La Entidad donde vivo', 'Formación Cívica y Ética', 'Educación Artística');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
-                        sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
-                        '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-                elif (result[0][1] == '3'):
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias Naturales', 'Geografía', 
-                    'Historia', 'Formación Cívica y Ética', 'Educación Artística');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
-                        sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
-                        '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-            elif(result[0][0] == "SECUNDARIA" or result[0][0] == 'Secundaria'):
-                if (result[0][1] == '1'):
-
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
-                    'Geografía', 'Educación Física');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
-                        sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
-                        '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-                elif (result[0][1] == '2'):
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
-                    'Historia', 'Formación Cívica y Ética', 'Educación Física');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
-                        sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
-                        '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-                elif (result[0][1] == '3'):
-                    sql = '''
-                    SELECT id_materia, nombre_materia
-                    FROM Materias
-                    WHERE nombre_materia IN ('Español', 'Matemáticas', 'Ciencias', 
-                    'Historia', 'Formación Cívica y Ética', 'Educación Física');
-                    '''
-                    mycursor.execute(sql)
-                    ids_materias = mycursor.fetchall()
-                    for materia in ids_materias:
-                        sql = '''
-                        INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)
-                        VALUES (%s, %s, %s, %s)
-                        '''
-                        fecha_actual = datetime.now()  # Obtener la fecha y hora actual
-                        mycursor.execute(sql, (id_alumno, materia[0], 0.0, fecha_actual))
-                        mydb.commit()
-                
-                     
+                        fecha_actual = datetime.now()
+                        execute_query(sql, (id_alumno, materia[0], 0.0, fecha_actual))
 
             # Mostrar mensaje de éxito
             self.show_popup("Éxito", "Alumno asignado correctamente.")
             self.reload_users()  # Recargar los usuarios no asignados
             self.go_back_to_convocatorias()
 
-        except mysql.connector.Error as err:
-            self.show_popup("Error", f"Ocurrió un error: {err}")
-        finally:
-            mycursor.close()
-            mydb.close()
-
+        except Exception as e:
+            self.show_popup("Error", f"Ocurrió un error: {e}")
 
     def get_grupos_cct(self, cct, grado):
         """Obtiene los grupos disponibles para un CCT específico."""
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+        try:
+            # Consulta para obtener grupos basados en el CCT seleccionado
+            sql = '''
+                SELECT nombre_grupo FROM CCTgrupos
+                WHERE id_CCT = ? and grado = ?
+            '''
+            result = execute_query(sql, (cct, grado))
 
-        # Consulta para obtener grupos basados en el CCT seleccionado
-        sql = '''
-            SELECT nombre_grupo FROM CCTgrupos
-            WHERE id_CCT = %s and grado = %s
-        '''
-        print(grado)
-        mycursor.execute(sql, (cct, grado))
-        result = mycursor.fetchall()
+            # Formatear resultados para mostrarlos en el dropdown
+            grupos = [nombre_grupo[0] for nombre_grupo in result]
 
-        # Formatear resultados para mostrarlos en el dropdown
-        grupos = [nombre_grupo[0] for nombre_grupo in result]
+            return grupos
 
-        mycursor.close()
-        mydb.close()
-
-        return grupos
-
-
+        except Exception as e:
+            print(f"Error al obtener los grupos: {e}")
+            return []
 
     def get_ccts_estado(self, estado, nivel_alumno):
         """
         Obtiene los CCTs disponibles para un estado específico que coincidan con el nivel educativo del alumno.
         """
         try:
-            # Conexión a la base de datos
-            mydb = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            mycursor = mydb.cursor()
-
             # Consulta para obtener CCTs que coincidan con el estado y el nivel educativo
             sql = '''
                 SELECT claveCentro, municipio, localidad 
                 FROM CCT 
-                WHERE estado = %s AND nivelEducativo = %s
+                WHERE estado = ? AND nivelEducativo = ?
             '''
-            mycursor.execute(sql, (estado, nivel_alumno))
-            result = mycursor.fetchall()
+            result = execute_query(sql, (estado, nivel_alumno))
 
             # Formatear resultados para mostrarlos en el dropdown
             ccts = [f"{claveCentro} {municipio} {localidad}" for claveCentro, municipio, localidad in result]
 
             return ccts
 
-        except mysql.connector.Error as e:
+        except Exception as e:
             print(f"Error al obtener los CCTs: {e}")
             return []
-
-        finally:
-            mycursor.close()
-            mydb.close()
-
+        
     def go_back_to_convocatorias(self):
         """Regresa directamente a la pantalla 'vista_gestion_alumnos'."""
         try:
@@ -484,7 +346,6 @@ class AsignarAlumnosWindow(BoxLayout):
     def go_back_button(self):
         """Manejo de regresar desde el detalle del alumno."""
         self.go_back_to_convocatorias()  # Usamos la función modificada
-
 
     def go_back_to_users(self):
         """Regresa a la pantalla principal desde el formulario."""
@@ -501,86 +362,54 @@ class AsignarAlumnosWindow(BoxLayout):
         popup.open()
 
     def get_users(self, mode, id):
-        mydb = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        mycursor = mydb.cursor()
+        """Obtiene la lista de usuarios desde la base de datos."""
+        if mode == "General":
+            _alumnos = OrderedDict()
+            _alumnos['CURP'] = {}
+            _alumnos['nombres'] = {}
+            _alumnos['apellido_paterno'] = {}
+            _alumnos['nivel'] = {}
+
+            # Consulta para obtener alumnos que no están en la tabla alumnoCCT
+            sql = '''
+                SELECT a.CURP, a.nombres, a.apellido_paterno, a.nivel
+                FROM alumno a
+                LEFT JOIN alumnoCCT ac ON a.CURP = ac.id_alumno
+                WHERE ac.id_alumno IS NULL
+            '''
+            users = execute_query(sql)
+
+            for idx, user in enumerate(users):
+                _alumnos['CURP'][idx] = user[0]
+                _alumnos['nombres'][idx] = user[1]
+                _alumnos['apellido_paterno'][idx] = user[2]
+                _alumnos['nivel'][idx] = user[3]
+
+            return _alumnos
+
+        else:  # Filtrar por CURP
+            _alumnos = OrderedDict()
+            _alumnos['CURP'] = {}
+            _alumnos['nombres'] = {}
+            _alumnos['apellido_paterno'] = {}
+            _alumnos['nivel'] = {}
+            _alumnos['grado'] = {}
+
+            sql = 'SELECT * FROM alumno WHERE CURP = ?'
+            users = execute_query(sql, (id,))
+
+            for idx, user in enumerate(users):
+                _alumnos['CURP'][idx] = user[0]
+                _alumnos['nombres'][idx] = user[1]
+                _alumnos['apellido_paterno'][idx] = user[2]
+                _alumnos['nivel'][idx] = user[5]
+                _alumnos['grado'][idx] = user[6]
+
+            return _alumnos
         
-        try:
-            """Obtiene la lista de usuarios desde la base de datos."""
-            if mode == "General":
-                _alumnos = OrderedDict()
-                _alumnos['CURP'] = {}
-                _alumnos['nombres'] = {}
-                _alumnos['apellido_paterno'] = {}
-                _alumnos['nivel'] = {}
-                ids = []
-                nombres = []
-                apellidos = []
-                niveles = []
-
-                # Consulta para obtener alumnos que no están en la tabla alumnoCCT
-                sql = '''
-                    SELECT a.CURP, a.nombres, a.apellido_paterno, a.nivel
-                    FROM alumno a
-                    LEFT JOIN alumnoCCT ac ON a.CURP = ac.id_alumno
-                    WHERE ac.id_alumno IS NULL
-                '''
-                mycursor.execute(sql)
-
-                users = mycursor.fetchall()
-                for user in users:
-                    ids.append(user[0])  # CURP
-                    nombres.append(user[1])  # Nombres
-                    apellidos.append(user[2])  # Apellido paterno
-                    niveles.append(user[3])  # Nivel
-
-                users_length = len(nombres)
-                idx = 0
-                while idx < users_length:
-                    _alumnos['CURP'][idx] = ids[idx]
-                    _alumnos['nombres'][idx] = nombres[idx]
-                    _alumnos['apellido_paterno'][idx] = apellidos[idx]
-                    _alumnos['nivel'][idx] = niveles[idx]
-                    idx += 1
-
-                return _alumnos
-
-            else:  # Filtrar por CURP
-                _alumnos = OrderedDict()
-                _alumnos['CURP'] = {}
-                _alumnos['nombres'] = {}
-                _alumnos['apellido_paterno'] = {}
-                _alumnos['nivel'] = {}
-                _alumnos['grado'] = {}
-
-                sql = 'SELECT * FROM alumno WHERE CURP = %s'
-                mycursor.execute(sql, (id,))
-                users = mycursor.fetchall()
-
-                for idx, user in enumerate(users):
-                    _alumnos['CURP'][idx] = user[0]
-                    _alumnos['nombres'][idx] = user[1]
-                    _alumnos['apellido_paterno'][idx] = user[2]
-                    _alumnos['nivel'][idx] = user[5]
-                    _alumnos['grado'][idx] = user[6]
-
-                return _alumnos
-        finally:
-            # Cierra el cursor y la conexión
-            mycursor.close()
-            mydb.close()
-
-        
-
-
 class AsignarAlumnosApp(App):
     def build(self):
         return AsignarAlumnosWindow()
-
 
 if __name__ == '__main__':
     AsignarAlumnosApp().run()

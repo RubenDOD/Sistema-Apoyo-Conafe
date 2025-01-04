@@ -6,8 +6,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
-import mysql.connector
-
+from db_connection import execute_query
 
 class AlumnosCalificaciones(BoxLayout):
     def __init__(self, cct=None, grupo=None,**kwargs):
@@ -35,30 +34,11 @@ class AlumnosCalificaciones(BoxLayout):
         self.regresar_button.bind(on_press=self.regresar)
         self.add_widget(self.regresar_button)
 
-    def connect_to_database(self):
-        """Conexión a MySQL"""
-        try:
-            conn = mysql.connector.connect(
-                host="localhost",  # Cambia al host de tu servidor
-                user="root",  # Cambia al usuario de tu servidor
-                password="1234",  # Cambia a tu contraseña
-                database="CONAFE",  # Cambia al nombre de tu base de datos
-            )
-            return conn
-        except mysql.connector.Error as e:
-            self.show_error(f"Error conectando a MySQL: {e}")
-            return None
-
     def load_alumnos(self):
         """Carga los alumnos desde la base de datos"""
-        conn = self.connect_to_database()
-        if not conn:
-            return
-
         try:
-            cursor = conn.cursor()
             # Consulta para recuperar CURP y nombre completo (concatenando los campos)
-            cursor.execute("""
+            query = """
                 SELECT 
                     a.CURP, 
                     CONCAT(a.apellido_paterno, ' ', a.apellido_materno, ' ', a.nombres) AS nombre_completo
@@ -69,9 +49,9 @@ class AlumnosCalificaciones(BoxLayout):
                 JOIN 
                     CCTgrupos cg ON ac.id_grupo = cg.id_grupo
                 WHERE 
-                    ac.id_CCT = %s AND cg.nombre_grupo = %s;
-            """,(self.cct,self.grupo))
-            rows = cursor.fetchall()
+                    ac.id_CCT = ? AND cg.nombre_grupo = ?;
+            """
+            rows = execute_query(query, (self.cct, self.grupo))
 
             # Crear botones para cada alumno
             if rows:
@@ -88,10 +68,8 @@ class AlumnosCalificaciones(BoxLayout):
             else:
                 self.records_layout.add_widget(Label(text="No hay alumnos disponibles."))
 
-        except mysql.connector.Error as e:
+        except Exception as e:
             self.show_error(f"Error obteniendo alumnos: {e}")
-        finally:
-            conn.close()
 
     def show_details(self, curp):
         """Muestra las calificaciones del alumno en un popup"""
@@ -117,47 +95,40 @@ class AlumnosCalificaciones(BoxLayout):
         total_calificaciones = 0
         num_calificaciones = 0
 
-        # Cargar las calificaciones del alumno
-        conn = self.connect_to_database()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                query = """
-                    SELECT c.id_calificacion, m.nombre_materia, c.calificacion, c.fecha_registro
-                    FROM Calificaciones c
-                    JOIN Materias m ON c.id_materia = m.id_materia
-                    WHERE c.id_alumno = %s
-                """
-                cursor.execute(query, (curp,))
-                rows = cursor.fetchall()
+        try:
+            # Cargar las calificaciones del alumno
+            query = """
+                SELECT c.id_calificacion, m.nombre_materia, c.calificacion, c.fecha_registro
+                FROM Calificaciones c
+                JOIN Materias m ON c.id_materia = m.id_materia
+                WHERE c.id_alumno = ?
+            """
+            rows = execute_query(query, (curp,))
 
-                if rows:
-                    for row in rows:
-                        id_calificacion, materia, calificacion, fecha = row
-                        table_layout.add_widget(Label(text=materia, size_hint_y=None, height=30))
-                        table_layout.add_widget(Label(text=str(calificacion), size_hint_y=None, height=30))
-                        table_layout.add_widget(Label(text=str(fecha), size_hint_y=None, height=30))
+            if rows:
+                for row in rows:
+                    id_calificacion, materia, calificacion, fecha = row
+                    table_layout.add_widget(Label(text=materia, size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=str(calificacion), size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=str(fecha), size_hint_y=None, height=30))
 
-                        # Botón para actualizar calificación
-                        update_button = Button(text="Actualizar", size_hint_y=None, height=30)
-                        update_button.bind(
-                            on_press=lambda instance, id_c=id_calificacion, curr_cal=calificacion: self.update_calificacion_popup(
-                                id_c, curr_cal
-                            )
+                    # Botón para actualizar calificación
+                    update_button = Button(text="Actualizar", size_hint_y=None, height=30)
+                    update_button.bind(
+                        on_press=lambda instance, id_c=id_calificacion, curr_cal=calificacion: self.update_calificacion_popup(
+                            id_c, curr_cal
                         )
-                        table_layout.add_widget(update_button)
+                    )
+                    table_layout.add_widget(update_button)
 
-                        # Acumular para el cálculo del promedio
-                        total_calificaciones += calificacion
-                        num_calificaciones += 1
-                else:
-                    table_layout.add_widget(Label(text="SIN MATERIAS INSCRITAS.", size_hint_y=None, height=30))
-            except mysql.connector.Error as e:
-                table_layout.add_widget(Label(text=f"Error: {e}", size_hint_y=None, height=30))
-            finally:
-                conn.close()
-        else:
-            table_layout.add_widget(Label(text="Error conectando a la base de datos.", size_hint_y=None, height=30))
+                    # Acumular para el cálculo del promedio
+                    total_calificaciones += calificacion
+                    num_calificaciones += 1
+            else:
+                table_layout.add_widget(Label(text="SIN MATERIAS INSCRITAS.", size_hint_y=None, height=30))
+
+        except Exception as e:
+            table_layout.add_widget(Label(text=f"Error: {e}", size_hint_y=None, height=30))
 
         # Calcular promedio
         promedio = total_calificaciones / num_calificaciones if num_calificaciones > 0 else 0
@@ -217,20 +188,14 @@ class AlumnosCalificaciones(BoxLayout):
             self.show_error("Por favor, ingresa un valor válido.")
             return
 
-        # Conectar a la base de datos y actualizar calificación
-        conn = self.connect_to_database()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                query = "UPDATE Calificaciones SET calificacion = %s WHERE id_calificacion = %s"
-                cursor.execute(query, (nueva_calificacion, id_calificacion))
-                conn.commit()
-                self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
-            except mysql.connector.Error as e:
-                self.show_error(f"Error actualizando calificación: {e}")
-            finally:
-                conn.close()
-
+        try:
+            # Conectar a la base de datos y actualizar calificación
+            query = "UPDATE Calificaciones SET calificacion = ? WHERE id_calificacion = ?"
+            execute_query(query, (nueva_calificacion, id_calificacion))
+            self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
+        except Exception as e:
+            self.show_error(f"Error actualizando calificación: {e}")
+    
     def show_error(self, message):
         """Mostrar error en un popup"""
         popup_layout = BoxLayout(orientation="vertical", padding=10, spacing=10)

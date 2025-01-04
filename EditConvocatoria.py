@@ -3,10 +3,10 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-import mysql.connector
+from db_connection import execute_query
 
 class EditConvocatoriaWindow(Screen):
-    def __init__(self, conv_id = None, **kwargs):
+    def __init__(self, conv_id=None, **kwargs):
         super().__init__(**kwargs)
         self.conv_id = conv_id
 
@@ -37,51 +37,40 @@ class EditConvocatoriaWindow(Screen):
         self.add_widget(self.layout)
 
     def cargar_datos(self):
-        # Conexión a la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
+        try:
+            # Obtener los datos de la convocatoria por ID
+            sql = """
+                SELECT nombre_convocatoria, url_convocatoria, url_forms
+                FROM ConvocatoriaActual
+                WHERE id_Convo = ?
+            """
+            data = execute_query(sql, (self.conv_id,))
 
-        # Obtener los datos de la convocatoria por ID
-        cursor.execute("SELECT nombre_convocatoria, url_convocatoria, url_forms FROM ConvocatoriaActual WHERE id_Convo = %s", (self.conv_id,))
-        data = cursor.fetchone()
+            if data:
+                self.nombre_input.text = data[0][0]
+                self.url_input.text = data[0][1]
+                self.url_form_input.text = data[0][2]
 
-        if data:
-            self.nombre_input.text = data[0]
-            self.url_input.text = data[1]
-            self.url_form_input.text = data[2]
-
-        cursor.close()
-        db.close()
+        except Exception as e:
+            print(f"Error al cargar datos de la convocatoria: {e}")
 
     def actualizar_convocatoria(self, instance):
-        # Obtener los valores del formulario
-        nuevo_nombre = self.nombre_input.text
-        nueva_url = self.url_input.text
-        nueva_url_form = self.url_form_input.text
+        try:
+            # Obtener los valores del formulario
+            nuevo_nombre = self.nombre_input.text
+            nueva_url = self.url_input.text
+            nueva_url_form = self.url_form_input.text
 
-        # Actualizar la convocatoria en la base de datos
-        db = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            passwd='1234',
-            database='CONAFE'
-        )
-        cursor = db.cursor()
+            # Actualizar la convocatoria en la base de datos
+            sql = """
+                UPDATE ConvocatoriaActual
+                SET nombre_convocatoria = ?, url_convocatoria = ?, url_forms = ?
+                WHERE id_Convo = ?
+            """
+            execute_query(sql, (nuevo_nombre, nueva_url, nueva_url_form, self.conv_id))
 
-        cursor.execute("""
-        UPDATE ConvocatoriaActual
-        SET nombre_convocatoria = %s, url_convocatoria = %s, url_forms = %s
-        WHERE id_Convo = %s
-        """, (nuevo_nombre, nueva_url, nueva_url_form, self.conv_id))
+            # Regresar a la pantalla anterior
+            self.manager.current = 'scrn_content'
 
-        db.commit()  # Guardar cambios
-        cursor.close()
-        db.close()
-
-        # Regresar a la pantalla anterior
-        self.manager.current = 'scrn_content'
+        except Exception as e:
+            print(f"Error al actualizar la convocatoria: {e}")

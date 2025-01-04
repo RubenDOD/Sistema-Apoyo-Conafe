@@ -9,7 +9,7 @@ from kivy.graphics import Color, Ellipse, Rectangle
 from kivy.core.window import Window
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
-import mysql.connector
+from db_connection import execute_query
 
 # Establecer el fondo de la ventana en blanco
 Window.clearcolor = (1, 1, 1, 1)  # Valores RGBA (1,1,1,1) es blanco puro
@@ -49,16 +49,8 @@ class AspiranteSeguimientoWindow(BoxLayout):
         # Barra de navegación superior
         self.add_widget(self.create_navigation_bar())
 
-        # Db_config
-        self.db_config = {
-            'host':'localhost',
-            'user':'root',
-            'passwd':'1234',
-            'database':'CONAFE'
-        }
-
         # Obtenemos la información del aspirante
-        info_aspirante = self.consultar_observaciones(self.id_aspirante, self.db_config)
+        info_aspirante = self.consultar_observaciones(self.id_aspirante)
 
         if info_aspirante:
             # Nombre del aspirante
@@ -157,11 +149,7 @@ class AspiranteSeguimientoWindow(BoxLayout):
             self.add_widget(self.states_layout)
 
 
-    def consultar_observaciones(self, id_aspirante, db_config=None):
-        mydb = mysql.connector.connect(**db_config)
-        my_cursor = mydb.cursor()
-
-        # Consulta optimizada
+    def consultar_observaciones(self, id_aspirante):
         sql = """
             SELECT 
                 ca.id_Capacitador,
@@ -180,20 +168,16 @@ class AspiranteSeguimientoWindow(BoxLayout):
             JOIN 
                 Usuario u ON ca.id_Capacitador = u.id_Usuario
             WHERE 
-                ca.id_Aspirante = %s
+                ca.id_Aspirante = ?
         """
-        my_cursor.execute(sql, (id_aspirante,))
-        info_aspirante = my_cursor.fetchone()
-
-        # Cerrar el cursor y la conexión
-        my_cursor.close()
-        mydb.close()
+        result = execute_query(sql, (id_aspirante,))
 
         # Validar si hay resultados
-        if not info_aspirante:
+        if not result:
             return []
 
         # Construir el diccionario
+        info_aspirante = result[0]
         _datosAspirante = {
             'id_Capacitador': info_aspirante[0],
             'nombres': info_aspirante[1],
