@@ -87,7 +87,7 @@ class DetalleCCTScreen(Screen):
             FROM ResidenciaAspirante
             JOIN InfoEducativaAspirante ON ResidenciaAspirante.id_Aspirante = InfoEducativaAspirante.id_Aspirante
             JOIN Aspirante ON ResidenciaAspirante.id_Aspirante = Aspirante.id_Aspirante
-            WHERE ResidenciaAspirante.id_Aspirante = %s;
+            WHERE ResidenciaAspirante.id_Aspirante = ?;
             """
             aspirante_data = execute_query(query_aspirante, (aspirante_id,))
 
@@ -109,7 +109,7 @@ class DetalleCCTScreen(Screen):
             query_ccts = """
             SELECT claveCentro, nombre, estado, municipio, nivelEducativo, cupos_disponibles
             FROM CCT
-            WHERE estado = %s AND municipio = %s AND nivelEducativo = %s AND cupos_disponibles > 0
+            WHERE estado = ? AND municipio = ? AND nivelEducativo = ? AND cupos_disponibles > 0
             ORDER BY estado, municipio;
             """
             ccts = execute_query(query_ccts, (estado, municipio, nivel_educativo))
@@ -216,12 +216,12 @@ class DetalleCCTScreen(Screen):
         try:
             query_assign = """
             INSERT INTO AsignacionAspiranteCCT (id_Aspirante, claveCentro, fecha_asignacion)
-            VALUES (%s, %s, CURDATE());
+            VALUES (?, ?, CURDATE());
             """
             execute_non_query(query_assign, (aspirante_id, clave_centro))
 
             query_update_cupos = """
-            UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = %s;
+            UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = ?;
             """
             execute_non_query(query_update_cupos, (clave_centro,))
 

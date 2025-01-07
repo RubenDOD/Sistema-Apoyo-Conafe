@@ -47,7 +47,7 @@ class ModificarAlumnoWindow(BoxLayout):
             self.ids.mes.text = str(user_data['fechaNacimiento'][0].month)  # Llenar mes
             self.ids.anio.text = str(user_data['fechaNacimiento'][0].year)  # Llenar año
             self.ids.nivel.text = user_data['nivel'][0]  # Llenar nivel
-            self.ids.grado.text = user_data['grado'][0]  # Llenar grado
+            self.ids.grado.text = str(user_data['grado'][0]) if 0 in user_data['grado'] else ""  # Llenar grado
             # Hacer el campo de CURP no editable
             self.ids.curp.readonly = True
 
@@ -140,7 +140,17 @@ class ModificarAlumnoWindow(BoxLayout):
     def add_user_fields(self):
         """Cambia a la pantalla del formulario de usuario."""
         self.ids.scrn_mngr.current = 'add_user_form'
-
+    
+    def show_popup(self, title, message):
+        """Muestra un Popup con un mensaje."""
+        popup = Popup(
+            title=title,
+            content=Label(text=message),
+            size_hint=(0.8, 0.4),
+            auto_dismiss=True
+        )
+        popup.open()
+        
     def save_user(self):
         """Actualiza los datos de un usuario existente en la base de datos con validaciones."""
         curp = self.ids.curp.text.strip().upper()  # Convertir a mayúsculas
@@ -184,24 +194,14 @@ class ModificarAlumnoWindow(BoxLayout):
             self.show_popup("Revisar datos", "La fecha ingresada no es válida.")
             return
 
-        # Verificar si el CURP existe en la base de datos
-        try:
-            check_query = "SELECT COUNT(*) FROM alumno WHERE CURP = %s"
-            result = execute_query(check_query, (curp,))
-            if result[0]['COUNT(*)'] == 0:
-                self.show_popup("Error", "El CURP no está registrado.")
-                return
-        except Exception as e:
-            self.show_popup("Error", f"Error al verificar el CURP: {e}")
-            return
 
         # Actualizar datos del usuario
         try:
             update_query = """
                 UPDATE alumno
-                SET nombres = %s, apellido_paterno = %s, apellido_materno = %s,
-                    fechaNacimiento = %s, nivel = %s, grado = %s
-                WHERE CURP = %s
+                SET nombres = ?, apellido_paterno = ?, apellido_materno = ?,
+                    fechaNacimiento = ?, nivel = ?, grado = ?
+                WHERE CURP = ?
             """
             values = (
                 nombres, apellido_paterno, apellido_materno,
@@ -255,13 +255,15 @@ class ModificarAlumnoWindow(BoxLayout):
                     WHERE ac.id_alumno IS NULL
                 '''
                 users = execute_query(sql)
-
+                print("DE")
                 for idx, user in enumerate(users):
-                    _alumnos['CURP'][idx] = user['CURP']
-                    _alumnos['nombres'][idx] = user['nombres']
-                    _alumnos['apellido_paterno'][idx] = user['apellido_paterno']
-                    _alumnos['nivel'][idx] = user['nivel']
+                    _alumnos['CURP'][idx] = user[0]
+                    _alumnos['nombres'][idx] = user[1]
+                    _alumnos['apellido_paterno'][idx] = user[2]
+                    _alumnos['nivel'][idx] = user[3]
+                print("debug")
 
+                print(_alumnos)
                 return _alumnos
 
             else:  # Filtrar por CURP
@@ -274,18 +276,21 @@ class ModificarAlumnoWindow(BoxLayout):
                 _alumnos['nivel'] = {}
                 _alumnos['grado'] = {}
 
-                sql = 'SELECT * FROM alumno WHERE CURP = %s'
+                sql = 'SELECT * FROM alumno WHERE CURP = ?'
+                print(f"Ejecutando consulta específica con id: {id}")
                 users = execute_query(sql, (id,))
+                print("Resultados de la consulta específica:", users)
 
                 for idx, user in enumerate(users):
-                    _alumnos['CURP'][idx] = user['CURP']
-                    _alumnos['nombres'][idx] = user['nombres']
-                    _alumnos['apellido_paterno'][idx] = user['apellido_paterno']
-                    _alumnos['apellido_materno'][idx] = user['apellido_materno']
-                    _alumnos['fechaNacimiento'][idx] = user['fechaNacimiento']
-                    _alumnos['nivel'][idx] = user['nivel']
-                    _alumnos['grado'][idx] = user['grado']
+                    _alumnos['CURP'][idx] = user[0]
+                    _alumnos['nombres'][idx] = user[1]
+                    _alumnos['apellido_paterno'][idx] = user[2]
+                    _alumnos['apellido_materno'][idx] = user[3]
+                    _alumnos['fechaNacimiento'][idx] = user[4]
+                    _alumnos['nivel'][idx] = user[5]
+                    _alumnos['grado'][idx] = user[6]
 
+                print("Datos procesados:", _alumnos)
                 return _alumnos
 
         except Exception as e:

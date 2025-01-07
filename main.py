@@ -21,6 +21,7 @@ from capacitador_aspirante import CapacitadorAspiranteWindow  # Importa la venta
 from aspirante_seguimiento import AspiranteSeguimientoWindow  # Importa la ventana aspirante_seguimiento
 from CCTs import CCTsWindow
 from alumnos import AlumnosWindow
+from modificarAlumno import ModificarAlumnoWindow
 from AsignarAlumno import AsignarAlumnosWindow
 from Calificaciones import AlumnosCalificaciones
 from Regularizaciones import Regularizaciones
@@ -41,6 +42,7 @@ Builder.load_file('capacitador_aspirante.kv')
 Builder.load_file('CCTs.kv')
 Builder.load_file("alumnos.kv")
 Builder.load_file("AsignarAlumno.kv")
+Builder.load_file("modificarAlumno.kv")
 Builder.load_file("interfaz_becas.kv")
 Builder.load_file("progreso_apoyos.kv")
 Builder.load_file("estimaciontallas.kv")
@@ -1068,6 +1070,10 @@ class LoginApp(App):
         screen_vista_asignar_alumnos.add_widget(AsignarAlumnosWindow())
         sm.add_widget(screen_vista_asignar_alumnos)
 
+        screen_vista_modificar_alumnos = Screen(name='vista_modificar_alumnos')
+        screen_vista_modificar_alumnos.add_widget(ModificarAlumnoWindow())
+        sm.add_widget(screen_vista_modificar_alumnos)
+
         screen_vista_gestion_grupos = Screen(name='vista_gestion_grupos')
         screen_vista_gestion_grupos.add_widget(vistaGestionGrupos())
         sm.add_widget(screen_vista_gestion_grupos)
@@ -1139,7 +1145,7 @@ class LoginApp(App):
         screen_equipamiento.add_widget(EquipamientoScreen())
         sm.add_widget(screen_equipamiento)
 
-        sm.current = 'login'
+        sm.current = 'vista_control_escolar'
 
         return sm
 

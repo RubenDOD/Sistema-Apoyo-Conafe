@@ -56,14 +56,14 @@ class CapacitadorAspiranteWindow(BoxLayout):
             try:
                 aspirantes = execute_query(query, (id_usuario,))
                 for idx, user in enumerate(aspirantes):
-                    _datosAspirante['id_Aspirante'][idx] = user['id_Aspirante']
-                    _datosAspirante['nombres'][idx] = user['nombre_aspirante']
-                    _datosAspirante['fechaInicio'][idx] = user['fechaInicio']
-                    _datosAspirante['fechaFinalizacion'][idx] = user['fechaFinalizacion']
-                    _datosAspirante['observaciones'][idx] = user['observaciones']
-                    _datosAspirante['estadoCapacitacion'][idx] = user['estadoCapacitacion']
-                    _datosAspirante['apellidoPaterno'][idx] = user['apellido_paterno']
-                    _datosAspirante['apellidoMaterno'][idx] = user['apellido_materno']
+                    _datosAspirante['id_Aspirante'][idx] = user[0]
+                    _datosAspirante['nombres'][idx] = user[1]
+                    _datosAspirante['fechaInicio'][idx] = user[2]
+                    _datosAspirante['fechaFinalizacion'][idx] = user[3]
+                    _datosAspirante['observaciones'][idx] = user[4]
+                    _datosAspirante['estadoCapacitacion'][idx] = user[5]
+                    _datosAspirante['apellidoPaterno'][idx] = user[6]
+                    _datosAspirante['apellidoMaterno'][idx] = user[7]
                 return _datosAspirante
             except Exception as e:
                 print(f"Error al obtener los aspirantes: {e}")

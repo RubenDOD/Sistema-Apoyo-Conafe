@@ -14,7 +14,7 @@ class UpdateCorreoWindow(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
         self.aspirante_id = id_aspirante  # Asignar el id_aspirante recibido
-
+  
         # Cargar los datos del aspirante
         self.cargar_datos()
 
@@ -24,14 +24,22 @@ class UpdateCorreoWindow(BoxLayout):
         select_query = """
         SELECT telefonoFijo, telefonoMovil, correo
         FROM Aspirante
-        WHERE id_Aspirante = %s
+        WHERE id_Aspirante = ?
+        """
+        select_query2 = """
+        SELECT telefonoFijo, telefonoMovil, correo, id_Aspirante
+        FROM Aspirante WHERE id_Aspirante = 109
         """
         try:
             result = execute_query(select_query, (self.aspirante_id,))
+            print(result)
+            users = execute_query(select_query2)
+            print(users)
             if result:
-                self.ids.telefono_fijo.text = result[0]['telefonoFijo']
-                self.ids.telefono_movil.text = result[0]['telefonoMovil']
-                self.ids.correo.text = result[0]['correo']
+                print(result)
+                self.ids.telefono_fijo.text = str(result[0][0])
+                self.ids.telefono_movil.text = str(result[0][1])
+                self.ids.correo.text = str(result[0][2])
         except Exception as e:
             self.mostrar_error(f"Error al cargar los datos: {e}")
 
@@ -65,8 +73,8 @@ class UpdateCorreoWindow(BoxLayout):
         # Actualizar los datos del aspirante en la base de datos
         update_query = """
         UPDATE Aspirante
-        SET telefonoFijo = %s, telefonoMovil = %s, correo = %s
-        WHERE id_Aspirante = %s
+        SET telefonoFijo = ?, telefonoMovil = ?, correo = ?
+        WHERE id_Aspirante = ?
         """
         try:
             execute_non_query(update_query, (telefono_fijo, telefono_movil, correo, self.aspirante_id))
@@ -97,7 +105,7 @@ class UpdateCorreoWindow(BoxLayout):
 class UpdateCorreo(App):
     def build(self):
         # Aquí le pasas el ID del aspirante al formulario
-        return UpdateCorreoWindow(id_aspirante=1)  # Cambia el ID según sea necesario
+        return UpdateCorreoWindow(id_aspirante=109)  # Cambia el ID según sea necesario
 
 if __name__ == '__main__':
     UpdateCorreo().run()
