@@ -1,6 +1,8 @@
 import re
 import mysql.connector
 import pyodbc
+from kivy.uix.popup import Popup
+from datetime import datetime
 from kivy.properties import StringProperty
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -30,6 +32,10 @@ from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
 from db_connection import execute_query
 from db_connection import execute_non_query
+from db_connection import get_connection
+from kivy.clock import Clock
+from pytz import timezone
+
 
 # Cargar todos los archivos .kv
 Builder.load_file('main.kv')
@@ -121,6 +127,9 @@ class LoginScreen(CustomBoxLayout):
             elif acceso == 'Departamento Becas':
                 print("Creando pantalla de departamento de becas...")
                 sm.current = 'departamento_becas'
+                depto_becas_screen = sm.get_screen('departamento_becas').children[0]
+                depto_becas_screen.id_Usuario = id_usuario
+                sm.current = 'departamento_becas'
             elif acceso == 'Departamento Equipamiento':
                 print("Creando pantalla de departamento de tallas y equipamiento...")
                 sm.current = 'departamento_equipamiento'
@@ -201,7 +210,7 @@ class AspiranteSeguimientoScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(AspiranteSeguimientoScreen, self).__init__(**kwargs)
         # Crear una instancia de AspiranteSeguimientoWindow y pasar id_usuario
-        self.add_widget(AspiranteSeguimientoWindow(self.id_usuario))
+        # self.add_widget(AspiranteSeguimientoWindow(self.id_usuario))
 
 class VistaDireccionTerritorialScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
@@ -231,12 +240,12 @@ class VistaDireccionTerritorialScreen(CustomBoxLayout):
 class ConvocatoriasScreen(Screen):  # Modificar para heredar de Screen
     def __init__(self, **kwargs):
         super(ConvocatoriasScreen, self).__init__(**kwargs)
-        self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
+        #self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
 
 class CapacitacionesScreen(Screen):
     def __init__(self, **kwargs):
         super(CapacitacionesScreen, self).__init__(**kwargs)
-        self.admin_window = AdminWindowAsignaciones()  # Instancia única de AdminWindowAsignaciones
+        # self.admin_window = AdminWindowAsignaciones()  # Instancia única de AdminWindowAsignaciones
 
     def on_enter(self):
         # Limpiar todos los widgets de la pantalla antes de añadir el contenido
@@ -630,6 +639,24 @@ class LECScreen(CustomBoxLayout):
     cct = StringProperty("No asignado")  # Almacena el CCT del LEC
     grupo = StringProperty("Sin grupo asignado")  # Almacena el grupo del LEC
 
+    def fetch_as_dict(self, cursor, fetch_one=False):
+        """
+        Convierte los resultados de una consulta de cursor en un diccionario o lista de diccionarios.
+
+        Args:
+            cursor: El cursor ejecutado de la consulta SQL.
+            fetch_one (bool): Si es True, usa fetchone; si es False, usa fetchall.
+
+        Returns:
+            dict o list[dict]: Diccionario si fetch_one es True, lista de diccionarios si es False.
+        """
+        columns = [column[0] for column in cursor.description]
+        if fetch_one:
+            row = cursor.fetchone()
+            return dict(zip(columns, row)) if row else None
+        else:
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
     def cargar_informacion(self):
         """
         Carga la información del CCT y del grupo asignado al LEC.
@@ -637,6 +664,8 @@ class LECScreen(CustomBoxLayout):
 
         try:
             # Consulta para obtener el CCT y grupo asignado al LEC
+            conexion = get_connection()
+            cursor = conexion.cursor()
             query = f"""
                 SELECT 
                 AsignacionAspiranteCCT.claveCentro AS cct,
@@ -645,7 +674,7 @@ class LECScreen(CustomBoxLayout):
                 LEFT JOIN CCTgrupos ON AsignacionAspiranteCCT.id_Aspirante = CCTgrupos.id_profesor
                 WHERE AsignacionAspiranteCCT.id_Aspirante = '{self.id_usuario}';
             """
-            result = execute_query(query)
+            result = self.fetch_as_dict(cursor.execute(query), fetch_one=True)
 
             # Actualizar las propiedades de la pantalla
             self.cct = result['cct'] if result and result['cct'] else "No asignado"
@@ -824,7 +853,7 @@ class CapacitadorAspiranteScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(CapacitadorAspiranteScreen, self).__init__(**kwargs)
         # Crear una instancia de CapacitadorAspiranteWindow y pasar id_usuario
-        self.add_widget(CapacitadorAspiranteWindow(self.id_usuario))
+        # self.add_widget(CapacitadorAspiranteWindow(self.id_usuario))
 
 class ControlEscolarScreen(CustomBoxLayout):
     cct = StringProperty("")  # Propiedad para almacenar el CCT asociado
@@ -964,18 +993,189 @@ class vistaGestionGrupos(CustomBoxLayout):
     pass
 
 class DepartamentoBecasScreen(Screen):
+    id_Usuario = StringProperty(None)
     def gestionar_apoyos(self, instance):
         print("Accediendo a la pantalla de gestión de apoyos")
         app = App.get_running_app()
 
         # Crear una instancia de la pantalla de gestión de apoyos
-        gestion_apoyos_window = ApoyosSolicitadosWindow()
+        gestion_apoyos_window = ApoyosSolicitadosWindow(id_Usuario=self.id_Usuario)
         gestion_apoyos_screen = app.root.get_screen('gestion_apoyos')
         gestion_apoyos_screen.clear_widgets()
         gestion_apoyos_screen.add_widget(gestion_apoyos_window)
 
         # Mostrar la pantalla de gestión de apoyos
         app.root.current = 'gestion_apoyos'
+    
+
+    def fetch_as_dict(self, cursor, fetch_one=False):
+        """
+        Convierte los resultados de una consulta de cursor en un diccionario o lista de diccionarios.
+
+        Args:
+            cursor: El cursor ejecutado de la consulta SQL.
+            fetch_one (bool): Si es True, usa fetchone; si es False, usa fetchall.
+
+        Returns:
+            dict o list[dict]: Diccionario si fetch_one es True, lista de diccionarios si es False.
+        """
+        columns = [column[0] for column in cursor.description]
+        if fetch_one:
+            row = cursor.fetchone()
+            return dict(zip(columns, row)) if row else None
+        else:
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    def mostrar_popup(self, titulo, mensaje):
+        popup = Popup(
+            title=titulo,
+            content=Label(text=mensaje),
+            size_hint=(0.6, 0.4)
+        )
+        popup.open()
+
+    def procesar_pagos_automaticos(self, instance):
+        conexion = get_connection()
+        cursor = conexion.cursor()
+
+        # Obtener nombre del mes actual
+        mes_actual = datetime.now().month
+
+        # Lista de nombres de meses en español
+        nombres_meses = [
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+        ]
+        mes_actual = nombres_meses[mes_actual - 1]  # Nombre del mes actual
+        print(f"Procesando pagos para el mes: {mes_actual}")
+
+        # Consulta para obtener tickets pendientes del mes actual
+        query = """
+        SELECT tp.id_ticket, tp.id_educador, tp.id_apoyo, tp.monto, ae.estado_apoyo
+        FROM tickets_pago tp
+        JOIN apoyo_educador ae ON tp.id_apoyo = ae.id_apoyo AND tp.id_educador = ae.id_educador
+        WHERE tp.mes = ? AND tp.estado = 'Pendiente'
+        """
+        cursor.execute(query, (mes_actual,))
+        tickets = self.fetch_as_dict(cursor, fetch_one=False)
+
+        # Si no hay tickets pendientes
+        if not tickets:
+            print("No hay tickets pendientes para este mes.")
+            # Mostrar popup después de que la función termine
+            Clock.schedule_once(lambda dt: self.mostrar_popup("No hay pagos pendientes", "No quedan pagos que procesar."))
+            return
+
+        tz = timezone('America/Mexico_City')
+        current_time = datetime.now(tz)
+
+        # Procesar cada ticket
+        for ticket in tickets:
+            id_ticket = ticket['id_ticket']
+            estado_apoyo = ticket['estado_apoyo']
+
+            # Validar que el apoyo no esté congelado o cancelado
+            if estado_apoyo in ['Congelado', 'Cancelado']:
+                print(f"El ticket {id_ticket} no puede ser procesado porque el apoyo está en estado '{estado_apoyo}'.")
+                continue
+
+            # Marcar el ticket como pagado
+            update_query = """
+            UPDATE tickets_pago
+            SET estado = 'Pagado', fecha_pago = ?
+            WHERE id_ticket = ?
+            """
+            cursor.execute(update_query, (current_time, id_ticket,))
+            print(f"El ticket {id_ticket} ha sido marcado como pagado.")
+
+        # Confirmar los cambios en la base de datos
+        conexion.commit()
+        print("Todos los pagos automáticos han sido procesados.")
+
+        # Mostrar popup de éxito después de que la función termine
+        Clock.schedule_once(lambda dt: self.mostrar_popup("Pagos procesados", "Todos los pagos automáticos han sido procesados con éxito."))
+
+
+        # Cerrar la conexión a la base de datos
+        cursor.close()
+        conexion.close()
+
+    def insertar_apoyos(self, instance):
+
+        conexion = get_connection()
+        cursor = conexion.cursor()
+        tz = timezone('America/Mexico_City')
+        current_time = datetime.now(tz)
+        # Definir la consulta
+        query = """
+        INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo, observaciones, numero_cuenta, fecha_solicitud)
+        SELECT 
+            CASE 
+                WHEN c.nivelEducativo = 'Inicial' THEN (
+                    SELECT TOP 1 id_apoyo 
+                    FROM apoyo_economico 
+                    WHERE tipo_apoyo = 'Educador Comunitario de Inicial (EC)'
+                )
+                WHEN c.nivelEducativo IN ('Preescolar', 'Primaria', 'Secundaria') THEN (
+                    SELECT TOP 1 id_apoyo 
+                    FROM apoyo_economico 
+                    WHERE tipo_apoyo = 'Educador Comunitario de Preescolar, Primaria y Secundaria (EC)'
+                )
+                ELSE NULL
+            END AS id_apoyo,
+            aac.id_Aspirante AS id_educador,
+            'Pendiente' AS estado_apoyo,
+            NULL AS observaciones,
+            NULL AS numero_cuenta,
+            ? AS fecha_solicitud
+        FROM AsignacionAspiranteCCT aac
+        JOIN CCT c ON aac.claveCentro = c.claveCentro
+        WHERE c.nivelEducativo IN ('Inicial', 'Preescolar', 'Primaria', 'Secundaria')
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM apoyo_educador ae
+            WHERE ae.id_apoyo = (
+                CASE 
+                    WHEN c.nivelEducativo = 'Inicial' THEN (
+                        SELECT TOP 1 id_apoyo 
+                        FROM apoyo_economico 
+                        WHERE tipo_apoyo = 'Educador Comunitario de Inicial (EC)'
+                    )
+                    WHEN c.nivelEducativo IN ('Preescolar', 'Primaria', 'Secundaria') THEN (
+                        SELECT TOP 1 id_apoyo 
+                        FROM apoyo_economico 
+                        WHERE tipo_apoyo = 'Educador Comunitario de Preescolar, Primaria y Secundaria (EC)'
+                    )
+                    ELSE NULL
+                END
+            )
+            AND ae.id_educador = aac.id_Aspirante
+        );
+        """
+
+        try:
+            # Ejecutar la consulta
+            cursor.execute(query, (current_time,))
+            conexion.commit()
+
+            # Mostrar un mensaje de éxito
+            success_popup = Popup(
+                title="Éxito",
+                content=Label(text="Se han asignado los apoyos económicos a los educadores nuevos."),
+                size_hint=(0.6, 0.4)
+            )
+            success_popup.open()
+
+
+        except pyodbc.Error as e:
+            # Mostrar un mensaje de error si algo falla
+            error_popup = Popup(
+                title="Error",
+                content=Label(text=f"Hubo un error al asignar los apoyos: {str(e)}"),
+                size_hint=(0.6, 0.4)
+            )
+            error_popup.open()
+
 
 class ApoyosSolicitadosScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
@@ -1145,7 +1345,7 @@ class LoginApp(App):
         screen_equipamiento.add_widget(EquipamientoScreen())
         sm.add_widget(screen_equipamiento)
 
-        sm.current = 'vista_control_escolar'
+        sm.current = 'login'
 
         return sm
 

@@ -9,8 +9,20 @@ from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle
-from db_connection import execute_query
-from db_connection import execute_non_query
+from datetime import datetime
+from pytz import timezone
+from datetime import datetime
+
+
+import mysql.connector
+import pyodbc
+
+# Datos de conexión
+server = 'conafe-server.database.windows.net'
+database = 'conafe-database'
+username = 'admin-conafe'
+password = 'MateriaAcaba08/01/25'
+driver = '{ODBC Driver 18 for SQL Server}'
 
 class SolicitarApoyoWindow(BoxLayout):
     def __init__(self, id_educador,**kwargs):
@@ -24,6 +36,9 @@ class SolicitarApoyoWindow(BoxLayout):
         self.bind(size=self._update_rect, pos=self._update_rect)
 
         self.id_educador = id_educador  # ID de usuario predeterminado
+        self.conexion = pyodbc.connect(f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}')
+        self.cursor = self.conexion.cursor()
+
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -45,7 +60,7 @@ class SolicitarApoyoWindow(BoxLayout):
 
         # Obtener datos de 'apoyo_economico'
         self.cursor.execute("SELECT * FROM apoyo_economico")
-        apoyos = self.cursor.fetchall()
+        apoyos = self.fetch_as_dict(self.cursor, fetch_one=False) 
 
         for apoyo in apoyos:
             grid.add_widget(Label(text=apoyo['claveApoyo']))
@@ -59,6 +74,24 @@ class SolicitarApoyoWindow(BoxLayout):
 
         scroll_view.add_widget(grid)
         self.add_widget(scroll_view)
+
+    def fetch_as_dict(self, cursor, fetch_one=False):
+        """
+        Convierte los resultados de una consulta de cursor en un diccionario o lista de diccionarios.
+
+        Args:
+            cursor: El cursor ejecutado de la consulta SQL.
+            fetch_one (bool): Si es True, usa fetchone; si es False, usa fetchall.
+
+        Returns:
+            dict o list[dict]: Diccionario si fetch_one es True, lista de diccionarios si es False.
+        """
+        columns = [column[0] for column in cursor.description]
+        if fetch_one:
+            row = cursor.fetchone()
+            return dict(zip(columns, row)) if row else None
+        else:
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     def create_navigation_bar(self):
         # Crear el BoxLayout para la barra de navegación
@@ -110,40 +143,46 @@ class SolicitarApoyoWindow(BoxLayout):
         popup.open()
 
     def solicitar_apoyo(self, apoyo):
-        """Solicita un apoyo para el educador si aún no lo tiene."""
         # Verificar si el usuario ya tiene un apoyo
-        query = "SELECT * FROM apoyo_educador WHERE id_educador = %s"
-        resultado = execute_query(query, (self.id_educador,))
+        query = "SELECT * FROM apoyo_educador WHERE id_educador = ?"
+        self.cursor.execute(query, (self.id_educador,))
+        resultado = self.fetch_as_dict(self.cursor, fetch_one=False)
 
         print("Apoyos con los que ya cuenta el usuario:", resultado)
 
-        # Verificar si el usuario ya tiene el apoyo solicitado
+        tiene_beca = False
         for result in resultado:
-            if result['id_apoyo'] == apoyo['id_apoyo']:
-                # Mostrar mensaje de error si el apoyo ya existe
-                popup = Popup(
-                    title='Error',
-                    content=Label(text='Ya cuentas con este apoyo.'),
-                    size_hint=(0.6, 0.4)
-                )
+            id_apoyo_resultado = result['id_apoyo']
+
+            # Verificar si el usuario ya el apoyo solicitado
+            if id_apoyo_resultado == apoyo['id_apoyo']:
+                # El usuario ya tiene un apoyo
+                popup = Popup(title='Error',
+                            content=Label(text='Ya cuentas con este apoyo.'),
+                            size_hint=(0.6, 0.4))
                 popup.open()
-                return
+                tiene_beca = True
+                break
 
-        # Insertar el nuevo apoyo para el usuario
-        insert_query = """
-            INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo)
-            VALUES (%s, %s, 'pendiente')
-        """
-        execute_non_query(insert_query, (apoyo['id_apoyo'], self.id_educador))
+        if not tiene_beca:
+            # Insertar el nuevo apoyo para el usuario
+            # Zona horaria específica
+            tz = timezone('America/Mexico_City')
+            current_time = datetime.now(tz)
+            print(current_time)
+            insert_query = "INSERT INTO apoyo_educador (id_apoyo, id_educador, estado_apoyo, fecha_solicitud) VALUES (?, ?, 'Pendiente', ?)"
+            self.cursor.execute(insert_query, (apoyo['id_apoyo'], self.id_educador, current_time))
+            self.conexion.commit()
 
-        # Mostrar mensaje de éxito
-        popup = Popup(
-            title='Éxito',
-            content=Label(text='Has solicitado el apoyo exitosamente.'),
-            size_hint=(0.6, 0.4)
-        )
-        popup.open()
+            popup = Popup(title='Éxito',
+                    content=Label(text='Has solicitado el apoyo exitosamente.'),
+                    size_hint=(0.6, 0.4))
+            popup.open()
 
+    def on_stop(self):
+        self.cursor.close()
+        self.conexion.close()
+        
     def go_back(self, instance):
         App.get_running_app().root.current = 'lec'
 

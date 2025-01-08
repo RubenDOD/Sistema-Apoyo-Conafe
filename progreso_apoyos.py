@@ -1,15 +1,28 @@
+import kivy
 from kivy.app import App
+from kivy.graphics import Line
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
+from kivy.uix.popup import Popup
 from datetime import datetime
 from kivy.uix.image import Image
-from db_connection import execute_query
+from kivy.uix.gridlayout import GridLayout
+from kivy.properties import StringProperty, NumericProperty
+import mysql.connector
 import json
 from datetime import datetime
 from kivy.graphics import Color, Rectangle
+import pyodbc
+
+# Datos de conexión
+server = 'conafe-server.database.windows.net'
+database = 'conafe-database'
+username = 'admin-conafe'
+password = 'MateriaAcaba08/01/25'
+driver = '{ODBC Driver 18 for SQL Server}'
 
 class BecaProgresoWindow(BoxLayout):
     # id_educador = NumericProperty(0)
@@ -30,6 +43,9 @@ class BecaProgresoWindow(BoxLayout):
         print(f"ID del apoyo: {self.id_apoyo}")
         # self.id_educador = 1  # ID del usuario que verá el progreso
 
+        self.conexion = pyodbc.connect(f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}')
+        self.cursor = self.conexion.cursor()
+
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -38,12 +54,27 @@ class BecaProgresoWindow(BoxLayout):
         # Título
         self.add_widget(Label(text='Progreso de Beca', size_hint_y=None, height=40))
 
+        # Observaciones
+        self.query = """
+        SELECT
+            observaciones
+        FROM apoyo_educador
+        WHERE id_apoyo = ? AND id_educador = ?
+        """
+
+        self.cursor.execute(self.query, (self.id_apoyo, self.id_educador))
+        self.observaciones = self.fetch_as_dict(self.cursor, fetch_one=True)
+
+        self.add_widget(Label(text='Observaciones:', size_hint_y=None, height=40))
+        self.add_widget(Label(text=self.observaciones['observaciones'], size_hint_y=None, height=40))
+
         # Contenedor con scroll para el progreso
         scroll_view = ScrollView()
         self.progreso_layout = BoxLayout(orientation='vertical', padding=10, spacing=10, size_hint_y=None)
         self.progreso_layout.bind(minimum_height=self.progreso_layout.setter('height'))
         scroll_view.add_widget(self.progreso_layout)
         self.add_widget(scroll_view)
+
 
         # Cargar datos
         self.cargar_datos()
@@ -55,6 +86,7 @@ class BecaProgresoWindow(BoxLayout):
             # Dibujar el fondo de la barra de navegación
             Color(0.06, 0.45, 0.45, 1)  # Color verde azulado
             self.rect = Rectangle(size=nav_bar.size, pos=nav_bar.pos)
+
 
         # Asegurar que el fondo se actualice con el tamaño y posición
         nav_bar.bind(size=self._update_rect, pos=self._update_rect)
@@ -79,99 +111,93 @@ class BecaProgresoWindow(BoxLayout):
 
         return nav_bar
     
+    def fetch_as_dict(self, cursor, fetch_one=False):
+        """
+        Convierte los resultados de una consulta de cursor en un diccionario o lista de diccionarios.
+
+        Args:
+            cursor: El cursor ejecutado de la consulta SQL.
+            fetch_one (bool): Si es True, usa fetchone; si es False, usa fetchall.
+
+        Returns:
+            dict o list[dict]: Diccionario si fetch_one es True, lista de diccionarios si es False.
+        """
+        columns = [column[0] for column in cursor.description]
+        if fetch_one:
+            row = cursor.fetchone()
+            return dict(zip(columns, row)) if row else None
+        else:
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
     def _update_rect(self, *args):
         self.rect.size = self.size
         self.rect.pos = self.pos
 
     def cargar_datos(self):
-        # Consulta para obtener la información del apoyo
+        # Consulta para obtener los tickets de pago
         query = """
         SELECT 
-            ae.estado_apoyo,
-            ae.numero_cuenta,
-            aeco.tipo_apoyo,
-            aeco.monto_apoyo,
-            aeco.fecha_inicio,
-            aeco.periodo_entrega_meses,
-            aeco.meses_entrega
-        FROM apoyo_educador ae
-        JOIN apoyo_economico aeco ON ae.id_apoyo = aeco.id_apoyo
-        WHERE ae.id_educador = %s AND ae.estado_apoyo = 'Aceptado'
-        AND ae.id_apoyo = %s
+            tp.mes,
+            tp.monto,
+            tp.estado,
+            tp.fecha_pago
+        FROM tickets_pago tp
+        WHERE tp.id_educador = ? AND tp.id_apoyo = ?
+        ORDER BY 
+            CASE tp.mes
+                WHEN 'Enero' THEN 1
+                WHEN 'Febrero' THEN 2
+                WHEN 'Marzo' THEN 3
+                WHEN 'Abril' THEN 4
+                WHEN 'Mayo' THEN 5
+                WHEN 'Junio' THEN 6
+                WHEN 'Julio' THEN 7
+                WHEN 'Agosto' THEN 8
+                WHEN 'Septiembre' THEN 9
+                WHEN 'Octubre' THEN 10
+                WHEN 'Noviembre' THEN 11
+                WHEN 'Diciembre' THEN 12
+            END ASC
         """
-        apoyo = execute_query(query, (self.id_educador, self.id_apoyo))
-        
-        print(f"Apoyo obtenido: {apoyo}")   
-        if not apoyo:
-            self.progreso_layout.add_widget(Label(text="El apoyo aún no es aceptado por el departamento de apoyos.", size_hint_y=None, height=40))
+        self.cursor.execute(query, (self.id_educador, self.id_apoyo))
+        tickets = self.fetch_as_dict(self.cursor, fetch_one=False)
+
+        if not tickets:
+            self.progreso_layout.add_widget(Label(text="No se han generado tickets para este apoyo.", size_hint_y=None, height=40))
             return
 
-        # Mostrar información del apoyo
-        self.progreso_layout.add_widget(Label(text=f"Tipo de Apoyo: {apoyo['tipo_apoyo']}", size_hint_y=None, height=30))
-        self.progreso_layout.add_widget(Label(text=f"Monto Mensual: ${apoyo['monto_apoyo']}", size_hint_y=None, height=30))
-        self.progreso_layout.add_widget(Label(text=f"Monto total: {apoyo['periodo_entrega_meses'] * apoyo['monto_apoyo']}", size_hint_y=None, height=30))
-        self.progreso_layout.add_widget(Label(text=f"Fecha de Inicio: {apoyo['fecha_inicio']}", size_hint_y=None, height=30))
-        self.progreso_layout.add_widget(Label(text=f"Periodo de Entrega: {apoyo['periodo_entrega_meses']} meses", size_hint_y=None, height=30))
-        self.progreso_layout.add_widget(Label(text=f"Número de Cuenta: {apoyo['numero_cuenta']}", size_hint_y=None, height=30))
+        # Mostrar los tickets en un formato de lista
+        self.progreso_layout.add_widget(Label(text="Tickets de Pago:", size_hint_y=None, height=40))
 
-        # Calcular progreso
-        try:
-            meses_entrega = json.loads(apoyo['meses_entrega'])
-        except (TypeError, json.JSONDecodeError):
-            meses_entrega = []
+        for ticket in tickets:
+            # Crear un layout horizontal para mostrar cada ticket
+            ticket_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
 
-        total_meses = apoyo['periodo_entrega_meses']
+            # Mes del ticket
+            ticket_layout.add_widget(Label(text=f"Mes: {ticket['mes']}", size_hint_x=0.3))
 
-        meses_map = {
-            "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-            "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-            "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
-        }
+            # Monto del ticket
+            ticket_layout.add_widget(Label(text=f"Monto: ${ticket['monto']:.2f}", size_hint_x=0.2))
 
-        # Obtener el mes actual
-        mes_actual = datetime.now().month
-        print(f"Mes actual (número): {mes_actual}")
+            # Estado del ticket
+            estado = ticket['estado']
+            estado_label = Label(text=f"Estado: {estado}", size_hint_x=0.3)
+            if estado == "Pagado":
+                estado_label.color = (0, 1, 0, 1)  # Verde
+            elif estado == "Pendiente":
+                estado_label.color = (1, 1, 0, 1)  # Amarillo
+            elif estado == "Cancelado":
+                estado_label.color = (1, 0, 0, 1)  # Rojo
+            ticket_layout.add_widget(estado_label)
 
-        # Convertir los nombres a números y filtrar los meses pagados
-        meses_pagados = [mes for mes in meses_entrega if meses_map[mes.lower()] <= mes_actual]
+            # Fecha de pago (si el estado es pagado)
+            if estado == "Pagado":
+                ticket_layout.add_widget(Label(text=f"Pagado el: {ticket['fecha_pago']}", size_hint_x=0.4))
+            else:
+                ticket_layout.add_widget(Label(text="", size_hint_x=0.4))
 
-        meses_pagados_len = len(meses_pagados)
-        progreso = (meses_pagados_len / total_meses) * 100 if total_meses > 0 else 0
-
-        # Mostrar barra de progreso
-        self.progreso_layout.add_widget(Label(text="Progreso de Pagos:", size_hint_y=None, height=80))
-        progress_bar = ProgressBar(value=progreso, max=100, size_hint_y=None, height=200)
-        self.progreso_layout.add_widget(progress_bar)
-
-        # Mostrar detalles de pagos realizados
-        for mes in meses_pagados:
-            # Crear un layout horizontal para el texto y la imagen
-            mes_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=30, spacing=-5)
-
-            # Etiqueta con el nombre del mes
-            mes_label = Label(
-                text=f"Pago realizado en: {mes}",
-                size_hint_x=0.5,  # Deja menos espacio horizontal para el texto
-                halign="center",  # Alinea el texto a la izquierda
-                valign="middle"  # Alinea verticalmente en el centro
-            )
-            mes_label.bind(size=mes_label.setter('text_size'))  # Ajusta el tamaño del texto al contenedor
-
-            # Imagen de palomita
-            check_icon = Image(
-                source='check.png',
-                size_hint_x= 0.5,  # Deshabilita la proporción horizontal automática
-                size_hint_y= None,  # Deshabilita la proporción vertical automática
-                height=25,  # Tamaño más pequeño
-                width=1  # Tamaño más pequeño
-            )
-
-            # Agregar el texto y la imagen al layout
-            mes_layout.add_widget(mes_label)
-            mes_layout.add_widget(check_icon)
-
-            # Agregar el layout al progreso_layout
-            self.progreso_layout.add_widget(mes_layout)
+            # Agregar el layout del ticket a la vista
+            self.progreso_layout.add_widget(ticket_layout)
 
     def cerrar_app(self, instance):
         self.stop()
@@ -182,6 +208,8 @@ class BecaProgresoWindow(BoxLayout):
     
     def go_back(self, instance):
         App.get_running_app().root.current = 'apoyos_economicos'
+
+    
 
 class BecaProgresoApp(App):
     def build(self):

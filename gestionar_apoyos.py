@@ -1,3 +1,4 @@
+import json
 import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -10,12 +11,21 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
 import re
-from db_connection import execute_query
-from db_connection import execute_non_query
+import mysql.connector
+import pyodbc
+
+# Datos de conexión
+server = 'conafe-server.database.windows.net'
+database = 'conafe-database'
+username = 'admin-conafe'
+password = 'MateriaAcaba08/01/25'
+driver = '{ODBC Driver 18 for SQL Server}'
 
 class ApoyosSolicitadosWindow(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, id_Usuario = None,**kwargs):
         super().__init__(**kwargs)
+
+        self.id_Usuario = id_Usuario
 
         with self.canvas.before:
             # Define el color (R, G, B, A)
@@ -23,6 +33,10 @@ class ApoyosSolicitadosWindow(BoxLayout):
             self.rect = Rectangle(size=self.size, pos=self.pos)
         # Actualiza el rectángulo cuando el tamaño o posición cambian
         self.bind(size=self._update_rect, pos=self._update_rect)
+
+        self.conexion = pyodbc.connect(f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}')
+        self.cursor = self.conexion.cursor()
+
         self.orientation = 'vertical'
 
         # Barra de navegación superior
@@ -73,6 +87,25 @@ class ApoyosSolicitadosWindow(BoxLayout):
         self.rect.size = self.size
         self.rect.pos = self.pos
 
+    def fetch_as_dict(self, cursor, fetch_one=False):
+        """
+        Convierte los resultados de una consulta de cursor en un diccionario o lista de diccionarios.
+
+        Args:
+            cursor: El cursor ejecutado de la consulta SQL.
+            fetch_one (bool): Si es True, usa fetchone; si es False, usa fetchall.
+
+        Returns:
+            dict o list[dict]: Diccionario si fetch_one es True, lista de diccionarios si es False.
+        """
+        columns = [column[0] for column in cursor.description]
+        if fetch_one:
+            row = cursor.fetchone()
+            return dict(zip(columns, row)) if row else None
+        else:
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
     def crear_grid_apoyos(self):
         # Limpiar el contenido anterior del scroll_view
         self.scroll_view.clear_widgets()
@@ -81,7 +114,8 @@ class ApoyosSolicitadosWindow(BoxLayout):
         grid.bind(minimum_height=grid.setter('height'))
 
         # Encabezados de tabla
-        grid.add_widget(Label(text='ID Apoyo', bold=True))
+        # grid.add_widget(Label(text='ID Apoyo', bold=True))
+        grid.add_widget(Label(text='Fehca de Solicitud', bold=True))
         grid.add_widget(Label(text='Clave del Apoyo', bold=True))
         grid.add_widget(Label(text='Aspirante', bold=True))
         grid.add_widget(Label(text='Estado Actual', bold=True))
@@ -95,18 +129,20 @@ class ApoyosSolicitadosWindow(BoxLayout):
             aeco.claveApoyo,
             u.correo AS aspirante_correo,
             u.id_Usuario AS id_educador,
-            ae.estado_apoyo
+            ae.estado_apoyo,
+            ae.fecha_solicitud
         FROM apoyo_educador ae
         JOIN apoyo_economico aeco ON ae.id_apoyo = aeco.id_apoyo
         JOIN Usuario u ON ae.id_educador = u.id_Usuario
         """
-        apoyos = execute_query(query)
+        self.cursor.execute(query)
+        apoyos =self.fetch_as_dict(self.cursor, fetch_one=False)
 
         # Lista de estados posibles
         estados = ['Aceptado', 'Rechazado', 'Congelado']
 
         for apoyo in apoyos:
-            grid.add_widget(Label(text=str(apoyo['id_apoyo'])))
+            grid.add_widget(Label(text=str(apoyo['fecha_solicitud'])))
             grid.add_widget(Label(text=apoyo['claveApoyo']))
 
             # Botón "Ver" para mostrar información del aspirante
@@ -146,10 +182,12 @@ class ApoyosSolicitadosWindow(BoxLayout):
         FROM Usuario u 
         JOIN LEC maestro ON u.id_Usuario = maestro.id_Usuario
         JOIN Aspirante ON maestro.id_Usuario = Aspirante.id_Aspirante
-        WHERE u.id_Usuario = %s
+        WHERE u.id_Usuario = ?
         """
-        aspirante = execute_query(query, (id_educador,))
+        self.cursor.execute(query, (id_educador,))
+        aspirante = self.fetch_as_dict(self.cursor, fetch_one=True)
 
+        print("Aspirante:", aspirante)
         if aspirante:
             contenido = BoxLayout(orientation='vertical', spacing=10, padding=10)
             contenido.add_widget(Label(text=f"Correo: {aspirante['correo']}"))
@@ -187,11 +225,6 @@ class ApoyosSolicitadosWindow(BoxLayout):
         observaciones_input = TextInput(hint_text="Escribe aquí...", multiline=True, size_hint_y=None, height=100)
         contenido.add_widget(observaciones_input)
 
-        contenido.add_widget(Label(text="Fecha de pago (YYYY-MM-DD):"))
-        fecha_pago_input = TextInput(hint_text="YYYY-MM-DD", size_hint_y=None, height=40)  # Cambiar número de cuenta por fecha
-        contenido.add_widget(fecha_pago_input)
-
-
         btn_confirmar = Button(text='Confirmar', size_hint_y=None, height=40)
         btn_cancelar = Button(text='Cancelar', size_hint_y=None, height=40)
 
@@ -203,13 +236,13 @@ class ApoyosSolicitadosWindow(BoxLayout):
 
         popup = Popup(title="Cambiar Estado", content=contenido, size_hint=(0.8, 0.6))
 
-        btn_confirmar.bind(on_release=lambda btn: self.cambiar_estado(apoyo, nuevo_estado, observaciones_input.text, fecha_pago_input.text, popup))
+        btn_confirmar.bind(on_release=lambda btn: self.cambiar_estado(apoyo, nuevo_estado, observaciones_input.text, popup))
         btn_cancelar.bind(on_release=popup.dismiss)
 
         popup.open()
 
     
-    def cambiar_estado(self, apoyo, nuevo_estado, observaciones, fecha_pago, popup):
+    def cambiar_estado(self, apoyo, nuevo_estado, observaciones, popup):
         # Validar campos
         
         if not observaciones.strip():
@@ -221,28 +254,46 @@ class ApoyosSolicitadosWindow(BoxLayout):
             error_popup.open()
             return
 
-        def fecha_valida(fecha):
-            # Validar el formato de fecha como YYYY-MM-DD
-            patron = r"^\d{4}-\d{2}-\d{2}$"
-            return re.match(patron, fecha) is not None
-        
-        if not fecha_valida(fecha_pago):
-            error_popup = Popup(
-                title="Error",
-                content=Label(text="Fecha inválida. Usa el formato YYYY-MM-DD."),
-                size_hint=(0.6, 0.4)
-            )
-            error_popup.open()
-            return
+        # Obtener el estado anterior del apoyo
+        estado_anterior = apoyo['estado_apoyo']
 
         # Actualizar el estado, las observaciones y el número de cuenta en la base de datos
         update_query = """
         UPDATE apoyo_educador
-        SET estado_apoyo = %s, observaciones = %s, fecha_pago = %s
-        WHERE id_apoyo = %s AND id_educador = %s
+        SET estado_apoyo = ?, observaciones = ?
+        WHERE id_apoyo = ? AND id_educador = ?
         """
-        execute_non_query(update_query, (nuevo_estado, observaciones, fecha_pago, apoyo['id_apoyo'], apoyo['id_educador']))
+        self.cursor.execute(update_query, (nuevo_estado, observaciones, apoyo['id_apoyo'], apoyo['id_educador']))
         self.conexion.commit()
+
+        # Insertar el cambio en la tabla cambios_estado_solicitud
+        insert_cambio_query = """
+        INSERT INTO cambios_estado_solicitud (id_apoyo, id_educador, estado_anterior, estado_actual, fecha_cambio, usuario_responsable, comentario)
+        VALUES (?, ?, ?, ?, GETDATE(), ?, ?)
+        """
+        usuario_responsable = self.id_Usuario
+        self.cursor.execute(insert_cambio_query, (
+            apoyo['id_apoyo'],        # ID del apoyo
+            apoyo['id_educador'],    # ID del educador
+            estado_anterior,         # Estado anterior
+            nuevo_estado,            # Nuevo estado
+            usuario_responsable,     # Usuario que realizó el cambio
+            observaciones            # Comentarios
+        ))
+        self.conexion.commit()
+
+        # Modificar el estado de los tickets si el apoyo fue congelado
+        if nuevo_estado == 'Congelado':
+            if estado_anterior == 'Aceptado':
+                self.actualizar_tickets_estado(apoyo['id_apoyo'], apoyo['id_educador'], 'Pendiente')
+
+        # Generar los tickets si el apoyo es aprobado
+        if nuevo_estado == 'Aceptado':
+            if estado_anterior != 'Aceptado':
+                self.generar_tickets(apoyo['id_educador'], apoyo['id_apoyo'])
+            else:
+                self.actualizar_tickets_estado(apoyo['id_apoyo'], apoyo['id_educador'], 'Pendiente')
+
 
         popup.dismiss()
 
@@ -256,6 +307,58 @@ class ApoyosSolicitadosWindow(BoxLayout):
 
         # Refrescar la lista de apoyos
         self.crear_grid_apoyos()
+
+
+    def actualizar_tickets_estado(self, id_apoyo, id_educador, nuevo_estado):
+        # Cambiar el estado de los tickets dependiendo del estado del apoyo
+        estado_ticket = 'Cancelado' if nuevo_estado == 'Cancelado' else 'Pendiente'
+
+        update_query = """
+        UPDATE tickets_pago
+        SET estado = ?
+        WHERE id_apoyo = ? AND id_educador = ? AND estado = 'Pendiente'
+        """
+        self.cursor.execute(update_query, (estado_ticket, id_apoyo, id_educador))
+        self.conexion.commit()
+
+        print(f"Tickets actualizados a estado: {estado_ticket}.")
+
+    def generar_tickets(self, id_educador, id_apoyo):
+        # Consultar información del apoyo
+        query = """
+        SELECT 
+            aeco.monto_apoyo,
+            aeco.meses_entrega,
+            ae.estado_apoyo
+        FROM apoyo_educador ae
+        JOIN apoyo_economico aeco ON ae.id_apoyo = aeco.id_apoyo
+        WHERE ae.id_educador = ? AND ae.id_apoyo = ?
+        """
+        self.cursor.execute(query, (id_educador, id_apoyo))
+        apoyo = self.fetch_as_dict(self.cursor, fetch_one=True)
+
+        if not apoyo or apoyo['estado_apoyo'] != 'Aceptado':
+            print("No se pueden generar tickets: el apoyo no está aceptado.")
+            return
+
+        # Generar un ticket por cada mes del periodo de entrega
+        meses_entrega = json.loads(apoyo['meses_entrega'])  # Lista de meses como "Enero", "Febrero", etc.
+        monto_apoyo = apoyo['monto_apoyo']
+
+        for mes in meses_entrega:
+            # Insertar el ticket en la base de datos
+            insert_ticket_query = """
+            INSERT INTO tickets_pago (id_educador, id_apoyo, mes, monto)
+            VALUES (?, ?, ?, ?)
+            """
+            self.cursor.execute(insert_ticket_query, (id_educador, id_apoyo, mes, monto_apoyo))
+
+        self.conexion.commit()
+        print("Tickets generados exitosamente.")
+
+    def on_stop(self):
+        self.cursor.close()
+        self.conexion.close()
 
     def go_back(self, instance):
         App.get_running_app().root.current = 'departamento_becas'

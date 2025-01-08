@@ -5,7 +5,7 @@ SERVER = 'conafe-server.database.windows.net'  # Servidor
 DATABASE = 'conafe-database'                  # Nombre de la base de datos
 USERNAME = 'admin-conafe'                     # Usuario administrador
 PASSWORD = 'MateriaAcaba08/01/25'             # Contraseña
-DRIVER = '{ODBC Driver 17 for SQL Server}'    # Driver ODBC
+DRIVER = '{ODBC Driver 18 for SQL Server}'    # Driver ODBC
 
 def get_connection():
     """
