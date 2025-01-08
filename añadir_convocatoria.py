@@ -118,7 +118,7 @@ class AddConvoScreen(Screen):
                 # Inserta la convocatoria con el estado "Cerrada"
                 sql = """
                     INSERT INTO ConvocatoriaActual (nombre_convocatoria, url_convocatoria, url_forms, estado_convocatoria)
-                    VALUES (%s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?)
                 """
                 data = (nombre_convocatoria, self.url_documento, self.url_forms, 'Cerrada')
 

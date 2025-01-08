@@ -40,8 +40,12 @@ class EstimacionTallasScreen(BoxLayout):
             self.show_popup("Error", "Por favor, complete ambos campos correctamente.")
 
     def round_to_nearest_100(self, value):
-        """Redondea el valor al múltiplo de 100 más cercano, con un mínimo de 100."""
-        return max(100, round(value / 100) * 100)
+        """Redondea el valor al múltiplo de 100 más cercano, o a múltiplos de 10 si es menor a 300."""
+        if value < 300:
+            return max(10, round(value / 10) * 10)
+        else:
+            return max(100, round(value / 100) * 100)
+
 
     def fetch_and_calculate(self, units, state):
         """Busca los datos en la base de datos y realiza los cálculos."""
@@ -56,17 +60,16 @@ class EstimacionTallasScreen(BoxLayout):
                 WHERE ESTADO = ?
             """
             row = execute_query(query, (state,))
-
-            if not row:
-                return "No se encontraron datos para el estado seleccionado."
-
             row = row[0]
+
+
+
 
             # Calcular tallas de cuerpo
             resultados = {
-                "CUERPO_CHICO": self.round_to_nearest_100(row["CUERPO_CHICO"] * units / 100),
-                "CUERPO_MEDIANO": self.round_to_nearest_100(row["CUERPO_MEDIANO"] * units / 100),
-                "CUERPO_GRANDE": self.round_to_nearest_100(row["CUERPO_GRANDE"] * units / 100),
+                "CUERPO_CHICO": self.round_to_nearest_100(row[0] * units / 100),
+                "CUERPO_MEDIANO": self.round_to_nearest_100(row[1] * units / 100),
+                "CUERPO_GRANDE": self.round_to_nearest_100(row[2] * units / 100),
             }
 
             # Distribuir calzado: 48% hombres, 52% mujeres
@@ -75,12 +78,12 @@ class EstimacionTallasScreen(BoxLayout):
             calzado_mujeres = calzado_total * 0.52
 
             resultados.update({
-                "CALZADO_H_MENOR": self.round_to_nearest_100(row["CALZADO_H_MENOR"] * calzado_hombres / 100),
-                "CALZADO_H_MEDIO": self.round_to_nearest_100(row["CALZADO_H_MEDIO"] * calzado_hombres / 100),
-                "CALZADO_H_MAYOR": self.round_to_nearest_100(row["CALZADO_H_MAYOR"] * calzado_hombres / 100),
-                "CALZADO_M_MENOR": self.round_to_nearest_100(row["CALZADO_M_MENOR"] * calzado_mujeres / 100),
-                "CALZADO_M_MEDIO": self.round_to_nearest_100(row["CALZADO_M_MEDIO"] * calzado_mujeres / 100),
-                "CALZADO_M_MAYOR": self.round_to_nearest_100(row["CALZADO_M_MAYOR"] * calzado_mujeres / 100),
+                "CALZADO_H_MENOR": self.round_to_nearest_100(row[3] * calzado_hombres / 100),
+                "CALZADO_H_MEDIO": self.round_to_nearest_100(row[4] * calzado_hombres / 100),
+                "CALZADO_H_MAYOR": self.round_to_nearest_100(row[5] * calzado_hombres / 100),
+                "CALZADO_M_MENOR": self.round_to_nearest_100(row[6] * calzado_mujeres / 100),
+                "CALZADO_M_MEDIO": self.round_to_nearest_100(row[7] * calzado_mujeres / 100),
+                "CALZADO_M_MAYOR": self.round_to_nearest_100(row[8] * calzado_mujeres / 100),
             })
 
             # Organiza los resultados

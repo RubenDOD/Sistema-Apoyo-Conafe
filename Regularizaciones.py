@@ -51,7 +51,7 @@ class Regularizaciones(BoxLayout):
         JOIN
             Calificaciones c ON c.id_alumno = a.CURP
         WHERE 
-            ac.id_CCT = %s AND cg.nombre_grupo = %s
+            ac.id_CCT = ? AND cg.nombre_grupo = ?
             AND c.calificacion < 6
         GROUP BY
             a.CURP
@@ -103,7 +103,7 @@ class Regularizaciones(BoxLayout):
         SELECT c.id_calificacion, m.nombre_materia, c.calificacion, c.fecha_registro
         FROM Calificaciones c
         JOIN Materias m ON c.id_materia = m.id_materia
-        WHERE c.id_alumno = %s AND c.calificacion < 6
+        WHERE c.id_alumno = ? AND c.calificacion < 6
         """
         try:
             rows = execute_query(query, (curp,))
@@ -189,7 +189,7 @@ class Regularizaciones(BoxLayout):
             self.show_error("Por favor, ingresa un valor válido.")
             return
 
-        query = "UPDATE Calificaciones SET calificacion = %s WHERE id_calificacion = %s"
+        query = "UPDATE Calificaciones SET calificacion = ? WHERE id_calificacion = ?"
         try:
             execute_non_query(query, (nueva_calificacion, id_calificacion))
             self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")

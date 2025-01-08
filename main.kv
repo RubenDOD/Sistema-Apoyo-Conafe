@@ -696,6 +696,18 @@
                 on_press: root.gestionar_apoyos(self)
 
             Button:
+                text: 'Procesar pagos del mes actual'
+                size_hint_y: None
+                height: 50
+                on_press: root.procesar_pagos_automaticos(self)
+
+            Button:
+                text: 'Asignar becas a los nuevo educadores'
+                size_hint_y: None
+                height: 50
+                on_press: root.insertar_apoyos(self)
+
+            Button:
                 text: 'Regresar al Login'
                 size_hint_y: None
                 height: 50
