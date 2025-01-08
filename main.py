@@ -1,6 +1,4 @@
 import re
-import mysql.connector
-import pyodbc
 from kivy.properties import StringProperty
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -253,13 +251,6 @@ class AsignarCCTPracticasScreen(Screen):
     def load_data(self):
         try:
             print("Conectando a la base de datos...")
-            db = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = db.cursor()
 
             # Consulta SQL
             query = """
@@ -278,9 +269,9 @@ class AsignarCCTPracticasScreen(Screen):
                     AND ACCT.id_Aspirante IS NULL -- Asegura que el aspirante no esté asignado a ningún CCT
                     AND U.acceso = 'Aspirante'; -- Asegura que el usuario sea un aspirante
             """
-            cursor.execute(query)
-            aspirantes = cursor.fetchall()
-            db.close()
+
+            # Usar la función execute_query para obtener los datos
+            aspirantes = execute_query(query)
 
             print("Datos recuperados:", aspirantes)
 
@@ -308,42 +299,32 @@ class AsignarCCTPracticasScreen(Screen):
                 self.ids.data_layout.add_widget(action_btn)
 
             self.ids.data_layout.height = self.ids.data_layout.minimum_height
-        except mysql.connector.Error as err:
-            print(f"Error al conectar a la base de datos: {err}")
+        except Exception as e:
+            print(f"Error al conectar a la base de datos: {e}")
+        def go_to_detalle(self, aspirante_id, *args):
+            # Obtén la pantalla DetalleCCTScreen
+            detalle_screen = self.manager.get_screen("mostrar ccts")
 
-    def go_to_detalle(self, aspirante_id, *args):
-        # Obtén la pantalla DetalleCCTScreen
-        detalle_screen = self.manager.get_screen("mostrar ccts")
+            # Limpiar widgets antes de cargar nuevos datos
+            detalle_screen.ids.cct_list.clear_widgets()
 
-        # Limpiar widgets antes de cargar nuevos datos
-        detalle_screen.ids.cct_list.clear_widgets()
+            # Establece el aspirante_id en la pantalla de detalle
+            detalle_screen.load_initial_ccts(aspirante_id)
 
-        # Establece el aspirante_id en la pantalla de detalle
-        detalle_screen.load_initial_ccts(aspirante_id)
-
-        # Cambia a la pantalla de detalle
-        self.manager.current = "mostrar ccts"
+            # Cambia a la pantalla de detalle
+            self.manager.current = "mostrar ccts"
 
     def go_back(self):
         if self.manager:
             self.manager.current = 'vista_direccion_territorial'
 
 class DetalleCCTScreen(Screen):
+    # Modificación del método load_initial_ccts para usar pyodbc
     def load_initial_ccts(self, aspirante_id):
         self.aspirante_id = aspirante_id
-        print(f"Cargando CCT iniciales para aspirante con ID: {aspirante_id}...")  # Debug
         try:
             # Limpiar widgets previos
             self.ids.cct_list.clear_widgets()
-
-            # Conexión a la base de datos
-            db = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = db.cursor()
 
             # Consulta de datos del aspirante
             query_aspirante = """
@@ -357,16 +338,15 @@ class DetalleCCTScreen(Screen):
                     ON ParticipacionAspirante.id_Aspirante = InfoEducativaAspirante.id_Aspirante
                 JOIN Aspirante 
                     ON ParticipacionAspirante.id_Aspirante = Aspirante.id_Aspirante
-                WHERE ParticipacionAspirante.id_Aspirante = %s;
+                WHERE ParticipacionAspirante.id_Aspirante = ?;
             """
-            cursor.execute(query_aspirante, (aspirante_id,))
-            aspirante_data = cursor.fetchone()
+            aspirante_data = execute_query(query_aspirante, (aspirante_id,))
 
             if not aspirante_data:
                 print("No se encontraron datos del aspirante.")  # Debug
                 return
 
-            estado, municipio, nivel_educativo, nombre_completo = aspirante_data
+            estado, municipio, nivel_educativo, nombre_completo = aspirante_data[0]
             estado = estado.replace("CONAFE ", "").strip()
 
             # Si el municipio es "NO SE", o no se encuentra en los CCT, se define como texto vacío
@@ -390,12 +370,10 @@ class DetalleCCTScreen(Screen):
             query_ccts = """
             SELECT claveCentro, nombre, estado, municipio, nivelEducativo, cupos_disponibles
             FROM CCT
-            WHERE estado = %s AND nivelEducativo = %s AND cupos_disponibles > 0
+            WHERE estado = ? AND nivelEducativo = ? AND cupos_disponibles > 0
             ORDER BY estado, municipio;
             """
-            cursor.execute(query_ccts, (estado, nivel_educativo))
-            ccts = cursor.fetchall()
-            db.close()
+            ccts = execute_query(query_ccts, (estado, nivel_educativo))
 
             print("CCT iniciales recuperados:", ccts)  # Debug
 
@@ -463,42 +441,35 @@ class DetalleCCTScreen(Screen):
                 row.add_widget(action_btn)
 
                 self.ids.cct_list.add_widget(row)
-        except mysql.connector.Error as err:
-            print(f"Error al conectar a la base de datos: {err}")
+        except Exception as e:
+            print(f"Error al conectar a la base de datos: {e}")
 
+    # Modificación del método search_ccts para usar pyodbc
     def search_ccts(self, *args):
         estado = self.ids.search_estado.text.strip()
         municipio = self.ids.search_municipio.text.strip()
 
         print(f"Buscando CCTs por Estado: {estado}, Municipio: {municipio}...")  # Debug
         try:
-            db = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = db.cursor()
-
             # Construir consulta dinámica según los campos de búsqueda
             query = """
             SELECT claveCentro, nombre, estado, municipio, nivelEducativo, cupos_disponibles
             FROM CCT
-            WHERE nivelEducativo = %s
+            WHERE nivelEducativo = ?
             """
             params = [self.nivel_educativo]
 
             if estado:
-                query += " AND estado = %s"
+                query += " AND estado = ?"
                 params.append(estado)
             if municipio:
-                query += " AND municipio = %s"
+                query += " AND municipio = ?"
                 params.append(municipio)
 
             query += " ORDER BY estado, municipio;"
-            cursor.execute(query, tuple(params))
-            ccts = cursor.fetchall()
-            db.close()
+            
+            # Ejecutar consulta usando execute_query
+            ccts = execute_query(query, tuple(params))
 
             print("CCTs recuperados:", ccts)  # Debug
 
@@ -524,8 +495,8 @@ class DetalleCCTScreen(Screen):
                 cct_btn.bind(on_release=partial(self.assign_cct_confirm, self.aspirante_id, cct[0]))
                 self.ids.cct_list.add_widget(cct_btn)
 
-        except mysql.connector.Error as err:
-            print(f"Error al buscar CCTs: {err}")
+        except Exception as e:
+            print(f"Error al buscar CCTs: {e}")
 
     def assign_cct_confirm(self, aspirante_id, clave_centro, *args):
         # Mostrar un botón de confirmación
@@ -561,42 +532,32 @@ class DetalleCCTScreen(Screen):
     def assign_cct(self, aspirante_id, clave_centro, *args):
         print(f"Asignando CCT {clave_centro} al aspirante {aspirante_id}...")  # Debug
         try:
-            db = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                passwd='1234',
-                database='CONAFE'
-            )
-            cursor = db.cursor()
-
             # Insertar asignación en la tabla
             query_assign = """
             INSERT INTO AsignacionAspiranteCCT (id_Aspirante, claveCentro, fecha_asignacion)
-            VALUES (%s, %s, CURDATE());
+            VALUES (?, ?, GETDATE());
             """
-            cursor.execute(query_assign, (aspirante_id, clave_centro))
+            execute_non_query(query_assign, (aspirante_id, clave_centro))
 
             # Actualizar cupos disponibles en el CCT
             query_update_cupos = """
-            UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = %s;
+            UPDATE CCT SET cupos_disponibles = cupos_disponibles - 1 WHERE claveCentro = ?;
             """
-            cursor.execute(query_update_cupos, (clave_centro,))
+            execute_non_query(query_update_cupos, (clave_centro,))
 
-            # Actualizar cupos disponibles en el CCT
+            # Actualizar acceso del usuario a LEC
             query_update_LEC = """
-            UPDATE USUARIO SET acceso = 'LEC' WHERE id_Usuario = %s;
+            UPDATE USUARIO SET acceso = 'LEC' WHERE id_Usuario = ?;
             """
-            cursor.execute(query_update_LEC, (aspirante_id,))
-            db.commit()
-            db.close()
+            execute_non_query(query_update_LEC, (aspirante_id,))
 
             print("CCT asignado correctamente.")  # Debug
 
             # Redirigir al usuario al AsignacionCCTPracticasScreen y recargar los datos
             self.manager.current = "asignacion_cct_practicas"
             self.manager.get_screen("asignacion_cct_practicas").load_data()
-        except mysql.connector.Error as err:
-            print(f"Error al asignar CCT: {err}")
+        except Exception as e:
+            print(f"Error al asignar CCT: {e}")
 
     def reload_ccts(self, *args):
         # Recarga la lista inicial de CCTs
@@ -635,27 +596,32 @@ class LECScreen(CustomBoxLayout):
 
         try:
             # Consulta para obtener el CCT y grupo asignado al LEC
-            query = f"""
+            query = """
                 SELECT 
                 AsignacionAspiranteCCT.claveCentro AS cct,
                 CCTgrupos.nombre_grupo AS grupo
                 FROM AsignacionAspiranteCCT
                 LEFT JOIN CCTgrupos ON AsignacionAspiranteCCT.id_Aspirante = CCTgrupos.id_profesor
-                WHERE AsignacionAspiranteCCT.id_Aspirante = '{self.id_usuario}';
+                WHERE AsignacionAspiranteCCT.id_Aspirante = ?;
             """
-            result = execute_query(query)
+            result = execute_query(query, (self.id_usuario,))
 
             # Actualizar las propiedades de la pantalla
-            self.cct = result['cct'] if result and result['cct'] else "No asignado"
-            self.grupo = result['grupo'] if result and result['grupo'] else "Sin grupo asignado"
-        except mysql.connector.Error as err:
-            print(f"Error al cargar información del LEC: {err}")
+            if result:
+                result = result[0]  # Tomar la primera fila de resultados
+                self.cct = result['cct'] if result and result['cct'] else "No asignado"
+                self.grupo = result['grupo'] if result and result['grupo'] else "Sin grupo asignado"
+            else:
+                self.cct = "No asignado"
+                self.grupo = "Sin grupo asignado"
+        except Exception as e:
+            print(f"Error al cargar información del LEC: {e}")
             self.cct = "Error al cargar"
             self.grupo = "Error al cargar"
 
         # Actualizar los botones dinámicos según la asignación del grupo
         self.actualizar_botones()
-
+        
     def actualizar_botones(self):
         """
         Actualiza los botones de la pantalla dinámicamente según el grupo asignado.

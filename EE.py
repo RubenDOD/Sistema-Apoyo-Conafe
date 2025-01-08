@@ -13,7 +13,16 @@ from db_connection import execute_query
 
 class EquipamientoScreen(BoxLayout):
 
+    def reset_screen(self):
+        # Añadir aquí la lógica para restablecer todos los elementos necesarios
+        # Por ejemplo, si tienes listas o formularios, puedes limpiarlos aquí
+        self.ids.algun_id.text = ""  # Resetear texto
+        self.ids.otro_id.value = 0   # Resetear valores
+        # Puedes también recargar cualquier dato necesario
+        self.load_states()  # Suponiendo que este método recargue los datos necesarios
+
     def go_back(self, instance):
+        self.reset_screen()  # Llamar a reset_screen antes de cambiar de pantalla
         # Implementa aquí la funcionalidad deseada, como cerrar la pantalla o navegar al menú principal
         print("Regresando al menú principal...")
 

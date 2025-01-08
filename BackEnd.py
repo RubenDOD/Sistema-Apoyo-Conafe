@@ -1,19 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  
-import pymysql
+import pyodbc
 
 app = Flask(__name__)
 CORS(app)  
 
 # Conexión a la base de datos
 def get_db_connection():
-    return pymysql.connect(
-        host="localhost",
-        user="root",
-        password="35283447",
-        database="CONAFE",
-        cursorclass=pymysql.cursors.DictCursor
+    # Configura los detalles de la conexión
+    SERVER = 'conafe-server.database.windows.net'  # Servidor
+    DATABASE = 'conafe-database'                  # Nombre de la base de datos
+    USERNAME = 'admin-conafe'                     # Usuario administrador
+    PASSWORD = 'MateriaAcaba08/01/25'             # Contraseña
+    DRIVER = '{ODBC Driver 17 for SQL Server}'    # Driver ODBC
+
+    conn = pyodbc.connect(
+        f'DRIVER={DRIVER};SERVER={SERVER};PORT=1433;DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
     )
+    return conn
 
 @app.route('/registrar', methods=['POST'])
 def registrar():
@@ -24,17 +28,28 @@ def registrar():
 
         cursor.execute("""
             INSERT INTO Usuario (correo, password, acceso)
-            VALUES (%s, %s, 'Aspirante')
+            VALUES (?, ?, 'Aspirante')
         """, (data['email'], 'default_password'))
-        connection.commit()
-        id_usuario = cursor.lastrowid
-
+        # Obtener el último ID insertado
+        connection.commit()  # Asegúrate de hacer commit del INSERT antes de continuar
+        
+        cursor.execute("""
+            SELECT id_Usuario FROM Usuario WHERE correo = ?
+        """, (data['email'],))
+        row = cursor.fetchone()
+        if row:
+            id_usuario = row[0]
+            print(f"ID Usuario recuperado: {id_usuario}")
+        else:
+            print("No se pudo recuperar el ID del usuario.")
+            return jsonify({'message': 'Error interno del servidor: No se pudo recuperar el ID del usuario.'}), 500
+                
         cursor.execute("""
             INSERT INTO Aspirante (
                 id_Aspirante, convocatoria, telefonoFijo, telefonoMovil, correo,
                 curp, edad, nombres, apellidoPaterno, apellidoMaterno, fechaNacimiento,
                 genero, nacionalidad, estado_solicitud
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'Pendiente')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente')
         """, (
             id_usuario, 1, data['telefono-fijo'], data['telefono-movil'], data['email'],
             data['curp'], data['edad'], data['nombre'], data['apellido1'], data['apellido2'],
@@ -44,7 +59,7 @@ def registrar():
 
         cursor.execute("""
             INSERT INTO EquipoAspirante (id_Aspirante, estatura, peso, tallaPlayera, tallaPantalon)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?)
         """, (
             id_usuario, data['estatura'], data['peso'], data['playera'], data['pantalon']
         ))
@@ -54,7 +69,7 @@ def registrar():
             INSERT INTO ResidenciaAspirante (
                 id_Aspirante, codigoPostal, estado, municipio, localidad, colonia,
                 calle, numeroExterior, numeroInterior
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             id_usuario, data['codigo-postal'], data['estado'], data['municipio'], data['localidad'],
             data['colonia'], data['calle'], data['numero-exterior'], data.get('numero-interior', None)
@@ -65,7 +80,7 @@ def registrar():
             INSERT INTO InfoEducativaAspirante (
                 id_Aspirante, nivelEducativo, lenguaIndigena, pregunta1, pregunta2,
                 pregunta3, pregunta4, pregunta5, pregunta6, pregunta7
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             id_usuario,
             data['NivelEdu'],
@@ -82,7 +97,7 @@ def registrar():
 
         cursor.execute("""
             INSERT INTO InfoBancariaAspirante (id_Aspirante, nombreBanco, cuentaBancaria)
-            VALUES (%s, %s, %s)
+            VALUES (?, ?, ?)
         """, (
             id_usuario, data['banco'], data.get('cuenta BBVA') or data.get('cuenta-otro', None)
         ))
@@ -102,7 +117,7 @@ def registrar():
 
         cursor.execute("""
             INSERT INTO DocumentosAspirante (id_Aspirante, certificado, identificacion, estadoDeCuenta)
-            VALUES (%s, %s, %s, %s)
+            VALUES (?, ?, ?, ?)
         """, (
             id_usuario, certificado_path, identificacion_path, estado_cuenta_path
         ))
@@ -118,6 +133,3 @@ def registrar():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
