@@ -70,7 +70,7 @@ class AdminWindowAsignaciones(BoxLayout):
 
         values = list(user_info.values())
         
-        aspirante_text = f"Aspirante: {values[2]} {values[3]} {values[4]}"
+        aspirante_text = f"Nombre completo del aspirante: {values[2]} {values[3]} {values[4]}"
         user_info_layout.add_widget(Label(text=aspirante_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
         conv_text = f"Aplicando a la convocatoria: {values[1]}"
@@ -88,8 +88,8 @@ class AdminWindowAsignaciones(BoxLayout):
         estado_text2 = f"en el municipio: {values[11]}"
         user_info_layout.add_widget(Label(text=estado_text2, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
-        ciclo_text = f"Ciclo: {values[10]}"
-        user_info_layout.add_widget(Label(text=ciclo_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
+        #ciclo_text = f"Ciclo: {values[10]}"
+        #user_info_layout.add_widget(Label(text=ciclo_text, color=(0, 0, 0, 1), size_hint_y=None, height=50, halign='left', valign='middle'))
 
         estado = values[9].replace("CONAFE ", "")
         #estado = values[7]

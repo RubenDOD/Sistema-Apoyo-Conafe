@@ -193,8 +193,7 @@ class ModificarAlumnoWindow(BoxLayout):
         except ValueError:
             self.show_popup("Revisar datos", "La fecha ingresada no es válida.")
             return
-
-
+        
         # Actualizar datos del usuario
         try:
             update_query = """
@@ -222,6 +221,7 @@ class ModificarAlumnoWindow(BoxLayout):
         self.ids.anio.text = ''
         self.ids.nivel.text = 'Seleccionar Nivel'
         self.ids.grado.text = 'Seleccionar Grado'
+        self.ids.scrn_mngr.current = 'scrn_content'
 
         def show_popup(self, title, message):
             """Muestra un Popup con un mensaje."""

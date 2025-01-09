@@ -102,7 +102,7 @@ class EstimacionTallasScreen(BoxLayout):
                 f"Tallas chicas (-23): {resultados['CALZADO_M_MENOR']}\n"
                 f"Tallas medianas (23-25): {resultados['CALZADO_M_MEDIO']}\n"
                 f"Tallas grandes (25+): {resultados['CALZADO_M_MAYOR']}\n\n"
-                "Datos redondeados a múltiplos de 100 unidades."
+                "Datos redondeados a múltiplos de 100 unidades para valores de 300 unidades en adelante."
             )
 
             return result_text

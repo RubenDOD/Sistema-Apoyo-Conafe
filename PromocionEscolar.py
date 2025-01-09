@@ -12,10 +12,19 @@ from db_connection import execute_query_comb  # Función para ejecutar consultas
 Builder.load_file('PromocionEscolar.kv')
 
 class PromocionScreen(BoxLayout):
+    def go_back_to_convocatorias(self):
+        """Regresa a la pantalla principal."""
+        try:
+            app = App.get_running_app()  # Obtén la instancia de la aplicación principal
+            app.root.current = "vista_gestion_alumnos"  # Cambia a la pantalla específica
+            print("Regresando a la pantalla 'vista_gestion_alumnos'")
+        except Exception as e:
+            print(f"Error al regresar a la pantalla: {e}")
+
     def on_kv_post(self, base_widget):
         # Inicializa el listado de niveles
         nivel_spinner = self.ids.nivel_spinner
-        nivel_spinner.values = ['Primaria', 'Secundaria','Certificado']  # Niveles disponibles
+        nivel_spinner.values = ['Primaria', 'Secundaria', 'Certificado']  # Niveles disponibles
 
     def actualizar_alumnos_por_nivel(self, nivel):
         # Obtiene los alumnos del nivel seleccionado desde la base de datos
@@ -90,7 +99,7 @@ class PromocionScreen(BoxLayout):
 
         # Verifica si hay calificaciones menores a 60
         if any(cal < 6 for cal in self.calificaciones_actuales):
-            self.mostrar_popup("Error", "El alumno no puede ser promovido debido a calificaciones menores a 60.")
+            self.mostrar_popup("Error", "El alumno no puede ser promovido debido a calificaciones menores a 6.")
             return
 
         # Actualiza el grado y nivel del alumno
@@ -104,18 +113,18 @@ class PromocionScreen(BoxLayout):
                 nuevo_nivel = "Certificado"  # Secundaria -> Certificado
             nuevo_grado = 1  # Reinicia el grado
 
-            # Elimina las calificaciones del alumno al pasar de nivel
-            delete_query = """
-                DELETE FROM calificaciones
-                WHERE id_alumno = ?;
-            """
-            try:
-                execute_query_comb(delete_query, (alumno_data['curp'],))
-                print(f"Calificaciones del alumno {alumno_data['curp']} eliminadas exitosamente.")
-            except Exception as e:
-                print(f"Error al eliminar calificaciones: {e}")
-                self.mostrar_popup("Error", "Hubo un problema al restablecer las calificaciones del alumno.")
-                return
+        # Elimina las materias asociadas al alumno en cualquier promoción
+        delete_query = """
+            DELETE FROM calificaciones
+            WHERE id_alumno = ?;
+        """
+        try:
+            execute_query_comb(delete_query, (alumno_data['curp'],))
+            print(f"Calificaciones del alumno {alumno_data['curp']} eliminadas exitosamente.")
+        except Exception as e:
+            print(f"Error al eliminar calificaciones: {e}")
+            self.mostrar_popup("Error", "Hubo un problema al restablecer las calificaciones del alumno.")
+            return
 
         # Debug: Verifica los valores antes de actualizar
         print(f"Promoviendo alumno: {alumno_data['curp']}, Nuevo Grado: {nuevo_grado}, Nuevo Nivel: {nuevo_nivel}")
@@ -153,8 +162,6 @@ class PromocionScreen(BoxLayout):
         alumno_seleccionado = self.ids.alumno_spinner.text
         if alumno_seleccionado != "Selecciona un alumno":
             self.mostrar_calificaciones(alumno_seleccionado)
-
-
 class CalificacionesApp(App):
     def build(self):
         return PromocionScreen()

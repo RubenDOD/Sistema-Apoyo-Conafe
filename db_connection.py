@@ -85,7 +85,6 @@ def execute_query_comb(query, params=None):
     finally:
         connection.close()
 
-
 def close_connection(conn):
     """
     Cierra la conexión a la base de datos.

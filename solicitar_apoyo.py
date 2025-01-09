@@ -12,9 +12,6 @@ from kivy.graphics import Color, Rectangle
 from datetime import datetime
 from pytz import timezone
 from datetime import datetime
-
-
-import mysql.connector
 import pyodbc
 
 # Datos de conexión
@@ -64,7 +61,7 @@ class SolicitarApoyoWindow(BoxLayout):
 
         for apoyo in apoyos:
             grid.add_widget(Label(text=apoyo['claveApoyo']))
-            grid.add_widget(Label(text=str(apoyo['monto_apoyo'])))
+            grid.add_widget(Label(text='$'+str(apoyo['monto_apoyo'])))
             btn_info = Button(text='Ver Detalles', size_hint_y=None, height=40)
             btn_info.bind(on_release=lambda btn, a=apoyo: self.mostrar_detalles(a))
             grid.add_widget(btn_info)
@@ -131,7 +128,7 @@ class SolicitarApoyoWindow(BoxLayout):
     def mostrar_detalles(self, apoyo):
         contenido = BoxLayout(orientation='vertical', spacing=10, padding=10)
         contenido.add_widget(Label(text=f"Nombre de Apoyo: {apoyo['tipo_apoyo']}"))
-        contenido.add_widget(Label(text=f"Monto: {apoyo['monto_apoyo']}"))
+        contenido.add_widget(Label(text=f"Monto: ${apoyo['monto_apoyo']}"))
         contenido.add_widget(Label(text=f"Fecha Inicio (Primer Pago): Se establecerá una fecha cuando la solicitud sea aprobada."))
         contenido.add_widget(Label(text=f"Periodo de Entrega (meses): Durante {apoyo['periodo_entrega_meses']} meses"))
 
@@ -158,7 +155,7 @@ class SolicitarApoyoWindow(BoxLayout):
             if id_apoyo_resultado == apoyo['id_apoyo']:
                 # El usuario ya tiene un apoyo
                 popup = Popup(title='Error',
-                            content=Label(text='Ya cuentas con este apoyo.'),
+                            content=Label(text='Ya solicitaste este apoyo.'),
                             size_hint=(0.6, 0.4))
                 popup.open()
                 tiene_beca = True

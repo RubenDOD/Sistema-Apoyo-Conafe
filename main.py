@@ -572,7 +572,7 @@ class DetalleCCTScreen(Screen):
 
             resultado = execute_query(query,(aspirante_id,))
             genero=resultado[0][0]
-            edad=resultado[0][0]
+            edad=resultado[0][1]
 
             print(resultado)
 

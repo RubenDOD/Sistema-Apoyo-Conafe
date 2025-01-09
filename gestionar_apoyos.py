@@ -12,6 +12,8 @@ from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
 import pyodbc
 from db_connection import execute_query, execute_non_query
+from datetime import datetime
+from pytz import timezone
 
 # Datos de conexión
 server = 'conafe-server.database.windows.net'
@@ -114,7 +116,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
 
         # Encabezados de tabla
         # grid.add_widget(Label(text='ID Apoyo', bold=True))
-        grid.add_widget(Label(text='Fehca de Solicitud', bold=True))
+        grid.add_widget(Label(text='Fecha de Solicitud', bold=True))
         grid.add_widget(Label(text='Clave del Apoyo', bold=True))
         grid.add_widget(Label(text='Aspirante', bold=True))
         grid.add_widget(Label(text='Estado Actual', bold=True))
@@ -286,15 +288,14 @@ class ApoyosSolicitadosWindow(BoxLayout):
         # Modificar el estado de los tickets si el apoyo fue congelado
         if nuevo_estado == 'Congelado':
             if estado_anterior == 'Aceptado':
-                self.actualizar_tickets_estado(apoyo[0], apoyo[4], 'Pendiente')
+                self.actualizar_tickets_estado(apoyo[0], apoyo[4], 'Congelado')
 
         # Generar los tickets si el apoyo es aprobado
         if nuevo_estado == 'Aceptado':
-            if estado_anterior != 'Aceptado':
+            if estado_anterior != 'Aceptado' and estado_anterior != 'Congelado':
                 self.generar_tickets(apoyo[4], apoyo[0])
             else:
                 self.actualizar_tickets_estado(apoyo[0], apoyo[4], 'Pendiente')
-
 
         popup.dismiss()
 
@@ -312,7 +313,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
 
     def actualizar_tickets_estado(self, id_apoyo, id_educador, nuevo_estado):
         # Cambiar el estado de los tickets dependiendo del estado del apoyo
-        estado_ticket = 'Cancelado' if nuevo_estado == 'Cancelado' else 'Pendiente'
+        estado_ticket = 'Cancelado' if nuevo_estado == 'Cancelado' else nuevo_estado
 
         update_query = """
         UPDATE tickets_pago
@@ -346,13 +347,16 @@ class ApoyosSolicitadosWindow(BoxLayout):
         meses_entrega = json.loads(apoyo['meses_entrega'])  # Lista de meses como "Enero", "Febrero", etc.
         monto_apoyo = apoyo['monto_apoyo']
 
+        tz = timezone('America/Mexico_City')
+        current_time = datetime.now(tz)
+
         for mes in meses_entrega:
             # Insertar el ticket en la base de datos
             insert_ticket_query = """
-            INSERT INTO tickets_pago (id_educador, id_apoyo, mes, monto)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO tickets_pago (id_educador, id_apoyo, mes, monto, fecha_creacion)
+            VALUES (?, ?, ?, ?, ?)
             """
-            self.cursor.execute(insert_ticket_query, (id_educador, id_apoyo, mes, monto_apoyo))
+            self.cursor.execute(insert_ticket_query, (id_educador, id_apoyo, mes, monto_apoyo, current_time))
 
         self.conexion.commit()
         print("Tickets generados exitosamente.")
