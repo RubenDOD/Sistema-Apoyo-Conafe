@@ -10,16 +10,15 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
-import re
-import mysql.connector
 import pyodbc
+from db_connection import execute_query, execute_non_query
 
 # Datos de conexión
 server = 'conafe-server.database.windows.net'
 database = 'conafe-database'
 username = 'admin-conafe'
 password = 'MateriaAcaba08/01/25'
-driver = '{ODBC Driver 18 for SQL Server}'
+driver = '{ODBC Driver 17 for SQL Server}'
 
 class ApoyosSolicitadosWindow(BoxLayout):
     def __init__(self, id_Usuario = None,**kwargs):
@@ -135,15 +134,15 @@ class ApoyosSolicitadosWindow(BoxLayout):
         JOIN apoyo_economico aeco ON ae.id_apoyo = aeco.id_apoyo
         JOIN Usuario u ON ae.id_educador = u.id_Usuario
         """
-        self.cursor.execute(query)
-        apoyos =self.fetch_as_dict(self.cursor, fetch_one=False)
+        apoyos = execute_query(query)
 
         # Lista de estados posibles
         estados = ['Aceptado', 'Rechazado', 'Congelado']
 
         for apoyo in apoyos:
-            grid.add_widget(Label(text=str(apoyo['fecha_solicitud'])))
-            grid.add_widget(Label(text=apoyo['claveApoyo']))
+            print(apoyo)
+            grid.add_widget(Label(text=str(apoyo[6])))
+            grid.add_widget(Label(text=apoyo[2]))
 
             # Botón "Ver" para mostrar información del aspirante
             btn_ver_aspirante = Button(text='Ver', size_hint_y=None, height=40)
@@ -151,7 +150,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
             btn_ver_aspirante.bind(on_release=lambda btn, a=apoyo: self.ver_informacion_aspirante(a))
             grid.add_widget(btn_ver_aspirante)
 
-            grid.add_widget(Label(text=apoyo['estado_apoyo']))
+            grid.add_widget(Label(text=apoyo[5]))
 
             spinner = Spinner(
                 text='Seleccionar',
@@ -165,7 +164,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         self.scroll_view.add_widget(grid)
 
     def ver_informacion_aspirante(self, apoyo):
-        id_educador = apoyo['id_educador']
+        id_educador = apoyo[4]
         # Obtener información completa del aspirante
         query = """
         SELECT
@@ -184,21 +183,21 @@ class ApoyosSolicitadosWindow(BoxLayout):
         JOIN Aspirante ON maestro.id_Usuario = Aspirante.id_Aspirante
         WHERE u.id_Usuario = ?
         """
-        self.cursor.execute(query, (id_educador,))
-        aspirante = self.fetch_as_dict(self.cursor, fetch_one=True)
+        aspirante = execute_query(query,(id_educador,))
+        aspirante = aspirante[0]
 
         print("Aspirante:", aspirante)
         if aspirante:
             contenido = BoxLayout(orientation='vertical', spacing=10, padding=10)
-            contenido.add_widget(Label(text=f"Correo: {aspirante['correo']}"))
-            contenido.add_widget(Label(text=f"Rol: {aspirante['acceso']}"))
-            contenido.add_widget(Label(text=f"Nombre: {aspirante['nombres']}"))
-            contenido.add_widget(Label(text=f"Apellido Paterno: {aspirante['apellidoPaterno']}"))
-            contenido.add_widget(Label(text=f"Apellido Materno: {aspirante['apellidoMaterno']}"))
-            contenido.add_widget(Label(text=f"Estado de Salud: {aspirante['estadoSalud']}"))
-            contenido.add_widget(Label(text=f"Genero: {aspirante['genero']}"))
-            contenido.add_widget(Label(text=f"Edad: {aspirante['edad']}"))
-            contenido.add_widget(Label(text=f"Capacidad Diferente: {aspirante['capacidadDiferente']}"))
+            contenido.add_widget(Label(text=f"Correo: {aspirante[1]}"))
+            contenido.add_widget(Label(text=f"Rol: {aspirante[2]}"))
+            contenido.add_widget(Label(text=f"Nombre: {aspirante[3]}"))
+            contenido.add_widget(Label(text=f"Apellido Paterno: {aspirante[4]}"))
+            contenido.add_widget(Label(text=f"Apellido Materno: {aspirante[5]}"))
+            contenido.add_widget(Label(text=f"Estado de Salud: {aspirante[6]}"))
+            contenido.add_widget(Label(text=f"Genero: {aspirante[7]}"))
+            contenido.add_widget(Label(text=f"Edad: {aspirante[8]}"))
+            contenido.add_widget(Label(text=f"Capacidad Diferente: {aspirante[9]}"))
 
             # No es recomendable mostrar la contraseña
             # contenido.add_widget(Label(text=f"Password: {aspirante['password']}"))
@@ -216,10 +215,12 @@ class ApoyosSolicitadosWindow(BoxLayout):
             popup.open()
 
     def mostrar_popup_observaciones(self, apoyo, nuevo_estado):
+        print(f'apoyo:{apoyo}')
+        print(f'nuevo estado: {nuevo_estado}')
         # Popup para escribir observaciones y número de cuenta
         contenido = BoxLayout(orientation='vertical', spacing=10, padding=10)
 
-        contenido.add_widget(Label(text=f"Cambiar estado a '{nuevo_estado}' para el apoyo ID {apoyo['id_apoyo']}."))
+        contenido.add_widget(Label(text=f"Cambiar estado a '{nuevo_estado}' para el apoyo ID {apoyo[0]}."))
         contenido.add_widget(Label(text="Escribe tus observaciones:"))
 
         observaciones_input = TextInput(hint_text="Escribe aquí...", multiline=True, size_hint_y=None, height=100)
@@ -255,7 +256,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
             return
 
         # Obtener el estado anterior del apoyo
-        estado_anterior = apoyo['estado_apoyo']
+        estado_anterior = apoyo[5]
 
         # Actualizar el estado, las observaciones y el número de cuenta en la base de datos
         update_query = """
@@ -263,7 +264,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         SET estado_apoyo = ?, observaciones = ?
         WHERE id_apoyo = ? AND id_educador = ?
         """
-        self.cursor.execute(update_query, (nuevo_estado, observaciones, apoyo['id_apoyo'], apoyo['id_educador']))
+        self.cursor.execute(update_query, (nuevo_estado, observaciones, apoyo[0], apoyo[4]))
         self.conexion.commit()
 
         # Insertar el cambio en la tabla cambios_estado_solicitud
@@ -273,8 +274,8 @@ class ApoyosSolicitadosWindow(BoxLayout):
         """
         usuario_responsable = self.id_Usuario
         self.cursor.execute(insert_cambio_query, (
-            apoyo['id_apoyo'],        # ID del apoyo
-            apoyo['id_educador'],    # ID del educador
+            apoyo[0],        # ID del apoyo
+            apoyo[4],    # ID del educador
             estado_anterior,         # Estado anterior
             nuevo_estado,            # Nuevo estado
             usuario_responsable,     # Usuario que realizó el cambio
@@ -285,14 +286,14 @@ class ApoyosSolicitadosWindow(BoxLayout):
         # Modificar el estado de los tickets si el apoyo fue congelado
         if nuevo_estado == 'Congelado':
             if estado_anterior == 'Aceptado':
-                self.actualizar_tickets_estado(apoyo['id_apoyo'], apoyo['id_educador'], 'Pendiente')
+                self.actualizar_tickets_estado(apoyo[0], apoyo[4], 'Pendiente')
 
         # Generar los tickets si el apoyo es aprobado
         if nuevo_estado == 'Aceptado':
             if estado_anterior != 'Aceptado':
-                self.generar_tickets(apoyo['id_educador'], apoyo['id_apoyo'])
+                self.generar_tickets(apoyo[4], apoyo[0])
             else:
-                self.actualizar_tickets_estado(apoyo['id_apoyo'], apoyo['id_educador'], 'Pendiente')
+                self.actualizar_tickets_estado(apoyo[0], apoyo[4], 'Pendiente')
 
 
         popup.dismiss()
@@ -300,7 +301,7 @@ class ApoyosSolicitadosWindow(BoxLayout):
         # Mostrar mensaje de confirmación
         success_popup = Popup(
             title="Estado Actualizado",
-            content=Label(text=f"El estado ha sido cambiado a '{nuevo_estado}' para el apoyo ID {apoyo['id_apoyo']}"),
+            content=Label(text=f"El estado ha sido cambiado a '{nuevo_estado}' para el apoyo ID {apoyo[0]}"),
             size_hint=(0.6, 0.4)
         )
         success_popup.open()

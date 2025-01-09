@@ -6,7 +6,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle
-from db_connection import execute_query
+from db_connection import execute_non_query
 
 class DataTableCapacitadorAspirante(BoxLayout):
     def __init__(self, table = '', id_capacitador=None,**kwargs):
@@ -226,11 +226,11 @@ class DataTableCapacitadorAspirante(BoxLayout):
             # Consulta SQL para actualizar los datos
             query = """
             UPDATE FII
-            SET estadoCapacitacion = %s, observaciones = %s
-            WHERE id_Aspirante = %s
+            SET estadoCapacitacion = ?, observaciones = ?
+            WHERE id_Aspirante = ?
             """
             # Ejecuta la consulta
-            execute_query(query, (nuevo_estado, observacion, id_aspirante))
+            execute_non_query(query, (nuevo_estado, observacion, id_aspirante))
             print(f"Se actualizó el aspirante {id_aspirante} con estado '{nuevo_estado}' y observación '{observacion}'.")
         except Exception as err:
             print(f"Error al actualizar la base de datos: {err}")

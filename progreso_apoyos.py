@@ -22,7 +22,7 @@ server = 'conafe-server.database.windows.net'
 database = 'conafe-database'
 username = 'admin-conafe'
 password = 'MateriaAcaba08/01/25'
-driver = '{ODBC Driver 18 for SQL Server}'
+driver = '{ODBC Driver 17 for SQL Server}'
 
 class BecaProgresoWindow(BoxLayout):
     # id_educador = NumericProperty(0)
@@ -65,8 +65,8 @@ class BecaProgresoWindow(BoxLayout):
         self.cursor.execute(self.query, (self.id_apoyo, self.id_educador))
         self.observaciones = self.fetch_as_dict(self.cursor, fetch_one=True)
 
-        self.add_widget(Label(text='Observaciones:', size_hint_y=None, height=40))
-        self.add_widget(Label(text=self.observaciones['observaciones'], size_hint_y=None, height=40))
+        observaciones_text = self.observaciones['observaciones'] if self.observaciones and self.observaciones['observaciones'] is not None else 'Sin observaciones'
+        self.add_widget(Label(text=observaciones_text, size_hint_y=None, height=40))
 
         # Contenedor con scroll para el progreso
         scroll_view = ScrollView()
@@ -74,7 +74,6 @@ class BecaProgresoWindow(BoxLayout):
         self.progreso_layout.bind(minimum_height=self.progreso_layout.setter('height'))
         scroll_view.add_widget(self.progreso_layout)
         self.add_widget(scroll_view)
-
 
         # Cargar datos
         self.cargar_datos()
@@ -86,7 +85,6 @@ class BecaProgresoWindow(BoxLayout):
             # Dibujar el fondo de la barra de navegación
             Color(0.06, 0.45, 0.45, 1)  # Color verde azulado
             self.rect = Rectangle(size=nav_bar.size, pos=nav_bar.pos)
-
 
         # Asegurar que el fondo se actualice con el tamaño y posición
         nav_bar.bind(size=self._update_rect, pos=self._update_rect)

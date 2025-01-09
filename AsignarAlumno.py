@@ -232,9 +232,10 @@ class AsignarAlumnosWindow(BoxLayout):
             sql = '''
                 SELECT nivel, grado FROM CCTgrupos WHERE id_grupo = ?
             '''
-            result = execute_non_query(sql, (id_grupo,))
+            result = execute_query(sql, (id_grupo,))
 
             if result:
+                print(result)
                 nivel, grado = result[0]
 
                 # Determinar las materias según nivel y grado
@@ -277,6 +278,7 @@ class AsignarAlumnosWindow(BoxLayout):
 
                 if materias_sql:
                     materias = execute_query(materias_sql)
+                    print(materias)
                     for materia in materias:
                         sql = '''
                             INSERT INTO calificaciones (id_alumno, id_materia, calificacion, fecha_registro)

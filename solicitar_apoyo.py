@@ -22,7 +22,7 @@ server = 'conafe-server.database.windows.net'
 database = 'conafe-database'
 username = 'admin-conafe'
 password = 'MateriaAcaba08/01/25'
-driver = '{ODBC Driver 18 for SQL Server}'
+driver = '{ODBC Driver 17 for SQL Server}'
 
 class SolicitarApoyoWindow(BoxLayout):
     def __init__(self, id_educador,**kwargs):

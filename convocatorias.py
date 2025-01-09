@@ -1,18 +1,11 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
-from kivy.uix.spinner import Spinner
 from collections import OrderedDict
 from utils.datatable_convocatorias import DataTableConv
-from datetime import datetime
-import hashlib
 from db_connection import execute_query
 from db_connection import execute_non_query
 from añadir_convocatoria import AddConvoScreen
 from kivy.uix.boxlayout import BoxLayout
-import webbrowser
-from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from admin import AdminWindow

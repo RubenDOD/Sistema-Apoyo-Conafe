@@ -79,32 +79,37 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
         content = self.ids.scrn_view
         # Obtén los datos del usuario en base al índice
         users = self.get_users("User", idx, conv)
-        user_info = {key: users[key][0] for key in users}
+        print("DE")
+        print(users)
+
+        # Ajusta la extracción de información del usuario
+        user_info = {key: list(value.values())[0] if value else "N/A" for key, value in users.items()}
 
         # Limpia la pantalla de visualización de usuario
         content.clear_widgets()
 
         # Crea un ScrollView para que el contenido sea desplazable
         scroll_view = ScrollView(size_hint=(1, 1))
-        doc_names = ["Ver Certificado", "Ver Identificacion", "Ver Edo. Cuenta"]
+        doc_names = ["Ver Certificado", "Ver Identificación", "Ver Edo. Cuenta"]
         doc_count = 0
+
         # Crea un layout para mostrar los datos del usuario
         user_info_layout = BoxLayout(orientation='vertical', size_hint_y=None)
         user_info_layout.bind(minimum_height=user_info_layout.setter('height'))
         total_items = len(user_info)
+
         # Agrega botones con información del usuario
         for idx, (key, value) in enumerate(user_info.items()):
             # Si estamos en los últimos tres elementos, crea un botón para abrir el documento
             if idx >= total_items - 3:
                 doc_button = Button(text=f"{doc_names[doc_count]}", size_hint_y=None, height=50)
                 doc_count += 1
-                # Asocia el evento `on_release` para abrir el documento correspondiente
+                # Asocia el evento on_release para abrir el documento correspondiente
                 doc_button.bind(on_release=lambda instance, url=value: self.ver_documento(url))
                 user_info_layout.add_widget(doc_button)
             else:
                 # Para los demás elementos, muestra el texto normalmente
                 user_info_layout.add_widget(Button(text=f"{key}: {value}", size_hint_y=None, height=50))
-
 
         # Botón para volver a la pantalla principal
         back_button = Button(text="Regresar", size_hint_y=None, height=50)
@@ -120,7 +125,7 @@ class AdminWindow(Screen):  # Cambiamos a Screen en lugar de BoxLayout
 
         # Cambia a la pantalla de visualización de usuario
         self.ids.scrn_mngr.current = 'scrn_view'
-
+        
     def ver_documento(self, url):
         # Lógica para abrir el documento específico
         if url:  # Asegúrate de que el URL no esté vacío

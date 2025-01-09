@@ -1,0 +1,43 @@
+<PromocionScreen>:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1  # Establece el color a negro
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        size_hint_y: 0.2
+        Spinner:
+            id: nivel_spinner
+            text: "Selecciona un nivel"
+            size_hint_x: 0.4
+            on_text: root.actualizar_alumnos_por_nivel(self.text)
+        Spinner:
+            id: alumno_spinner
+            text: "Selecciona un alumno"
+            size_hint_x: 0.6
+            on_text: root.mostrar_calificaciones(self.text)
+    ScrollView:
+        GridLayout:
+            id: table_layout
+            cols: 2
+            size_hint_y: None
+            height: self.minimum_height
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1  # También puedes establecer el fondo negro específicamente aquí
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+    Button:
+        text: "Actualizar"
+        size_hint_y: None
+        height: 40
+        on_press: root.actualizar_datos()
+    Button:
+        text: "Promover"
+        size_hint_y: None
+        height: 40
+        on_press: root.promover_alumno()

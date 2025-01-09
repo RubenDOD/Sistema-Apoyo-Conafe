@@ -1,0 +1,6 @@
+Registros Exportados:
+
+id_Capacitador	id_Aspirante	ClaveCCT	EstadoCapacitacion	fechaInicio	fechaFinalizacion	Observaciones
+19	4	CCT-1273-163	Finalizado	2025-01-08	2025-01-08	Muy bien :3
+20	229	CCT-1623-869	Finalizado	2025-01-08	2025-01-08	Va excelente, felicidades
+19	231	CCT-1273-163	Finalizado	2025-01-08	2025-01-08	Finalizado

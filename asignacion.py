@@ -180,7 +180,7 @@ class AdminWindowAsignaciones(BoxLayout):
         count_result = execute_query(sql, (capacitador_id,))
         count = count_result[0][0] if count_result else 0
 
-        if count >= 1:
+        if count >= 2:
             # Mostrar un popup indicando que el capacitador ya tiene el cupo lleno
             popup = Popup(title='Capacitador lleno',
                           content=Label(text='Cupos llenos para este capacitador'),
@@ -223,7 +223,7 @@ class AdminWindowAsignaciones(BoxLayout):
     def get_capacitadores_by_cct(self, claveCentro):
         # Consulta para obtener nombres de capacitadores asignados a un CCT específico
         sql = '''
-            SELECT Aspirante.nombres, Aspirante.apellidoPaterno, Aspirante.apellidoMaterno 
+            SELECT DISTINCT Aspirante.nombres, Aspirante.apellidoPaterno, Aspirante.apellidoMaterno 
             FROM CentroEducador
             JOIN LEC ON CentroEducador.id_LEC = LEC.id_Usuario
             JOIN Usuario ON LEC.id_Usuario = Usuario.id_Usuario

@@ -5,7 +5,7 @@ SERVER = 'conafe-server.database.windows.net'  # Servidor
 DATABASE = 'conafe-database'                  # Nombre de la base de datos
 USERNAME = 'admin-conafe'                     # Usuario administrador
 PASSWORD = 'MateriaAcaba08/01/25'             # Contraseña
-DRIVER = '{ODBC Driver 18 for SQL Server}'    # Driver ODBC
+DRIVER = '{ODBC Driver 17 for SQL Server}'    # Driver ODBC
 
 def get_connection():
     """
@@ -61,6 +61,30 @@ def execute_non_query(query, params=None):
     except Exception as e:
         print("Error al ejecutar la consulta:", e)
         raise
+
+def execute_query_comb(query, params=None):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+
+        # Si la consulta es de tipo modificación, haz un commit
+        if query.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE')):
+            connection.commit()
+            return None  # No se espera un resultado para estas operaciones
+
+        # Si es una consulta SELECT, devuelve los resultados
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"Error ejecutando la consulta: {e}")
+        raise e  # Relanza el error para depuración
+    finally:
+        connection.close()
+
 
 def close_connection(conn):
     """

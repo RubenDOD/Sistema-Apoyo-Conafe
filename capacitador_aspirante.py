@@ -50,7 +50,7 @@ class CapacitadorAspiranteWindow(BoxLayout):
             JOIN 
                 Aspirante a ON ca.id_Aspirante = a.id_Aspirante
             WHERE 
-                ca.id_Capacitador = %s
+                ca.id_Capacitador = ?
             """
 
             try:

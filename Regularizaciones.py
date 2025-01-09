@@ -41,7 +41,8 @@ class Regularizaciones(BoxLayout):
         query = """
         SELECT 
             a.CURP, 
-            CONCAT(a.apellido_paterno, ' ', a.apellido_materno, ' ', a.nombres) AS nombre_completo
+            CONCAT(a.apellido_paterno, ' ', a.apellido_materno, ' ', a.nombres) AS nombre_completo,
+            COUNT(c.id_materia) AS materias_reprobadas
         FROM 
             alumno a
         JOIN 
@@ -54,13 +55,14 @@ class Regularizaciones(BoxLayout):
             ac.id_CCT = ? AND cg.nombre_grupo = ?
             AND c.calificacion < 6
         GROUP BY
-            a.CURP
+            a.CURP, a.apellido_paterno, a.apellido_materno, a.nombres
         """
         try:
             rows = execute_query(query, (self.cct, self.grupo))
+            print(rows)
             if rows:
                 for row in rows:
-                    curp, nombre_completo = row["CURP"], row["nombre_completo"]
+                    curp, nombre_completo = row[0], row[1]
                     alumno_button = Button(
                         text=nombre_completo,
                         size_hint_y=None,
@@ -107,12 +109,16 @@ class Regularizaciones(BoxLayout):
         """
         try:
             rows = execute_query(query, (curp,))
+            print(f'Calificaciones: {rows}')
             if rows:
                 for row in rows:
-                    id_calificacion, materia, calificacion, fecha = row.values()
+                    id_calificacion, materia, calificacion, fecha = row
+                    # Convertir Decimal a str y formatear el datetime
+                    calificacion_str = str(calificacion)  # Convertir Decimal a string si es necesario
+                    fecha_str = fecha.strftime('%Y-%m-%d %H:%M:%S')  # Formatear la fecha a string
                     table_layout.add_widget(Label(text=materia, size_hint_y=None, height=30))
-                    table_layout.add_widget(Label(text=str(calificacion), size_hint_y=None, height=30))
-                    table_layout.add_widget(Label(text=str(fecha), size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=calificacion_str, size_hint_y=None, height=30))
+                    table_layout.add_widget(Label(text=fecha_str, size_hint_y=None, height=30))
 
                     # Botón para actualizar calificación
                     update_button = Button(text="Actualizar", size_hint_y=None, height=30)

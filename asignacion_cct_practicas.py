@@ -61,6 +61,7 @@ class AsignacionCCTPracticasScreen(Screen):
             print(f"Error al cargar datos: {e}")
 
     def go_to_detalle(self, aspirante_id, *args):
+        print("Intentando navegar a detalle_cct")
         if not self.manager:
             print("Error: El ScreenManager no está configurado.")
             return

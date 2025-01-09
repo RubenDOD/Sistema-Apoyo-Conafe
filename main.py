@@ -29,6 +29,8 @@ from Regularizaciones import Regularizaciones
 from estimaciontallas import EstimacionTallasScreen
 from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
+from PromocionEscolar import PromocionScreen
+from modificarAlumno import ModificarAlumnoWindow
 from db_connection import execute_query
 from db_connection import execute_non_query
 from db_connection import get_connection
@@ -53,6 +55,7 @@ Builder.load_file("progreso_apoyos.kv")
 Builder.load_file("estimaciontallas.kv")
 Builder.load_file("UpdateCorreo.kv")
 Builder.load_file("EE.kv")
+#Builder.load_file('PromocionEscolar.kv')
 
 class CustomBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -110,11 +113,12 @@ class LoginScreen(CustomBoxLayout):
                 sm.current = 'capacitador'
             elif acceso == 'Control Escolar':
                 # Obtener el CCT asociado
-                consulta_cct = f"SELECT CCT FROM AreaControlEscolar WHERE id_ACT = '{id_usuario}'"
-                resultado_cct = execute_query(consulta_cct)
+                consulta_cct = f"SELECT CCT FROM AreaControlEscolar WHERE id_ACT = ?"
+                resultado_cct = execute_query(consulta_cct, (id_usuario,))
+                print(resultado_cct)
                 
                 if resultado_cct:
-                    cct = resultado_cct[0]  # Extraer el valor del CCT
+                    cct = resultado_cct[0][0]  # Extraer el valor del CCT
                 else:
                     cct = "N/A"  # Si no hay un CCT asignado
 
@@ -173,8 +177,8 @@ class RegisterScreen(CustomBoxLayout):
             self.ids.lbl_estado.text = "El usuario ya está registrado."
             return
 
-        consulta_registro = f"INSERT INTO Usuario (correo, password, acceso) VALUES ('{usuario}, '{contrasena}', '{rol}')"
-        execute_non_query(consulta_registro)
+        consulta_registro = "INSERT INTO Usuario (correo, password, acceso) VALUES (?,?,?)"
+        execute_non_query(consulta_registro,(usuario,contrasena,rol))
         
         self.ids.lbl_estado.text = "Registro exitoso. Ahora puedes iniciar sesión."
         App.get_running_app().root.current = 'login'
@@ -239,12 +243,12 @@ class VistaDireccionTerritorialScreen(CustomBoxLayout):
 class ConvocatoriasScreen(Screen):  # Modificar para heredar de Screen
     def __init__(self, **kwargs):
         super(ConvocatoriasScreen, self).__init__(**kwargs)
-        #self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
+        self.add_widget(ConvocatoriaWindow())  # Agregar ConvocatoriaWindow como widget principal
 
 class CapacitacionesScreen(Screen):
     def __init__(self, **kwargs):
         super(CapacitacionesScreen, self).__init__(**kwargs)
-        # self.admin_window = AdminWindowAsignaciones()  # Instancia única de AdminWindowAsignaciones
+        self.admin_window = AdminWindowAsignaciones()  # Instancia única de AdminWindowAsignaciones
 
     def on_enter(self):
         # Limpiar todos los widgets de la pantalla antes de añadir el contenido
@@ -313,18 +317,19 @@ class AsignarCCTPracticasScreen(Screen):
             self.ids.data_layout.height = self.ids.data_layout.minimum_height
         except Exception as e:
             print(f"Error al conectar a la base de datos: {e}")
-        def go_to_detalle(self, aspirante_id, *args):
-            # Obtén la pantalla DetalleCCTScreen
-            detalle_screen = self.manager.get_screen("mostrar ccts")
 
-            # Limpiar widgets antes de cargar nuevos datos
-            detalle_screen.ids.cct_list.clear_widgets()
+    def go_to_detalle(self, aspirante_id, *args):
+        # Obtén la pantalla DetalleCCTScreen
+        detalle_screen = self.manager.get_screen("mostrar ccts")
 
-            # Establece el aspirante_id en la pantalla de detalle
-            detalle_screen.load_initial_ccts(aspirante_id)
+        # Limpiar widgets antes de cargar nuevos datos
+        detalle_screen.ids.cct_list.clear_widgets()
 
-            # Cambia a la pantalla de detalle
-            self.manager.current = "mostrar ccts"
+        # Establece el aspirante_id en la pantalla de detalle
+        detalle_screen.load_initial_ccts(aspirante_id)
+
+        # Cambia a la pantalla de detalle
+        self.manager.current = "mostrar ccts"
 
     def go_back(self):
         if self.manager:
@@ -563,6 +568,20 @@ class DetalleCCTScreen(Screen):
             """
             execute_non_query(query_update_LEC, (aspirante_id,))
 
+            query = """ SELECT genero,edad FROM Aspirante WHERE id_Aspirante = ?"""
+
+            resultado = execute_query(query,(aspirante_id,))
+            genero=resultado[0][0]
+            edad=resultado[0][0]
+
+            print(resultado)
+
+             # Actualizar acceso del usuario a LEC
+            query_update_LEC = """
+            INSERT INTO LEC (id_Usuario, estadoSalud, genero, edad, capacidadDiferente) VALUES (?, 'Excelente', ?, ?, 'Auditiva');
+            """
+            execute_non_query(query_update_LEC, (aspirante_id,genero,edad,))
+
             print("CCT asignado correctamente.")  # Debug
 
             # Redirigir al usuario al AsignacionCCTPracticasScreen y recargar los datos
@@ -636,13 +655,14 @@ class LECScreen(CustomBoxLayout):
                 LEFT JOIN CCTgrupos ON AsignacionAspiranteCCT.id_Aspirante = CCTgrupos.id_profesor
                 WHERE AsignacionAspiranteCCT.id_Aspirante = ?;
             """
-            result = self.fetch_as_dict(cursor.execute(query), fetch_one=True)
+            result = execute_query(query,(self.id_usuario,))#self.fetch_as_dict(cursor.execute(query), fetch_one=True)
 
             # Actualizar las propiedades de la pantalla
             if result:
                 result = result[0]  # Tomar la primera fila de resultados
-                self.cct = result['cct'] if result and result['cct'] else "No asignado"
-                self.grupo = result['grupo'] if result and result['grupo'] else "Sin grupo asignado"
+                print(result)
+                self.cct = result[0] if result and result[0] else "No asignado"
+                self.grupo = result[1] if result and result[1] else "Sin grupo asignado"
             else:
                 self.cct = "No asignado"
                 self.grupo = "Sin grupo asignado"
@@ -671,15 +691,6 @@ class LECScreen(CustomBoxLayout):
                 btn.bind(on_press=boton['on_press'])
                 self.ids.botones_layout.add_widget(btn)
 
-        # Botón de cerrar sesión (siempre presente)
-        btn_cerrar_sesion = Button(
-            text="Cerrar Sesión",
-            size_hint_y=None,
-            height=50,
-            on_press=lambda _: self.cerrar_sesion()
-        )
-        self.ids.botones_layout.add_widget(btn_cerrar_sesion)
-
         # Botón de update Correo (siempre presente)
         btn_actualizar_contacto = Button(
             text="Actualizar Contacto",
@@ -688,6 +699,15 @@ class LECScreen(CustomBoxLayout):
             on_press=lambda _: self.update_contacto()
         )
         self.ids.botones_layout.add_widget(btn_actualizar_contacto)
+    
+        # Botón de cerrar sesión (siempre presente)
+        btn_cerrar_sesion = Button(
+            text="Cerrar Sesión",
+            size_hint_y=None,
+            height=50,
+            on_press=lambda _: self.cerrar_sesion()
+        )
+        self.ids.botones_layout.add_widget(btn_cerrar_sesion)
 
     def opciones_grupo(self):
         print("Opciones del grupo seleccionadas.", self.id_usuario)
@@ -783,7 +803,6 @@ class LECScreen(CustomBoxLayout):
         app.root.get_screen('login').children[0].limpiar_campos()
         app.root.current = 'login'
 
-
 class SolicitarApoyoScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(SolicitarApoyoScreen, self).__init__(**kwargs)
@@ -796,7 +815,6 @@ class ApoyosScreen(CustomBoxLayout):
 class ApoyoProgresoScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(ApoyoProgresoScreen, self).__init__(**kwargs)
-
 
 class CapacitadorScreen(CustomBoxLayout):
     id_usuario = StringProperty()
@@ -924,7 +942,7 @@ class vistaAsignarGrupoLEC(CustomBoxLayout):
                 SET id_profesor = ?
                 WHERE id_grupo = ?;
             """
-            execute_query(query, (profesor_id, grupo_id))
+            execute_non_query(query, (profesor_id, grupo_id))
             print(f"Profesor {profesor_id} asignado al grupo {grupo_id}.")
         except Exception as err:
             print(f"Error al asignar profesor: {err}")
@@ -1236,6 +1254,10 @@ class LoginApp(App):
         screen_vista_asignar_alumnos = Screen(name='vista_asignar_alumnos')
         screen_vista_asignar_alumnos.add_widget(AsignarAlumnosWindow())
         sm.add_widget(screen_vista_asignar_alumnos)
+
+        screen_vista_promocion_escolar = Screen(name='vista_promocion_escolar')
+        screen_vista_promocion_escolar.add_widget(PromocionScreen())
+        sm.add_widget(screen_vista_promocion_escolar)
 
         screen_vista_modificar_alumnos = Screen(name='vista_modificar_alumnos')
         screen_vista_modificar_alumnos.add_widget(ModificarAlumnoWindow())
