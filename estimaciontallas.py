@@ -143,7 +143,6 @@ class EstimacionTallasScreen(BoxLayout):
         except Exception as err:
             return f"Error al realizar los cálculos: {err}"
 
-
     def show_popup(self, title, message):
         """Muestra un popup con el mensaje proporcionado."""
         popup = Popup(title=title,

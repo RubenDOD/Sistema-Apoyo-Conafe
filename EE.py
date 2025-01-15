@@ -181,27 +181,30 @@ class EquipamientoScreen(BoxLayout):
             return None
 
     def display_route_on_map(self, optimized_route, api_key):
-        # Convertir los índices a coordenadas de las localidades (incluye el punto inicial)
+        # Convertir índices a coordenadas
         waypoints = [
             "{},{}".format(self.available_localidades[idx-1][2], self.available_localidades[idx-1][3])
             if idx != 0 else "19.847811,-90.535945"
             for idx in optimized_route
         ]
 
-        # Crear marcadores para las localidades disponibles en el orden optimizado
-        markers = "|".join([
+        # Crear marcadores para las localidades optimizadas
+        markers = [
             f"color:red|label:{i+1}|{self.available_localidades[idx-1][2]},{self.available_localidades[idx-1][3]}"
             if idx != 0 else f"color:green|label:Inicio|19.847811,-90.535945"
             for i, idx in enumerate(optimized_route)
-        ])
+        ]
 
-        # Calcular el centro geográfico del mapa
+        # Concatenar todos los marcadores
+        markers_param = "&markers=".join(markers)
+
+        # Calcular el centro geográfico
         latitudes = [float(wp.split(",")[0]) for wp in waypoints]
         longitudes = [float(wp.split(",")[1]) for wp in waypoints]
         center_lat = sum(latitudes) / len(latitudes)
         center_lng = sum(longitudes) / len(longitudes)
 
-        # Ajustar el nivel de zoom automáticamente
+        # Ajustar zoom más refinado
         lat_range = max(latitudes) - min(latitudes)
         lng_range = max(longitudes) - min(longitudes)
         max_range = max(lat_range, lng_range)
@@ -217,8 +220,8 @@ class EquipamientoScreen(BoxLayout):
         else:
             zoom = 6
 
-        # Generar la URL del mapa con marcadores
-        map_url = f"https://maps.googleapis.com/maps/api/staticmap?size=800x600&markers={markers}&center={center_lat},{center_lng}&zoom={zoom}&key={api_key}"
+        # Generar la URL para el mapa
+        map_url = f"https://maps.googleapis.com/maps/api/staticmap?size=800x600&center={center_lat},{center_lng}&zoom={zoom}&{markers_param}&key={api_key}"
 
         # Descargar la imagen del mapa
         image_path = "map_image.png"
@@ -237,7 +240,7 @@ class EquipamientoScreen(BoxLayout):
 
         # Mostrar detalles de los viajes en un Popup
         self.display_travel_directions(optimized_route, api_key)
-        
+
     def display_travel_directions(self, optimized_route, api_key):
         """
         Mostrar un popup con la información de la ruta optimizada.
