@@ -160,53 +160,69 @@
 
 <VistaDireccionTerritorialScreen>:
     FloatLayout:
-        BoxLayout:
-            orientation: 'vertical'
-            spacing: 20
-            padding: 50
-            size_hint: 0.6, 0.3
-            pos_hint: {'center_x': 0.5, 'top': 0.7}
+        ScrollView:
+            size_hint: (1, 1)
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 20
+                padding: 50
+                size_hint: 0.6, None
+                pos_hint: {'center_x': 0.5, 'top': 0.7}
 
-            Label:
-                text: 'Miembro Dirección Territorial'
-                font_size: 24
-                color: [0, 0, 0, 1]
-                halign: 'center'
-                valign: 'middle'
-                size_hint_y: None
-                height: self.texture_size[1]
+                Label:
+                    text: 'Miembro Dirección Territorial'
+                    font_size: 24
+                    color: [0, 0, 0, 1]
+                    halign: 'center'
+                    valign: 'middle'
+                    size_hint_y: None
+                    height: self.texture_size[1]
 
-            Button:
-                text: 'Convocatorias'
-                size_hint_y: None
-                height: 50
-                on_press: root.interfaz_convocatorias(self)
-            
-            Button:
-                text: 'Capacitaciones'
-                size_hint_y: None
-                height: 50
-                on_press: root.interfaz_capacitaciones(self)
-            
-            Button:
-                text: 'Asignar CCT Prácticas'  # Nuevo botón
-                size_hint_y: None
-                height: 50
-                on_press: root.interfaz_cct_practicas(self)
+                Button:
+                    text: 'Convocatorias'
+                    size_hint_y: None
+                    height: 50
+                    on_press: root.interfaz_convocatorias(self)
+                
+                Button:
+                    text: 'Capacitaciones'
+                    size_hint_y: None
+                    height: 50
+                    on_press: root.interfaz_capacitaciones(self)
+                
+                Button:
+                    text: 'Asignar CCT Prácticas'  # Nuevo botón
+                    size_hint_y: None
+                    height: 50
+                    on_press: root.interfaz_cct_practicas(self)
 
-            Button:
-                text: 'Tablero de Control'
-                size_hint_y: None
-                height: 50
-                on_press: root.interfaz_tablero_control(self)
+                Button:
+                    text: 'Tablero de Control'
+                    size_hint_y: None
+                    height: 50
+                    on_press: root.interfaz_tablero_control(self)
 
-            Button:
-                text: 'Cerrar Sesión'
-                size_hint_y: None
-                height: 50
-                on_press:
-                    app.root.get_screen('login').children[0].limpiar_campos()
-                    app.root.current = 'login'
+                Button: 
+                    text: 'Padrón de Becas' 
+                    size_hint_y: None 
+                    height: 50 
+                    on_press: root.ir_a_padron_becas(self)
+
+                Button: 
+                    text: 'Reporte CCT'
+                    size_hint_y: None 
+                    height: 50 
+                    on_press: root.ir_a_reporte_cct(self)
+
+                Button:
+                    text: 'Cerrar Sesión'
+                    size_hint_y: None
+                    height: 50
+                    on_press:
+                        app.root.get_screen('login').children[0].limpiar_campos()
+                        app.root.current = 'login'
 
 <ConvocatoriasScreen>:
     FloatLayout:

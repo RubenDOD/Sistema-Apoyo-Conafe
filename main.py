@@ -27,6 +27,8 @@ from AsignarAlumno import AsignarAlumnosWindow
 from Calificaciones import AlumnosCalificaciones
 from Regularizaciones import Regularizaciones
 from estimaciontallas import EstimacionTallasScreen
+from padron_becas import PadronBecasScreen
+from reporte_cct import ReporteCCTScreen
 from EE import EquipamientoScreen
 from UpdateCorreo import UpdateCorreoWindow
 from PromocionEscolar import PromocionScreen
@@ -55,6 +57,7 @@ Builder.load_file("progreso_apoyos.kv")
 Builder.load_file("estimaciontallas.kv")
 Builder.load_file("UpdateCorreo.kv")
 Builder.load_file("EE.kv")
+Builder.load_file("padron_becas.kv")
 #Builder.load_file('PromocionEscolar.kv')
 
 class CustomBoxLayout(BoxLayout):
@@ -218,7 +221,10 @@ class AspiranteSeguimientoScreen(CustomBoxLayout):
 class VistaDireccionTerritorialScreen(CustomBoxLayout):
     def __init__(self, **kwargs):
         super(VistaDireccionTerritorialScreen, self).__init__(**kwargs)
-        # Configuración de los botones
+        
+        """ oton_padron = Button(text="Ver Padrón de Becas", size_hint=(1, 0.1))
+        boton_padron.bind(on_release=self.ir_a_padron_becas)
+        self.add_widget(boton_padron)   """
 
     def interfaz_convocatorias(self, instance):
         # Cambia a la pantalla de Convocatorias
@@ -240,6 +246,14 @@ class VistaDireccionTerritorialScreen(CustomBoxLayout):
         app = App.get_running_app()
         app.root.current = 'tablero de control'
 
+    def ir_a_padron_becas(self, instance):
+        app = App.get_running_app() 
+        app.root.current = 'padron_becas'
+
+    def ir_a_reporte_cct(self, instance):
+        app = App.get_running_app() 
+        app.root.current = 'reporte_cct'
+        
 class ConvocatoriasScreen(Screen):  # Modificar para heredar de Screen
     def __init__(self, **kwargs):
         super(ConvocatoriasScreen, self).__init__(**kwargs)
@@ -1231,6 +1245,9 @@ class LoginApp(App):
         screen_vdt = Screen(name='vista_direccion_territorial')
         screen_vdt.add_widget(VistaDireccionTerritorialScreen())
         sm.add_widget(screen_vdt)
+
+        sm.add_widget(PadronBecasScreen(name='padron_becas')) 
+        sm.add_widget(ReporteCCTScreen(name='reporte_cct'))
 
         screen_lec = Screen(name='lec')
         screen_lec.add_widget(LECScreen())
