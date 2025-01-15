@@ -118,8 +118,15 @@ class PromocionScreen(BoxLayout):
             DELETE FROM calificaciones
             WHERE id_alumno = ?;
         """
+
+        delete_query_2 = """
+            UPDATE alumnoCCT SET id_grupo = NULL
+            WHERE id_alumno = ?;
+        """
         try:
             execute_query_comb(delete_query, (alumno_data['curp'],))
+            execute_query_comb(delete_query_2, (alumno_data['curp'],))
+
             print(f"Calificaciones del alumno {alumno_data['curp']} eliminadas exitosamente.")
         except Exception as e:
             print(f"Error al eliminar calificaciones: {e}")

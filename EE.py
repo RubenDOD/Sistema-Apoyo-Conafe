@@ -4,89 +4,204 @@ from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-import mysql.connector
 import requests
 from polyline import decode
 from simplification.cutil import simplify_coords
 from kivy.uix.scrollview import ScrollView
 from db_connection import execute_query
+import random
+from kivy.lang import Builder
+
+#Builder.load_file("EE.kv")
+
+class GeneticAlgorithm:
+    def __init__(self, distance_matrix, demands, start_index, population_size=50, generations=100, mutation_rate=0.05):
+        self.distance_matrix = distance_matrix
+        self.demands = [0] + demands
+        self.start_index = start_index  # Índice del punto de inicio en la matriz
+        self.population_size = population_size
+        self.generations = generations
+        self.mutation_rate = mutation_rate
+        self.population = self.initialize_population()
+
+    def initialize_population(self):
+        population = []
+        idx = list(range(len(self.distance_matrix)))
+        idx.remove(self.start_index)  # Eliminar el punto de inicio de la lista de índices
+        for _ in range(self.population_size):
+            random.shuffle(idx)
+            population.append([self.start_index] + idx)  # Añadir el punto de inicio al comienzo de cada ruta
+        return population
+
+    def calculate_fitness(self, individual):
+        total_distance = 0
+        for i in range(len(individual) - 1):
+            start, end = individual[i], individual[i + 1]
+            total_distance += self.distance_matrix[start][end]
+        total_distance += self.demands[individual[0]]  # Solo sumar la demanda del punto de inicio
+        return total_distance
+
+    def selection(self):
+        self.population.sort(key=self.calculate_fitness)
+        self.population = self.population[:len(self.population) // 2]
+
+    def crossover(self, parent1, parent2):
+        cut = random.randint(1, len(parent1) - 1)
+        child = parent1[:cut] + [x for x in parent2 if x not in parent1[:cut]]
+        return child
+
+    def mutate(self, individual):
+        for i in range(len(individual)):
+            if random.random() < self.mutation_rate:
+                j = random.randint(0, len(individual) - 1)
+                individual[i], individual[j] = individual[j], individual[i]
+        return individual
+
+    def run(self):
+        for _ in range(self.generations):
+            self.selection()
+            new_population = []
+            while len(new_population) < self.population_size:
+                parent1, parent2 = random.sample(self.population, 2)
+                child = self.crossover(parent1, parent2)
+                child = self.mutate(child)
+                new_population.append(child)
+            self.population = new_population
+        best_solution = min(self.population, key=self.calculate_fitness)
+        return best_solution
 
 class EquipamientoScreen(BoxLayout):
+    def __init__(self, **kwargs):
+        super(EquipamientoScreen, self).__init__(**kwargs)
+        self.available_localidades = []  # Inicializar el atributo aquí
 
     def reset_screen(self):
-        # Añadir aquí la lógica para restablecer todos los elementos necesarios
-        # Por ejemplo, si tienes listas o formularios, puedes limpiarlos aquí
-        self.ids.algun_id.text = ""  # Resetear texto
-        self.ids.otro_id.value = 0   # Resetear valores
-        # Puedes también recargar cualquier dato necesario
-        self.load_states()  # Suponiendo que este método recargue los datos necesarios
+        self.ids.algun_id.text = ""  # Reset text
+        self.ids.otro_id.value = 0   # Reset values
+        self.load_states()  # Assuming this method reloads the necessary data
 
     def go_back(self, instance):
-        self.reset_screen()  # Llamar a reset_screen antes de cambiar de pantalla
-        # Implementa aquí la funcionalidad deseada, como cerrar la pantalla o navegar al menú principal
-        print("Regresando al menú principal...")
+        self.reset_screen()
+        print("Returning to the main menu...")
 
     def update_state_selection(self, button, state_name):
-        print("Mostrando estados")
+        print("Displaying states")
         button.text = state_name
-        available_ccts = self.get_ccts_by_state(state_name)
-
-        API_KEY = "AIzaSyAZC4UtWCoYayInA-CyzJ4lKso8PcJLtok"  # Reemplaza con tu clave de Google Maps API
-
-        # Convertir las coordenadas a strings "lat,lng"
-        original_waypoints = ["{},{}".format(lat, lng) for lat, lng in available_ccts]
-        validated_waypoints = []
-
-        # Verificar accesibilidad de cada waypoint
-        for waypoint in original_waypoints:
-            lat, lng = map(float, waypoint.split(","))
-            test_route_url = "https://maps.googleapis.com/maps/api/directions/json"
-            
-            params = {
-                "origin": waypoint,
-                "destination": waypoint,
-                "key": API_KEY
-            }
-            response = requests.get(test_route_url, params=params)
-            route_data = response.json()
-
-            if route_data["status"] == "OK":
-                validated_waypoints.append(waypoint)  # Punto accesible
-            else:
-                # Encontrar un punto accesible cercano
-                places_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-                lat, lng = map(float, waypoint.split(","))
-                radius = 10000
-
-                while radius <= 200000:
-                    places_params = {
-                        "location": f"{lat},{lng}",
-                        "radius": radius,  # Buscar puntos accesibles en un radio de 5 km
-                        "key": API_KEY
-                    }
-                    places_response = requests.get(places_url, params=places_params)
-                    places_data = places_response.json()
-
-                    if places_data["status"] == "OK" and places_data["results"]:
-                        nearest_place = places_data["results"][0]
-                        validated_waypoints.append(f"{nearest_place['geometry']['location']['lat']},{nearest_place['geometry']['location']['lng']}")
-                        break
-                    radius += 5000
-                else:
-                    print(f"No se encontró un lugar accesible cercano a {waypoint}. Ignorando este punto.")
-
-        if not validated_waypoints:
-            print("No se encontraron puntos accesibles para generar una ruta.")
+        localidades = self.get_localidades_by_state(state_name)
+        if not localidades:
+            print("No localidades found for state:", state_name)
             return
+        self.available_localidades = localidades  # Almacenar las localidades obtenidas
+        lat_lngs = ["{},{}".format(loc[2], loc[3]) for loc in self.available_localidades]
+        demands = [loc[4] for loc in self.available_localidades]
 
-        # Calcular el centro geográfico
-        latitudes = [float(latlng.split(",")[0]) for latlng in validated_waypoints]
-        longitudes = [float(latlng.split(",")[1]) for latlng in validated_waypoints]
-        centro_lat = sum(latitudes) / len(latitudes)
-        centro_lng = sum(longitudes) / len(longitudes)
-        centro = f"{centro_lat},{centro_lng}"
+        start_point = "19.847811,-90.535945"
+        api_key = "AIzaSyAZC4UtWCoYayInA-CyzJ4lKso8PcJLtok"
 
-        # Calcular nivel de zoom según la dispersión de los puntos
+        # Call the static method with all required arguments
+        distance_matrix = self.create_distance_matrix(lat_lngs, start_point, api_key)
+
+        print("Number of demands:", len(demands))
+        print("Size of distance matrix:", len(distance_matrix))
+
+        print(distance_matrix)
+
+        ga = GeneticAlgorithm(distance_matrix, demands, start_index=0, population_size=50, generations=100, mutation_rate=0.01)
+        optimized_route = ga.run()
+
+        map_url = self.display_route_on_map(optimized_route, api_key)
+        if map_url:
+            print("Map URL:", map_url)
+        else:
+            print("Failed to generate map URL.")
+            
+    def get_localidades_by_state(self, state):
+        try:
+            sql = "SELECT municipio, localidad, latitud, longitud, UnidadesTotalEntrega FROM LocalidadesCampeche"
+            localidades = execute_query(sql)
+            return [[municipio, localidad, float(latitud), float(longitud), int(UnidadesTotalEntrega)] for municipio, localidad, latitud, longitud, UnidadesTotalEntrega in localidades]
+        except Exception as e:
+            print(f"Error getting localities: {e}")
+            return []
+
+    def create_distance_matrix(self, all_points, start_point, api_key):
+        all_points = [start_point] + [pt for pt in all_points if pt != start_point]  # Asegúrate de que el punto de inicio es el primero
+        n = len(all_points)
+        matrix = [[float('inf')] * n for _ in range(n)]  # Usar 'inf' para inicializar la matriz
+
+        max_points = 7  # Este número debe calcularse para que no exceda el límite de elementos permitidos
+        for i in range(0, n, max_points):
+            for j in range(0, n, max_points):
+                sub_origins = all_points[i:i + max_points]
+                sub_destinations = all_points[j:j + max_points]
+                origins = "|".join(sub_origins)
+                destinations = "|".join(sub_destinations)
+                url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+                params = {
+                    'origins': origins,
+                    'destinations': destinations,
+                    'key': api_key,
+                    'mode': 'driving',
+                }
+                response = requests.get(url, params=params)
+                data = response.json()
+                if data['status'] == 'OK':
+                    for x, row in enumerate(data['rows']):
+                        for y, element in enumerate(row['elements']):
+                            if element['status'] == 'OK':
+                                matrix[i + x][j + y] = element['distance']['value']
+                            else:
+                                matrix[i + x][j + y] = float('inf')  # Tratar errores o lugares inaccesibles
+                else:
+                    print("Error:", data['status'])
+
+        return matrix
+
+    def get_distance_matrix(self, lat_lngs, demands, api_key="AIzaSyAZC4UtWCoYayInA-CyzJ4lKso8PcJLtok"):
+        origins = "|".join(["{},{}".format(lat, lng) for lat, lng in lat_lngs])
+        destinations = origins
+        url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+        params = {
+            'origins': origins,
+            'destinations': destinations,
+            'key': api_key,
+            'mode': 'driving',
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if data['status'] == 'OK':
+            matrix = []
+            for row in data['rows']:
+                row_distances = [element['distance']['value'] for element in row['elements']]
+                matrix.append(row_distances)
+            return matrix
+        else:
+            print("Error obtaining distance matrix:", data['status'])
+            return None
+
+    def display_route_on_map(self, optimized_route, api_key):
+        # Convertir los índices a coordenadas de las localidades (incluye el punto inicial)
+        waypoints = [
+            "{},{}".format(self.available_localidades[idx-1][2], self.available_localidades[idx-1][3])
+            if idx != 0 else "19.847811,-90.535945"
+            for idx in optimized_route
+        ]
+
+        # Crear marcadores para las localidades disponibles en el orden optimizado
+        markers = "|".join([
+            f"color:red|label:{i+1}|{self.available_localidades[idx-1][2]},{self.available_localidades[idx-1][3]}"
+            if idx != 0 else f"color:green|label:Inicio|19.847811,-90.535945"
+            for i, idx in enumerate(optimized_route)
+        ])
+
+        # Calcular el centro geográfico del mapa
+        latitudes = [float(wp.split(",")[0]) for wp in waypoints]
+        longitudes = [float(wp.split(",")[1]) for wp in waypoints]
+        center_lat = sum(latitudes) / len(latitudes)
+        center_lng = sum(longitudes) / len(longitudes)
+
+        # Ajustar el nivel de zoom automáticamente
         lat_range = max(latitudes) - min(latitudes)
         lng_range = max(longitudes) - min(longitudes)
         max_range = max(lat_range, lng_range)
@@ -97,156 +212,134 @@ class EquipamientoScreen(BoxLayout):
             zoom = 12
         elif max_range < 0.5:
             zoom = 10
-        else:
+        elif max_range < 1:
             zoom = 8
-
-        # Directions API: calcular la ruta óptima
-        directions_url = "https://maps.googleapis.com/maps/api/directions/json"
-        params = {
-            "origin": validated_waypoints[0],  # Primer punto como origen
-            "destination": validated_waypoints[0],  # Vuelve al primer punto (ruta circular)
-            "waypoints": "optimize:true|" + "|".join(validated_waypoints[1:]),  # Optimizar puntos
-            "key": API_KEY
-        }
-        response = requests.get(directions_url, params=params)
-        route_data = response.json()
-
-        if route_data["status"] != "OK":
-            print(f"Error al calcular la ruta: {route_data['status']}")
-            return
-
-        # Procesar las rutas del JSON
-        all_coordinates = []
-        for leg in route_data["routes"][0]["legs"]:
-            for step in leg["steps"]:
-                polyline = step["polyline"]["points"]
-                decoded_points = decode(polyline)  # Decodificar polyline
-                all_coordinates.extend(decoded_points)
-
-        print("-------------------------------------------------------------")
-        print(f'All cordinates = {all_coordinates}')
-
-        print("-------------------------------------------------------------")
-
-        # Generar Static Maps URL
-        static_map_url = "https://maps.googleapis.com/maps/api/staticmap"
-
-        # Simplificar las coordenadas usando Douglas-Peucker
-        tolerance = 0.0005  # Ajusta la tolerancia según el nivel de detalle deseado
-        simplified_coordinates = simplify_coords(all_coordinates, tolerance)
-
-        # Formatear las coordenadas como 'lat,lng'
-        formatted_coordinates = ["{:.6f},{:.6f}".format(lat, lng) for lat, lng in simplified_coordinates]
-
-        # Parámetro `path` para la ruta optimizada
-        path_param = "path=color:blue|weight:10|" + "|".join(formatted_coordinates)
-
-        # Parámetro `markers` para resaltar waypoints con números
-        markers_list = [
-            f"markers=color:red|label:{i+1}|{validated_waypoints[i]}"
-            for i in range(len(validated_waypoints))
-        ]
-        markers_param = "&".join(markers_list)
-
-        # Parámetros de la solicitud a Static Maps
-        static_map_params = {
-            "size": "800x600",      # Tamaño de la imagen
-            "path": path_param,     # Ruta optimizada
-            "center": centro,       # Centro del mapa
-            "zoom": zoom,             # Nivel de zoom
-            "key": API_KEY,         # Clave de la API
-            "markers": markers_param  # Marcadores para los waypoints
-        }
-
-        # Concatenar parámetros para incluir marcadores
-        static_map_url_with_params = f"{static_map_url}?{'&'.join(f'{key}={value}' for key, value in static_map_params.items())}&{markers_param}"
-
-        # Solicitar Static Maps
-        static_map_response = requests.get(static_map_url_with_params)
-
-        # Guardar la imagen
-        if static_map_response.status_code == 200:
-            with open(f"{state_name}.png", "wb") as file:
-                file.write(static_map_response.content)
-            self.ids.map_image.source = f"{state_name}.png"
-            self.ids.map_image.reload()
-            print(f"Imagen guardada como '{state_name}.png'")
         else:
-            print(f"Error al generar el mapa: {static_map_response.text}")
+            zoom = 6
 
+        # Generar la URL del mapa con marcadores
+        map_url = f"https://maps.googleapis.com/maps/api/staticmap?size=800x600&markers={markers}&center={center_lat},{center_lng}&zoom={zoom}&key={api_key}"
+
+        # Descargar la imagen del mapa
+        image_path = "map_image.png"
+        response = requests.get(map_url, stream=True)
+        if response.status_code == 200:
+            with open(image_path, 'wb') as file:
+                for chunk in response.iter_content(1024):
+                    file.write(chunk)
+
+            # Actualizar la imagen en la interfaz de Kivy
+            self.ids.map_image.source = image_path
+            self.ids.map_image.reload()
+            print(f"Map image saved to {image_path} and displayed.")
+        else:
+            print(f"Failed to download map image. Status code: {response.status_code}")
+
+        # Mostrar detalles de los viajes en un Popup
+        self.display_travel_directions(optimized_route, api_key)
         
-        # Crear un layout para el contenido del ScrollView
+    def display_travel_directions(self, optimized_route, api_key):
+        """
+        Mostrar un popup con la información de la ruta optimizada.
+        """
+        # Punto inicial fijo
+        start_point_name = "Palacio Federal, Zona Centro San Francisco"
+        start_point_coords = "19.847811,-90.535945"
+
+        # Inicializar el contenido del Popup
         content = BoxLayout(orientation="vertical", size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))  # Ajustar tamaño dinámico
 
-        print("-------------------------------------------------------------")
+        # Generar la información de cada viaje
+        for i in range(len(optimized_route) - 1):
+            origin_idx = optimized_route[i]
+            destination_idx = optimized_route[i + 1]
 
-        if "routes" in route_data and len(route_data["routes"]) > 0:
-            for leg in route_data["routes"][0]["legs"]:
-                content.add_widget(Label(text=f"Inicio: {leg['start_address']}", size_hint_y=None, height=40))
-                content.add_widget(Label(text=f"Destino: {leg['end_address']}", size_hint_y=None, height=40))
-                content.add_widget(Label(text=f"Distancia: {leg['distance']['text']}", size_hint_y=None, height=40))
-                content.add_widget(Label(text=f"Duración: {leg['duration']['text']}", size_hint_y=None, height=40))
-                content.add_widget(Label(text="----", size_hint_y=None, height=40))
-        else:
-            #print("No se encontraron rutas.")
-            content.add_widget(Label(text="No se encontraron rutas.", size_hint_y=None, height=40))
+            # Determinar origen
+            if i == 0:  # El primer viaje siempre inicia desde el punto fijo
+                origin_name = start_point_name
+                origin_coords = start_point_coords
+            else:
+                origin_name = f"{self.available_localidades[origin_idx-1][1]}, {self.available_localidades[origin_idx-1][0]}"
+                origin_coords = "{},{}".format(
+                    self.available_localidades[origin_idx-1][2],
+                    self.available_localidades[origin_idx-1][3]
+                )
 
-        print("-------------------------------------------------------------")
+            # Determinar destino
+            destination_name = f"{self.available_localidades[destination_idx-1][1]}, {self.available_localidades[destination_idx-1][0]}"
+            destination_coords = "{},{}".format(
+                self.available_localidades[destination_idx-1][2],
+                self.available_localidades[destination_idx-1][3]
+            )
 
+            # Llamar a la API Directions para obtener distancia y duración
+            params = {
+                'origin': origin_coords,
+                'destination': destination_coords,
+                'key': api_key,
+                'mode': 'driving',
+            }
+            url = "https://maps.googleapis.com/maps/api/directions/json"
+            response = requests.get(url, params=params)
+            data = response.json()
 
-        # Crear el ScrollView
+            if data['status'] == 'OK':
+                leg = data['routes'][0]['legs'][0]  # Información del primer trayecto
+                distance = leg['distance']['text']
+                duration = leg['duration']['text']
+            else:
+                distance = "N/A"
+                duration = "N/A"
+
+            # Cantidad de entrega
+            delivery_amount = self.available_localidades[destination_idx-1][4]
+
+            # Agregar información del viaje al popup
+            content.add_widget(Label(
+                text=f"Viaje {i + 1}:\n"
+                    f"De: {origin_name} ({origin_coords})\n"
+                    f"A: {destination_name} ({destination_coords})\n"
+                    f"Distancia: {distance}\n"
+                    f"Duración: {duration}\n"
+                    f"Unidades a entregar: {delivery_amount}\n",
+                size_hint_y=None,
+                height=150
+            ))
+
+        # Crear el ScrollView para el contenido del Popup
         scroll_view = ScrollView(size_hint=(1, 1))
         scroll_view.add_widget(content)
 
-        # Crear el Popup
+        # Crear y abrir el Popup
         popup = Popup(
-            title="Información de la Ruta",
+            title="Detalles de la Ruta",
             content=scroll_view,
-            size_hint=(0.8, 0.8),
+            size_hint=(0.9, 0.9),
         )
-
-        # Mostrar el Popup
         popup.open()
-
-    def set_image_widget(self, image_path):
-        """Actualiza el widget de imagen con el mapa generado."""
-        self.map_image.source = image_path
-        self.map_image.reload()
 
     def load_states(self, dropdown):
         try:
             sql = "SELECT DISTINCT estado FROM CCT"
             states = execute_query(sql)
-
             for state in states:
                 state_name = state[0]
                 btn = Button(text=state_name, size_hint_y=None, height=44)
                 btn.bind(on_release=lambda btn: dropdown.select(btn.text))
                 dropdown.add_widget(btn)
-
         except Exception as e:
-            print(f"Error al cargar estados: {e}")
+            print(f"Error loading states: {e}")
 
-    def get_ccts_by_state(self, state):
-        try:
-            sql = "SELECT claveCentro, nombre, latitud, longitud FROM CCT WHERE estado = ?"
-            ccts = execute_query(sql, (state,))
-            return [[float(latitud), float(longitud)] for clave, nombre, latitud, longitud in ccts]
-
-        except Exception as e:
-            print(f"Error al obtener CCTs: {e}")
-            return []
-        
     def open_dropdown(self, button):
         dropdown = DropDown()
-        self.load_states(dropdown)  # Carga los estados en el dropdown
+        self.load_states(dropdown)
         dropdown.open(button)
         dropdown.bind(on_select=lambda instance, x: self.update_state_selection(button, x))
 
 class MainApp(App):
     def build(self):
-        return EquipamientoScreen().build()
+        return EquipamientoScreen()
 
 if __name__ == '__main__':
     MainApp().run()

@@ -903,6 +903,12 @@ class vistaAsignarGrupoLEC(CustomBoxLayout):
         grupo_nombre = spinner.text
 
         if grupo_nombre == "No hay grupos disponibles" or grupo_nombre == "Cargando grupos...":
+            popup = Popup(
+                title="Mensaje",
+                content=Label(text="No se puede asignar. No hay grupos seleccionados o disponibles."),
+                size_hint=(0.6, 0.4)
+            )
+            popup.open()
             print("No se puede asignar. No hay grupos seleccionados o disponibles.")
             return
 
@@ -943,8 +949,19 @@ class vistaAsignarGrupoLEC(CustomBoxLayout):
                 WHERE id_grupo = ?;
             """
             execute_non_query(query, (profesor_id, grupo_id))
-            print(f"Profesor {profesor_id} asignado al grupo {grupo_id}.")
+            popup = Popup(
+                title="Mensaje",
+                content=Label(text=f"Profesor {profesor_id} asignado al grupo {grupo_id}."),
+                size_hint=(0.6, 0.4)
+            )
+            popup.open()
         except Exception as err:
+            popup = Popup(
+                title="Error",
+                content=Label(text=f"Error al asignar profesor: {err}"),
+                size_hint=(0.6, 0.4)
+            )
+            popup.open()
             print(f"Error al asignar profesor: {err}")
 
 

@@ -62,46 +62,79 @@ class EstimacionTallasScreen(BoxLayout):
             row = execute_query(query, (state,))
             row = row[0]
 
+            # Calcular tallas de cuerpo sin redondeo inicial
+            tallas_cuerpo = [
+                row[0] * units / 100,  # CUERPO_CHICO
+                row[1] * units / 100,  # CUERPO_MEDIANO
+                row[2] * units / 100,  # CUERPO_GRANDE
+            ]
+            cuerpo_total = sum(tallas_cuerpo)
 
+            # Ajustar proporcionalmente si el total no coincide
+            if cuerpo_total != units:
+                factor = units / cuerpo_total
+                tallas_cuerpo = [t * factor for t in tallas_cuerpo]
 
-
-            # Calcular tallas de cuerpo
-            resultados = {
-                "CUERPO_CHICO": self.round_to_nearest_100(row[0] * units / 100),
-                "CUERPO_MEDIANO": self.round_to_nearest_100(row[1] * units / 100),
-                "CUERPO_GRANDE": self.round_to_nearest_100(row[2] * units / 100),
-            }
+            # Redondear y ajustar al final para que la suma sea exacta
+            tallas_cuerpo_redondeadas = [self.round_to_nearest_100(t) for t in tallas_cuerpo]
+            diferencia = units - sum(tallas_cuerpo_redondeadas)
+            if diferencia != 0:
+                tallas_cuerpo_redondeadas[0] += diferencia  # Ajustar en la primera categoría
 
             # Distribuir calzado: 48% hombres, 52% mujeres
             calzado_total = units
             calzado_hombres = calzado_total * 0.48
             calzado_mujeres = calzado_total * 0.52
 
-            resultados.update({
-                "CALZADO_H_MENOR": self.round_to_nearest_100(row[3] * calzado_hombres / 100),
-                "CALZADO_H_MEDIO": self.round_to_nearest_100(row[4] * calzado_hombres / 100),
-                "CALZADO_H_MAYOR": self.round_to_nearest_100(row[5] * calzado_hombres / 100),
-                "CALZADO_M_MENOR": self.round_to_nearest_100(row[6] * calzado_mujeres / 100),
-                "CALZADO_M_MEDIO": self.round_to_nearest_100(row[7] * calzado_mujeres / 100),
-                "CALZADO_M_MAYOR": self.round_to_nearest_100(row[8] * calzado_mujeres / 100),
-            })
+            # Calcular calzado sin redondeo inicial
+            calzado_h = [
+                row[3] * calzado_hombres / 100,  # CALZADO_H_MENOR
+                row[4] * calzado_hombres / 100,  # CALZADO_H_MEDIO
+                row[5] * calzado_hombres / 100,  # CALZADO_H_MAYOR
+            ]
+            calzado_m = [
+                row[6] * calzado_mujeres / 100,  # CALZADO_M_MENOR
+                row[7] * calzado_mujeres / 100,  # CALZADO_M_MEDIO
+                row[8] * calzado_mujeres / 100,  # CALZADO_M_MAYOR
+            ]
 
-            # Organiza los resultados
+            # Ajustar proporcionalmente si los totales no coinciden
+            if sum(calzado_h) != calzado_hombres:
+                factor_h = calzado_hombres / sum(calzado_h)
+                calzado_h = [t * factor_h for t in calzado_h]
+
+            if sum(calzado_m) != calzado_mujeres:
+                factor_m = calzado_mujeres / sum(calzado_m)
+                calzado_m = [t * factor_m for t in calzado_m]
+
+            # Redondear y ajustar al final para que las sumas sean exactas
+            calzado_h_redondeado = [self.round_to_nearest_100(t) for t in calzado_h]
+            calzado_m_redondeado = [self.round_to_nearest_100(t) for t in calzado_m]
+
+            diferencia_h = calzado_hombres - sum(calzado_h_redondeado)
+            diferencia_m = calzado_mujeres - sum(calzado_m_redondeado)
+
+            if diferencia_h != 0:
+                calzado_h_redondeado[0] += diferencia_h  # Ajustar en la primera categoría
+            if diferencia_m != 0:
+                calzado_m_redondeado[0] += diferencia_m  # Ajustar en la primera categoría
+
+            # Organizar resultados
             result_text = (
                 "Se recomienda comprar:\n\n"
                 "Tallas Pantalón/Camisa:\n"
-                f"Chicas: {resultados['CUERPO_CHICO']}\n"
-                f"Medianas: {resultados['CUERPO_MEDIANO']}\n"
-                f"Grandes: {resultados['CUERPO_GRANDE']}\n\n"
+                f"Chicas: {tallas_cuerpo_redondeadas[0]}\n"
+                f"Medianas: {tallas_cuerpo_redondeadas[1]}\n"
+                f"Grandes: {tallas_cuerpo_redondeadas[2]}\n\n"
                 "Calzado:\n"
                 "Hombres:\n"
-                f"Tallas chicas (-26): {resultados['CALZADO_H_MENOR']}\n"
-                f"Tallas medianas (26-28): {resultados['CALZADO_H_MEDIO']}\n"
-                f"Tallas grandes (28+): {resultados['CALZADO_H_MAYOR']}\n\n"
+                f"Tallas chicas (-26): {calzado_h_redondeado[0]}\n"
+                f"Tallas medianas (26-28): {calzado_h_redondeado[1]}\n"
+                f"Tallas grandes (28+): {calzado_h_redondeado[2]}\n\n"
                 "Mujeres:\n"
-                f"Tallas chicas (-23): {resultados['CALZADO_M_MENOR']}\n"
-                f"Tallas medianas (23-25): {resultados['CALZADO_M_MEDIO']}\n"
-                f"Tallas grandes (25+): {resultados['CALZADO_M_MAYOR']}\n\n"
+                f"Tallas chicas (-23): {calzado_m_redondeado[0]}\n"
+                f"Tallas medianas (23-25): {calzado_m_redondeado[1]}\n"
+                f"Tallas grandes (25+): {calzado_m_redondeado[2]}\n\n"
                 "Datos redondeados a múltiplos de 100 unidades para valores de 300 unidades en adelante."
             )
 
@@ -109,6 +142,7 @@ class EstimacionTallasScreen(BoxLayout):
 
         except Exception as err:
             return f"Error al realizar los cálculos: {err}"
+
 
     def show_popup(self, title, message):
         """Muestra un popup con el mensaje proporcionado."""

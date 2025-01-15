@@ -8,6 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from db_connection import execute_query
 from db_connection import execute_non_query
+from datetime import datetime
+from pytz import timezone
 
 class AlumnosCalificaciones(BoxLayout):
     def __init__(self, cct=None, grupo=None,**kwargs):
@@ -184,15 +186,20 @@ class AlumnosCalificaciones(BoxLayout):
     def update_calificacion(self, id_calificacion, nueva_calificacion):
         """Actualiza la calificación en la base de datos"""
         try:
-            nueva_calificacion = float(nueva_calificacion)
+            nueva_calificacion = int(nueva_calificacion)
+            if nueva_calificacion < 0 or nueva_calificacion > 10:
+                self.show_error("Por favor, ingresa una calificación entre 0 y 10.")
+                return
         except ValueError:
-            self.show_error("Por favor, ingresa un valor válido.")
+            self.show_error("Por favor, ingresa un valor válido (número entero).")
             return
 
         try:
+            tz = timezone('America/Mexico_City')
+            current_time = datetime.now(tz)
             # Conectar a la base de datos y actualizar calificación
-            query = "UPDATE Calificaciones SET calificacion = ? WHERE id_calificacion = ?"
-            execute_non_query(query, (nueva_calificacion, id_calificacion))
+            query = "UPDATE Calificaciones SET calificacion = ?, fecha_registro = ? WHERE id_calificacion = ?"
+            execute_non_query(query, (nueva_calificacion, current_time, id_calificacion))
             self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
         except Exception as e:
             self.show_error(f"Error actualizando calificación: {e}")
@@ -216,7 +223,6 @@ class AlumnosCalificaciones(BoxLayout):
         """Regresa a la pantalla anterior"""
         app = App.get_running_app()
         app.root.current = 'lec'  # Cambia por el nombre de la pantalla anterior
-
 
 class AlumnosApp(App):
     def build(self):

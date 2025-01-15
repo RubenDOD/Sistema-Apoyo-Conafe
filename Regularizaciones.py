@@ -8,7 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from db_connection import execute_query
 from db_connection import execute_non_query
-
+from datetime import datetime
+from pytz import timezone
 
 class Regularizaciones(BoxLayout):
     def __init__(self, cct=None, grupo=None, **kwargs):
@@ -195,9 +196,12 @@ class Regularizaciones(BoxLayout):
             self.show_error("Por favor, ingresa un valor válido.")
             return
 
-        query = "UPDATE Calificaciones SET calificacion = ? WHERE id_calificacion = ?"
+        tz = timezone('America/Mexico_City')
+        current_time = datetime.now(tz)
+        # Conectar a la base de datos y actualizar calificación
+        query = "UPDATE Calificaciones SET calificacion = ?, fecha_registro = ? WHERE id_calificacion = ?"
         try:
-            execute_non_query(query, (nueva_calificacion, id_calificacion))
+            execute_non_query(query, (nueva_calificacion,current_time, id_calificacion))
             self.show_error(f"Calificación actualizada correctamente a {nueva_calificacion}.")
         except Exception as e:
             self.show_error(f"Error actualizando calificación: {e}")
