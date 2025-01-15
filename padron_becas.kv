@@ -1,0 +1,22 @@
+<PadrónBecasApp>:
+    orientation: "vertical"
+    padding: 20
+    spacing: 20
+
+    Label:
+        text: "Sistema de Gestión del Padrón de Becas"
+        font_size: 24
+        size_hint_y: None
+        height: self.texture_size[1]
+
+    Button:
+        text: "Mostrar Padrón Actual"
+        size_hint_y: None
+        height: 50
+        on_press: root.mostrar_padron()
+
+    Button:
+        text: "Actualizar Padrón con Nuevos Beneficiarios"
+        size_hint_y: None
+        height: 50
+        on_press: root.actualizar_padron()
