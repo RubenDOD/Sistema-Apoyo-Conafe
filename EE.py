@@ -96,7 +96,7 @@ class EquipamientoScreen(BoxLayout):
         demands = [loc[4] for loc in self.available_localidades]
 
         start_point = "19.847811,-90.535945"
-        api_key = "AIzaSyAZC4UtWCoYayInA-CyzJ4lKso8PcJLtok"
+        api_key = "AIzaSyCm9OLeGk7gjIe6dnzfoAg9Xdrxq8CI9Ik"
 
         # Call the static method with all required arguments
         distance_matrix = self.create_distance_matrix(lat_lngs, start_point, api_key)
